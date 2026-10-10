@@ -8,6 +8,14 @@
 > 全年状态码分布 = 你的身体监控面板。
 > 1024 程序员节 × 麦当劳官方 MCP 参赛作品。
 
+| 项目信息 | 内容 |
+|---|---|
+| **赛事** | 麦当劳中国程序员节创意开发大赛（[活动仓库](https://github.com/M-China/mcd-developer-innovation-challenge)） |
+| **形态** | Agent Skill + 本地 Python 确定性分类器 + 单文件 HTML 监控面板 |
+| **数据来源** | 麦当劳中国官方 MCP（`https://mcp.mcd.cn`），只读采集 |
+| **运行环境** | Python 3.10+，纯标准库，零第三方依赖 |
+| **仓库导航** | 见 [HOMEPAGE.md](HOMEPAGE.md) |
+
 ![常规模式监控面板](docs/screenshot-normal.png)
 
 *（按天维度：89 天里9 天有响应，Uptime 10.1%）*
