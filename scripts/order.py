@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""麦门状态码 · 下单脚本：让你的身体 API 从 404 变为 200。
+"""麦门监控台 · 下单脚本：让你的身体服务从 404 变为 200。
 
 这条链路由MCP 官方文档给出的固定顺序组成：
     query-nearby-stores → query-meals → calculate-price → create-order
@@ -175,7 +175,7 @@ def main():
         return
     order_id = (d.get("data") or {}).get("orderId") or (d.get("data") or {}).get("orderNo")
     print(f"✓ 下单成功！订单号 {order_id}")
-    print("重新运行 collect.py + classify.py，这一单的状态码即为你的身体 API 对它的真实响应。")
+    print("重新运行 collect.py + classify.py，这一单的状态码即为你的身体服务对它的真实响应。")
 
 
 if __name__ == "__main__":

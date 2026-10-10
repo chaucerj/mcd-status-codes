@@ -94,7 +94,7 @@ CODE_META = {
     "404": {
         "name": "404 Not Found", "short": "404 Not Found", "class": "error", "color": GF["red"],
         "title": "订单不存在",
-        "meaning": "你的身体 API 上还没有任何订单资源，这一单查无此物",
+        "meaning": "你的身体服务上还没有任何订单资源，这一单查无此物",
         "evidence": "初始拉取时订单集合为空，或该订单从未存在",
         "scope": "collection",
     },
@@ -130,7 +130,7 @@ CODE_META = {
     },
     "503": {
         "name": "503 Service Unavailable", "short": "503 Unavailable", "class": "error", "color": GF["red"],
-        "title": "身体 API 宕机",
+        "title": "身体服务宕机",
         "meaning": "这一天你的身体服务完全没有响应",
         "evidence": "当日零订单，计入 Uptime 分母",
     },
@@ -154,9 +154,9 @@ ACCOUNT_CODES = {"404", "503"}
 
 # 零订单彩蛋文案（404 专属）
 EASTER_EGG_404 = {
-    "title": "404 Not Found · 你的身体 API 上还没有任何订单资源",
+    "title": "404 Not Found · 你的身体服务上还没有任何订单资源",
     "lines": [
-        "本次拉取返回空集合 —— 你的身体 API 处于**从未被调用**状态。",
+        "本次拉取返回空集合 —— 你的身体服务处于**从未被调用**状态。",
         "这在 REST 语义里是最标准的一种 404：资源不存在，且这个「不存在」本身就是结论。",
         "别慌，这不是故障。把任意一单麦当劳下进来，资源即被创建，状态码会立刻跳到 200。",
     ],

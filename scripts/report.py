@@ -20,7 +20,7 @@ TEMPLATE = """<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>麦门状态码 · 身体 API 监控台</title>
+<title>麦门监控台 · 你的身体 API</title>
 <style>
   :root {{
     --bg:#0b0c0e; --panel:#111217; --panel2:#181b1f; --border:#24272e;
@@ -219,7 +219,7 @@ const esc = t => String(t).replace(/[&<>]/g, c => ({{'&':'&amp;','<':'&lt;','>':
 function topbar(cls, text) {{
   return `<div class="topbar">
     <img src="data:image/png;base64,${{logo}}" alt="Golden Arches">
-    <h1>麦门状态码 <span class="accent">// 身体 API 监控台</span></h1>
+    <h1>麦门监控台 <span class="accent">// 身体 API 监控台</span></h1>
     <span class="crumb">datasource: order-list · rules v${{DATA.rulesVersion}}</span>
     <span class="badge${{cls}}">${{text}}</span>
   </div>
@@ -246,7 +246,7 @@ function gauge(pct, color) {{
   }}
   return `<div class="gauge">
     <svg viewBox="0 0 96 96" width="112" height="112" role="img"
-         aria-label="身体 API Uptime ${{pct}}%">
+         aria-label="身体服务 Uptime ${{pct}}%">
       <defs>
         <linearGradient id="${{gid}}" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stop-color="${{color}}"/>
@@ -507,7 +507,7 @@ function render404() {{
     topbar(' on', 'collection 404 · 资源不存在') +
     `<div class="panel"><div class="egg-wrap">
       <div class="egg-code">404</div>
-      <div class="egg-title">Not Found · 你的身体 API 上还没有任何订单资源</div>
+      <div class="egg-title">Not Found · 你的身体服务上还没有任何订单资源</div>
       <div class="egg-box">
         ${{(egg.lines||[]).map(l => `<p>${{l}}</p>`).join('')}}
       </div>
@@ -537,14 +537,14 @@ function render(dim, logFilter, logPage) {{
   const hero = `
     <div class="panel">
       <div class="panel-h"><span class="dot" style="background:var(--blue)"></span>
-        <h3>身体 API 可用性</h3></div>
+        <h3>身体服务可用性</h3></div>
       <div class="gauge-wrap">
         ${{gauge(m.uptime, 'var(--blue)')}}
         <div style="min-width:0">
           <div class="stat mono" style="color:var(--blue);font-size:26px">${{m.uptime}}<small>%</small></div>
           <div class="stat-note" style="margin-top:6px">
             近 ${{m.span}} ${{unit}}中仅 <strong style="color:var(--text)">${{m.ordered}}</strong> ${{unit}}有响应<br>
-            你的身体 API 可用性，可能还没有你负责的那个服务高
+            你的身体服务可用性，可能还没有你负责的那个服务高
           </div>
           <div class="legend" style="border:0;padding:0;margin-top:9px">
             <span class="legend-item"><span class="sw" style="background:var(--panel2)"></span>
@@ -667,7 +667,7 @@ function render(dim, logFilter, logPage) {{
     <div style="text-align:center;padding:20px">
       <div class="stat mono" style="font-size:42px;color:var(--yellow)">${{s.flowUnit}}</div>
       <div class="stat-note" style="margin-top:9px">
-        按 1 kcal = 1 Byte、1024 进制换算，你的身体 API 本期共传输 ${{(s.totalKcal||0).toLocaleString()}} kcal。<br>
+        按 1 kcal = 1 Byte、1024 进制换算，你的身体服务本期共传输 ${{(s.totalKcal||0).toLocaleString()}} kcal。<br>
         没有丢包，全是 TCP（贪吃 Protocol）。
       </div>
     </div>`
@@ -744,7 +744,7 @@ function render(dim, logFilter, logPage) {{
     </div>
     <footer>
       语义唯一视角：你是主体，你的身体是服务端 —— 全部状态码只描述你的身体对这次摄入的响应<br>
-      麦门状态码 · 基于麦当劳中国官方 MCP 构建 · 独立开发，非官方产品 · 输出仅供参考，不构成营养或医疗建议
+      麦门监控台 · 基于麦当劳中国官方 MCP 构建 · 独立开发，非官方产品 · 输出仅供参考，不构成营养或医疗建议
     </footer>`;
 }}
 
