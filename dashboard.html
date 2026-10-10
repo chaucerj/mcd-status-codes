@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>麦门监控台 · 你的身体 API</title>
+<title>麦门监控台 · 你的身体服务</title>
 <style>
   :root {
     --bg:#0b0c0e; --panel:#111217; --panel2:#181b1f; --border:#24272e;
@@ -202,7 +202,7 @@ const esc = t => String(t).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'
 function topbar(cls, text) {
   return `<div class="topbar">
     <img src="data:image/png;base64,${logo}" alt="Golden Arches">
-    <h1>麦门监控台 <span class="accent">// 身体 API 监控台</span></h1>
+    <h1>麦门监控台 <span class="accent">// 身体服务监控台</span></h1>
     <span class="crumb">datasource: order-list · rules v${DATA.rulesVersion}</span>
     <span class="badge${cls}">${text}</span>
   </div>
