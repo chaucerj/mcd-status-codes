@@ -1,0 +1,449 @@
+{
+ "data": {
+  "list": [
+   {
+    "orderId": "DEMO-0000",
+    "orderType": "1",
+    "createTime": "2026-08-01 12:03:11",
+    "beType": "1",
+    "beCode": "",
+    "storeCode": "DEMO0",
+    "storeName": "演示餐厅00",
+    "orderStatus": "订单已完成",
+    "realTotalAmount": "41.0",
+    "orderProductList": [
+     {
+      "productCode": "D0-0",
+      "productName": "巨无霸",
+      "quantity": 1,
+      "comboItemList": []
+     },
+     {
+      "productCode": "D0-1",
+      "productName": "中薯条",
+      "quantity": 1,
+      "comboItemList": []
+     },
+     {
+      "productCode": "D0-2",
+      "productName": "可乐中杯",
+      "quantity": 1,
+      "comboItemList": []
+     }
+    ]
+   },
+   {
+    "orderId": "DEMO-0001",
+    "orderType": "1",
+    "createTime": "2026-08-02 12:10:00",
+    "beType": "1",
+    "beCode": "",
+    "storeCode": "DEMO1",
+    "storeName": "演示餐厅01",
+    "orderStatus": "订单已完成",
+    "realTotalAmount": "26.0",
+    "orderProductList": [
+     {
+      "productCode": "D1-0",
+      "productName": "板烧鸡腿堡",
+      "quantity": 1,
+      "comboItemList": []
+     },
+     {
+      "productCode": "D1-1",
+      "productName": "小杯玉米杯",
+      "quantity": 1,
+      "comboItemList": []
+     }
+    ]
+   },
+   {
+    "orderId": "DEMO-0002",
+    "orderType": "1",
+    "createTime": "2026-08-05 09:12:40",
+    "beType": "1",
+    "beCode": "",
+    "storeCode": "DEMO2",
+    "storeName": "演示餐厅02",
+    "orderStatus": "订单已完成",
+    "realTotalAmount": "21.0",
+    "orderProductList": [
+     {
+      "productCode": "D2-0",
+      "productName": "猪柳蛋麦满分",
+      "quantity": 1,
+      "comboItemList": []
+     },
+     {
+      "productCode": "D2-1",
+      "productName": "鲜煮咖啡中杯",
+      "quantity": 1,
+      "comboItemList": []
+     }
+    ]
+   },
+   {
+    "orderId": "DEMO-0003",
+    "orderType": "1",
+    "createTime": "2026-08-05 09:15:02",
+    "beType": "1",
+    "beCode": "",
+    "storeCode": "DEMO3",
+    "storeName": "演示餐厅03",
+    "orderStatus": "订单已完成",
+    "realTotalAmount": "21.0",
+    "orderProductList": [
+     {
+      "productCode": "D3-0",
+      "productName": "猪柳蛋麦满分",
+      "quantity": 1,
+      "comboItemList": []
+     },
+     {
+      "productCode": "D3-1",
+      "productName": "鲜煮咖啡中杯",
+      "quantity": 1,
+      "comboItemList": []
+     }
+    ]
+   },
+   {
+    "orderId": "DEMO-0004",
+    "orderType": "1",
+    "createTime": "2026-08-09 23:47:19",
+    "beType": "1",
+    "beCode": "",
+    "storeCode": "DEMO4",
+    "storeName": "演示餐厅04",
+    "orderStatus": "订单已完成",
+    "realTotalAmount": "33.5",
+    "orderProductList": [
+     {
+      "productCode": "D4-0",
+      "productName": "麦辣鸡腿堡",
+      "quantity": 1,
+      "comboItemList": []
+     },
+     {
+      "productCode": "D4-1",
+      "productName": "大薯条",
+      "quantity": 1,
+      "comboItemList": []
+     },
+     {
+      "productCode": "D4-2",
+      "productName": "麦乐鸡5块",
+      "quantity": 1,
+      "comboItemList": []
+     }
+    ]
+   },
+   {
+    "orderId": "DEMO-0005",
+    "orderType": "1",
+    "createTime": "2026-08-14 18:30:45",
+    "beType": "1",
+    "beCode": "",
+    "storeCode": "DEMO5",
+    "storeName": "演示餐厅05",
+    "orderStatus": "订单已完成",
+    "realTotalAmount": "18.0",
+    "orderProductList": [
+     {
+      "productCode": "D5-0",
+      "productName": "圆筒冰淇淋",
+      "quantity": 2,
+      "comboItemList": []
+     }
+    ]
+   },
+   {
+    "orderId": "DEMO-0006",
+    "orderType": "1",
+    "createTime": "2026-08-15 18:31:02",
+    "beType": "1",
+    "beCode": "",
+    "storeCode": "DEMO6",
+    "storeName": "演示餐厅06",
+    "orderStatus": "订单已完成",
+    "realTotalAmount": "18.0",
+    "orderProductList": [
+     {
+      "productCode": "D6-0",
+      "productName": "圆筒冰淇淋",
+      "quantity": 2,
+      "comboItemList": []
+     }
+    ]
+   },
+   {
+    "orderId": "DEMO-0007",
+    "orderType": "2",
+    "createTime": "2026-08-20 12:22:12",
+    "beType": "2",
+    "beCode": "",
+    "storeCode": "DEMO7",
+    "storeName": "演示餐厅07",
+    "orderStatus": "订单已完成",
+    "realTotalAmount": "88.0",
+    "orderProductList": [
+     {
+      "productCode": "D7-0",
+      "productName": "麦门限定星空堡套餐",
+      "quantity": 1,
+      "comboItemList": []
+     },
+     {
+      "productCode": "D7-1",
+      "productName": "泷盐星星圆筒",
+      "quantity": 2,
+      "comboItemList": []
+     },
+     {
+      "productCode": "D7-2",
+      "productName": "BFF四宫格小食盘",
+      "quantity": 1,
+      "comboItemList": []
+     }
+    ]
+   },
+   {
+    "orderId": "DEMO-0008",
+    "orderType": "2",
+    "createTime": "2026-08-26 21:05:31",
+    "beType": "2",
+    "beCode": "",
+    "storeCode": "DEMO8",
+    "storeName": "演示餐厅08",
+    "orderStatus": "订单已取消",
+    "realTotalAmount": "45.0",
+    "orderProductList": [
+     {
+      "productCode": "D8-0",
+      "productName": "麦香鱼",
+      "quantity": 2,
+      "comboItemList": []
+     },
+     {
+      "productCode": "D8-1",
+      "productName": "小薯条",
+      "quantity": 2,
+      "comboItemList": []
+     }
+    ]
+   },
+   {
+    "orderId": "DEMO-0009",
+    "orderType": "1",
+    "createTime": "2026-09-01 12:00:00",
+    "beType": "1",
+    "beCode": "",
+    "storeCode": "DEMO9",
+    "storeName": "演示餐厅09",
+    "orderStatus": "订单已完成",
+    "realTotalAmount": "12.5",
+    "orderProductList": [
+     {
+      "productCode": "D9-0",
+      "productName": "可乐大杯",
+      "quantity": 1,
+      "comboItemList": []
+     },
+     {
+      "productCode": "D9-1",
+      "productName": "芬达中杯",
+      "quantity": 1,
+      "comboItemList": []
+     }
+    ]
+   },
+   {
+    "orderId": "DEMO-0010",
+    "orderType": "1",
+    "createTime": "2026-09-06 12:40:08",
+    "beType": "1",
+    "beCode": "",
+    "storeCode": "DEMO10",
+    "storeName": "演示餐厅10",
+    "orderStatus": "订单已完成",
+    "realTotalAmount": "129.0",
+    "orderProductList": [
+     {
+      "productCode": "D10-0",
+      "productName": "巨无霸",
+      "quantity": 2,
+      "comboItemList": []
+     },
+     {
+      "productCode": "D10-1",
+      "productName": "麦辣鸡腿堡",
+      "quantity": 2,
+      "comboItemList": []
+     },
+     {
+      "productCode": "D10-2",
+      "productName": "大薯条",
+      "quantity": 2,
+      "comboItemList": []
+     },
+     {
+      "productCode": "D10-3",
+      "productName": "麦乐鸡5块",
+      "quantity": 2,
+      "comboItemList": []
+     }
+    ]
+   },
+   {
+    "orderId": "DEMO-0011",
+    "orderType": "1",
+    "createTime": "2026-09-12 19:22:54",
+    "beType": "1",
+    "beCode": "",
+    "storeCode": "DEMO11",
+    "storeName": "演示餐厅11",
+    "orderStatus": "订单已完成",
+    "realTotalAmount": "56.0",
+    "orderProductList": [
+     {
+      "productCode": "D11-0",
+      "productName": "麦辣鸡翅-2块",
+      "quantity": 2,
+      "comboItemList": []
+     },
+     {
+      "productCode": "D11-1",
+      "productName": "大薯条",
+      "quantity": 2,
+      "comboItemList": []
+     },
+     {
+      "productCode": "D11-2",
+      "productName": "朱古力新地",
+      "quantity": 1,
+      "comboItemList": []
+     }
+    ]
+   },
+   {
+    "orderId": "DEMO-0012",
+    "orderType": "1",
+    "createTime": "2026-09-18 12:15:33",
+    "beType": "1",
+    "beCode": "",
+    "storeCode": "DEMO12",
+    "storeName": "演示餐厅12",
+    "orderStatus": "订单已完成",
+    "realTotalAmount": "39.0",
+    "orderProductList": [
+     {
+      "productCode": "D12-0",
+      "productName": "双层吉士堡",
+      "quantity": 1,
+      "comboItemList": []
+     },
+     {
+      "productCode": "D12-1",
+      "productName": "中薯条",
+      "quantity": 1,
+      "comboItemList": []
+     }
+    ]
+   },
+   {
+    "orderId": "DEMO-0013",
+    "orderType": "1",
+    "createTime": "2026-09-25 12:33:21",
+    "beType": "1",
+    "beCode": "",
+    "storeCode": "DEMO13",
+    "storeName": "演示餐厅13",
+    "orderStatus": "订单已完成",
+    "realTotalAmount": "66.0",
+    "orderProductList": [
+     {
+      "productCode": "D13-0",
+      "productName": "麦麦脆汁鸡全肋",
+      "quantity": 1,
+      "comboItemList": []
+     },
+     {
+      "productCode": "D13-1",
+      "productName": "咸蛋黄鸡腿蛋月堡",
+      "quantity": 2,
+      "comboItemList": []
+     }
+    ]
+   },
+   {
+    "orderId": "DEMO-0014",
+    "orderType": "1",
+    "createTime": "2026-09-28 14:20:07",
+    "beType": "1",
+    "beCode": "",
+    "storeCode": "DEMO14",
+    "storeName": "演示餐厅14",
+    "orderStatus": "订单已完成",
+    "realTotalAmount": "15.0",
+    "orderProductList": [
+     {
+      "productCode": "D14-0",
+      "productName": "圆筒冰淇淋",
+      "quantity": 6,
+      "comboItemList": []
+     }
+    ]
+   },
+   {
+    "orderId": "DEMO-0015",
+    "orderType": "1",
+    "createTime": "2026-10-02 15:00:41",
+    "beType": "1",
+    "beCode": "",
+    "storeCode": "DEMO15",
+    "storeName": "演示餐厅15",
+    "orderStatus": "订单已完成",
+    "realTotalAmount": "47.0",
+    "orderProductList": [
+     {
+      "productCode": "D15-0",
+      "productName": "圆筒冰淇淋",
+      "quantity": 1,
+      "comboItemList": []
+     },
+     {
+      "productCode": "D15-1",
+      "productName": "麦门限定星空堡套餐",
+      "quantity": 1,
+      "comboItemList": []
+     }
+    ]
+   },
+   {
+    "orderId": "DEMO-0016",
+    "orderType": "1",
+    "createTime": "2026-10-05 12:08:55",
+    "beType": "1",
+    "beCode": "",
+    "storeCode": "DEMO16",
+    "storeName": "演示餐厅16",
+    "orderStatus": "订单已完成",
+    "realTotalAmount": "24.0",
+    "orderProductList": [
+     {
+      "productCode": "D16-0",
+      "productName": "板烧鸡腿堡",
+      "quantity": 1,
+      "comboItemList": []
+     },
+     {
+      "productCode": "D16-1",
+      "productName": "小杯玉米杯",
+      "quantity": 1,
+      "comboItemList": []
+     }
+    ]
+   }
+  ]
+ }
+}
