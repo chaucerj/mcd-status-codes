@@ -118,10 +118,11 @@ TEMPLATE = """<!DOCTYPE html>
   .legend-item .lv{{font-family:"SF Mono",monospace;color:var(--text);font-weight:600}}
   .legend-item .ln{{color:var(--dim)}}
 
-  /* 仪表盘 */
+  /* 仪表盘：容器必须与 SVG 显示尺寸一致（112×112），否则 inset:0 居中的
+     环心文字锚在 96 容器的 (48,48)，而圆环实际中心在 (56,56)，读数会偏左上 */
   .gauge-wrap{{display:flex;align-items:center;gap:16px}}
-  .gauge{{position:relative;width:96px;height:96px;flex:none}}
-  .gauge svg{{transform:rotate(-90deg)}}
+  .gauge{{position:relative;width:112px;height:112px;flex:none}}
+  .gauge svg{{display:block;transform:rotate(-90deg)}}
   .gauge .gv{{position:absolute;inset:0;display:flex;flex-direction:column;
     align-items:center;justify-content:center;gap:1px}}
   .gauge .gv b{{font-size:25px;font-weight:700;line-height:1;letter-spacing:-.5px;
