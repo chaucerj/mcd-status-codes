@@ -31,7 +31,8 @@ TEMPLATE = """<!DOCTYPE html>
   *{{margin:0;padding:0;box-sizing:border-box}}
   body{{background:var(--bg);color:var(--text);
     font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;padding:20px;max-width:1240px;margin:0 auto}}
-  .mono{{font-family:"SF Mono","JetBrains Mono",Consolas,monospace}}
+  .mono{{font-family:"SF Mono","JetBrains Mono",Consolas,monospace;
+    font-variant-numeric:tabular-nums}}
 
   .topbar{{display:flex;align-items:center;gap:14px;padding-bottom:12px;
     border-bottom:1px solid var(--border);margin-bottom:16px;flex-wrap:wrap}}
@@ -52,7 +53,8 @@ TEMPLATE = """<!DOCTYPE html>
   .panel-h h3{{font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.7px;text-transform:uppercase}}
   .dot{{width:7px;height:7px;border-radius:50%;flex:none}}
 
-  .stat{{font-size:30px;font-weight:700;line-height:1.15;letter-spacing:-.5px}}
+  .stat{{font-size:30px;font-weight:700;line-height:1.15;letter-spacing:-.5px;
+    font-variant-numeric:tabular-nums}}
   .stat small{{font-size:13px;color:var(--muted);font-weight:500}}
   .stat-note{{font-size:11px;color:var(--dim);margin-top:5px;line-height:1.5}}
 
@@ -122,7 +124,7 @@ TEMPLATE = """<!DOCTYPE html>
   .gauge svg{{transform:rotate(-90deg)}}
   .gauge .gv{{position:absolute;inset:0;display:flex;flex-direction:column;
     align-items:center;justify-content:center;gap:1px}}
-  .gauge .gv b{{font-size:23px;font-weight:700;line-height:1;letter-spacing:-.5px;
+  .gauge .gv b{{font-size:25px;font-weight:700;line-height:1;letter-spacing:-.5px;
     font-family:"SF Mono",Consolas,monospace}}
   .gauge .gv i{{font-size:9px;font-style:normal;color:var(--dim);letter-spacing:.4px}}
 
@@ -135,10 +137,7 @@ TEMPLATE = """<!DOCTYPE html>
     background:var(--dim);opacity:.7}}
   .scale-mark{{position:absolute;top:12px;width:2px;height:31px;background:var(--text);
     border-radius:1px;transform:translateX(-50%);box-shadow:0 0 0 2px var(--panel)}}
-  .scale-mark::after{{content:attr(data-v);position:absolute;top:-16px;left:50%;
-    transform:translateX(-50%);font-size:9px;color:var(--text);
-    font-family:"SF Mono",monospace;white-space:nowrap;font-weight:600}}
-  .scale-mark.p50{{height:22px;top:17px;background:var(--cyan)}}
+  .scale-mark.p50{{height:21px;top:17px;background:var(--cyan)}}
   .scale-mark.p99{{background:var(--purple)}}
   .scale-ticks{{position:absolute;top:37px;left:0;right:0;display:flex;
     justify-content:space-between;font-size:9px;color:var(--dim);
@@ -436,17 +435,14 @@ function distBar(m) {{
   const dist = Object.entries(m.dist).sort((a, b) => b[1] - a[1]);
   const total = dist.reduce((a, b) => a + b[1], 0) || 1;
   let x = 0;
+  const GAP = dist.length > 1 ? 0.6 : 0;   // 段间留缝，窄段不缝
   const segs = dist.map(([c, n]) => {{
     const w = n / total * 100;
     const pct = Math.round(n / total * 100);
-    // 段宽足够时把百分比写进色块内（白字），窄段只靠tooltip
-    const inner = w >= 16
-      ? `<text x="${{(x + w / 2).toFixed(2)}}" y="4.3" text-anchor="middle"
-          fill="#fff" fill-opacity=".92" style="font-size:2.6px;font-weight:700"
-          font-family="SF Mono,monospace">${{pct}}%</text>`
-      : '';
-    const seg = `<g><rect x="${{x.toFixed(2)}}" y="0" width="${{w.toFixed(2)}}"
-      height="100%" fill="${{COLOR[c]}}" rx="2"><title>${{SHORT[c]}} · ${{n}} 次 · ${{pct}}%</title></rect>${{inner}}</g>`;
+    // 数值只走图例行与 tooltip：viewBox 非等比拉伸下段内文字必然变形
+    const g = w > GAP * 3 ? GAP / 2 : 0;
+    const seg = `<g><rect x="${{(x + g).toFixed(2)}}" y="0" width="${{(w - g * 2).toFixed(2)}}"
+      height="100%" fill="${{COLOR[c]}}" rx="2"><title>${{SHORT[c]}} · ${{n}} 次 · ${{pct}}%</title></rect></g>`;
     x += w;
     return seg;
   }}).join('');
@@ -487,8 +483,8 @@ function kcalScale() {{
     </div>
     <div class="scale-thr" style="left:${{pos(KCAL_OK)}}%" title="403 阈值 ${{KCAL_OK}} kcal"></div>
     <div class="scale-thr" style="left:${{pos(KCAL_OVERLOAD)}}%" title="500 阈值 ${{KCAL_OVERLOAD}} kcal"></div>
-    ${{p50 != null ? `<div class="scale-mark p50" data-v="P50 ${{p50}}" style="left:${{pos(p50)}}%"></div>` : ''}}
-    ${{p99 != null ? `<div class="scale-mark p99" data-v="P99 ${{p99}}" style="left:${{pos(p99)}}%"></div>` : ''}}
+    ${{p50 != null ? `<div class="scale-mark p50" style="left:${{pos(p50)}}%" title="P50 中位单餐 ${{p50}} kcal"></div>` : ''}}
+    ${{p99 != null ? `<div class="scale-mark p99" style="left:${{pos(p99)}}%" title="P99 ${{p99}} kcal"></div>` : ''}}
     <div class="scale-ticks">
       <span>0</span><span>${{KCAL_OK}}</span><span>${{KCAL_OVERLOAD}}</span>
     </div>
@@ -497,6 +493,8 @@ function kcalScale() {{
     <span class="legend-item"><span class="sw" style="background:rgba(55,135,45,.65)"></span><span class="ln">≤ ${{KCAL_OK}} → 200</span></span>
     <span class="legend-item"><span class="sw" style="background:rgba(224,131,0,.6)"></span><span class="ln">→ 403 营养署拒绝</span></span>
     <span class="legend-item"><span class="sw" style="background:rgba(226,77,66,.5)"></span><span class="ln">>${{KCAL_OVERLOAD}} → 500 过载</span></span>
+    ${{p50 != null ? `<span class="legend-item"><span class="sw" style="background:var(--cyan);width:2px;border-radius:0"></span><span class="lv">P50 ${{p50}}</span><span class="ln">kcal 中位单餐</span></span>` : ''}}
+    ${{p99 != null ? `<span class="legend-item"><span class="sw" style="background:var(--purple);width:2px;border-radius:0"></span><span class="lv">P99 ${{p99}}</span><span class="ln">kcal</span></span>` : ''}}
   </div>`;
 }}
 
@@ -541,8 +539,7 @@ function render(dim, logFilter, logPage) {{
       <div class="gauge-wrap">
         ${{gauge(m.uptime, 'var(--blue)')}}
         <div style="min-width:0">
-          <div class="stat mono" style="color:var(--blue);font-size:26px">${{m.uptime}}<small>%</small></div>
-          <div class="stat-note" style="margin-top:6px">
+          <div class="stat-note" style="margin-top:0;font-size:12px">
             近 ${{m.span}} ${{unit}}中仅 <strong style="color:var(--text)">${{m.ordered}}</strong> ${{unit}}有响应<br>
             你的身体服务可用性，可能还没有你负责的那个服务高
           </div>
@@ -752,7 +749,9 @@ if (s.collectionStatus === '404') {{
   render404();
 }} else {{
   // 三类交互状态彼此独立：统计维度 / 日志筛选 / 日志页码
-  let CURRENT = 'day';
+  // 维度支持 URL 深链（#week / #day），便于按视图分享与回访
+  const HASH_DIM = (location.hash || '').replace('#', '');
+  let CURRENT = HASH_DIM === 'week' ? 'week' : 'day';
   let LOG_FILTER = 'all';
   let LOG_PAGE = 1;
 
@@ -763,7 +762,7 @@ if (s.collectionStatus === '404') {{
     const dimBtn = e.target.closest('[data-dim]');
     if (dimBtn) {{
       const d = dimBtn.getAttribute('data-dim');
-      if (d !== CURRENT) {{ CURRENT = d; draw(); }}
+      if (d !== CURRENT) {{ CURRENT = d; history.replaceState(null, '', '#' + d); draw(); }}
       dimBtn.focus();
       return;
     }}
