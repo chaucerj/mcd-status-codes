@@ -9,25 +9,41 @@
 > 一眼看清吃了几次、吃得多重、哪里断了供。
 > 1024 程序员节 × 麦当劳官方 MCP 参赛作品。
 
+<p align="center">
+  <a href="https://chaucerj.github.io/mcd-status-codes/"><b>🎮 在线试玩面板（免Token、零安装）→</b></a>
+</p>
+
+<p align="center">
+  <a href="#star"><img src="https://img.shields.io/github/stars/chaucerj/mcd-status-codes?style=social" alt="Star"></a>
+  <a href="#star"><img src="https://img.shields.io/github/forks/chaucerj/mcd-status-codes?style=social" alt="Fork"></a>
+  <a href="https://github.com/M-China/mcd-developer-innovation-challenge/issues/264"><img src="https://img.shields.io/badge/%E5%B7%B2%E9%80%89%E5%AE%A2%E5%8F%82%E8%B5%9B-1024-%E7%A8%8B%E5%BA%8F%E5%91%98%E8%8A%82-ffc700?style=social" alt="已入选参赛"></a>
+</p>
+
 | 项目信息 | 内容 |
 |---|---|
 | **赛事** | 麦当劳中国程序员节创意开发大赛（[活动仓库](https://github.com/M-China/mcd-developer-innovation-challenge)） |
 | **形态** | Agent Skill + 本地 Python 确定性分类器 + 单文件 HTML 监控面板 |
 | **数据来源** | 麦当劳中国官方 MCP（`https://mcp.mcd.cn`），只读采集 |
 | **运行环境** | Python 3.10+，纯标准库，零第三方依赖 |
+| **在线试玩** | [chaucerj.github.io/mcd-status-codes](https://chaucerj.github.io/mcd-status-codes/) —— 免 Token、零安装 |
 | **仓库导航** | 见 [HOMEPAGE.md](HOMEPAGE.md) |
 
 ![常规模式监控面板](docs/screenshot-normal.png)
 
-*（按天维度：89 天里9 天有响应，Uptime 10.1%）*
+*（按天维度：89 天里 9 天有响应，Uptime 10.1%）*
+
+<details>
+<summary><b>▸ 点击展开：周维度 / 1024 限定模式</b></summary>
 
 ![周维度监控面板](docs/screenshot-week.png)
 
-*（切到按周维度：14 周里6 周有响应，Uptime 42.9% —— 同一份数据的另一种观察粒度）*
+*（切到按周维度：14 周里 6 周有响应，Uptime 42.9% —— 同一份数据的另一种观察粒度）*
 
 ![1024 限定模式](docs/screenshot-1024.png)
 
 *（10/20–10/26 活动窗口自动解锁：把摄入总量按 1 kcal = 1 Byte、1024 进制换算为流量单位）*
+
+</details>
 
 ---
 
@@ -203,3 +219,31 @@ Grafana 暗色科技风，单文件 HTML 零依赖。图表全部为**手绘 SVG
 ## 参赛说明
 
 本作品为麦当劳程序员节创意开发大赛参赛项目，基于麦当劳中国官方 MCP（`https://mcp.mcd.cn`）开发，独立开发、非官方产品。MCP 接入说明见 [MCP_INTEGRATION.md](MCP_INTEGRATION.md)。
+
+---
+
+<h2 id="star" align="center">喜欢这份大盘的话，帮我点一下 ⭐</h2>
+
+<p align="center">
+  <a href="https://github.com/chaucerj/mcd-status-codes/stargazers"><img src="https://img.shields.io/github/stars/chaucerj/mcd-status-codes?style=for-the-badge&labelColor=ffc700" alt="Star"></a>
+  <a href="https://github.com/chaucerj/mcd-status-codes/network/members"><img src="https://img.shields.io/github/forks/chaucerj/mcd-status-codes?style=for-the-badge&labelColor=8A2BE2" alt="Fork"></a>
+  <a href="https://github.com/chaucerj/mcd-status-codes/watchers"><img src="https://img.shields.io/github/watchers/chaucerj/mcd-status-codes?style=for-the-badge&labelColor=555" alt="Watch"></a>
+</p>
+
+这是我在麦当劳程序员节创意开发大赛的参赛作品，**正在按 Star 数排名中**。
+
+如果你也想看自己的麦当劳账户长什么样——
+
+- **点 ⭐ Star**：这是对我最直接的认可，也是让作品被更多人看到的唯一方式
+- **点 🍴 Fork**：拿去改成你自己的版本，用你自己的订单数据跑一遍
+- **点 👀 Watch**：后续迭代（更多状态码、更多维度）我会在这里通知
+
+**不用注册任何东西、不需要 Token、点一下就好。** 三秒钟。
+
+<p align="center">
+  <a href="https://github.com/chaucerj/mcd-status-codes"><b>⭐ Star 这个仓库</b></a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/chaucerj/mcd-status-codes/issues/264"><b>查看参赛 Issue</b></a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/M-China/mcd-developer-innovation-challenge"><b>查看官方活动仓库</b></a>
+</p>
