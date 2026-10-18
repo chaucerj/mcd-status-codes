@@ -252,21 +252,37 @@ def probe_loop(orders, meta, prefs, ops_prev, nutrition):
                 probes.append(_probe(sig, key, "599", now, "caffeine",
                                      "午后咖啡窗关闭仍未摄入咖啡因——下午的 CPU 降频已记录在案"))
 
-        elif key == "afternoon_snack" and meta.get("profileSet") and meta.get("goal") == "cut":
+        elif key == "afternoon_snack" and meta.get("profileSet") and meta.get("goal") in ("cut", "bulk"):
             gap = meta["target"] - intake_today
-            if gap < 0:
-                probes.append(_probe(sig, key, "412", now, "metabolic",
-                                     f"今日已超减脂预算 {-gap} kcal，下午茶建议被你的目标否决——"
-                                     f"这不是失败，是 412 在保护你"))
-            elif gap >= 250:
-                snack = pick_snack(nutrition, min(gap, meta["windows"]["snack"] * 2))
-                payload = (f"缺口 {gap} kcal：建议 {snack[0]}（{snack[1]} kcal / 蛋白 {snack[2]}g）"
-                           if snack else f"缺口 {gap} kcal：可补给轻量蛋白类加餐")
-                probes.append(_probe(sig, key, "103", now, "metabolic",
-                                     f"减脂场景午后补给窗：{payload}，维持下午体力"))
+            if meta["goal"] == "bulk":
+                # 增肌：gap = 距盈余目标还差多少；不足则 103 盈余加餐，足够则 204
+                if gap <= 0:
+                    probes.append(_probe(sig, key, "204", now, "metabolic",
+                                         f"今日盈余目标已达成（+{-gap} kcal），增肌窗口主动静默"))
+                elif gap >= 250:
+                    snack = pick_snack(nutrition, gap)
+                    payload = (f"距盈余目标还差 {gap} kcal：建议 {snack[0]}"
+                               f"（{snack[1]} kcal / 蛋白 {snack[2]}g）" if snack
+                               else f"距盈余目标还差 {gap} kcal：建议蛋白加餐")
+                    probes.append(_probe(sig, key, "103", now, "metabolic",
+                                         f"增肌场景午后补给窗：{payload}"))
+                else:
+                    probes.append(_probe(sig, key, "204", now, "metabolic",
+                                         f"距盈余目标仅差 {gap} kcal，正餐即可覆盖，主动静默"))
             else:
-                probes.append(_probe(sig, key, "204", now, "metabolic",
-                                     f"今日摄入与预算吻合（缺口仅 {gap} kcal），本窗口无需补给，主动静默"))
+                if gap < 0:
+                    probes.append(_probe(sig, key, "412", now, "metabolic",
+                                         f"今日已超减脂预算 {-gap} kcal，下午茶建议被你的目标否决——"
+                                         f"这不是失败，是 412 在保护你"))
+                elif gap >= 250:
+                    snack = pick_snack(nutrition, min(gap, meta["windows"]["snack"] * 2))
+                    payload = (f"缺口 {gap} kcal：建议 {snack[0]}（{snack[1]} kcal / 蛋白 {snack[2]}g）"
+                               if snack else f"缺口 {gap} kcal：可补给轻量蛋白类加餐")
+                    probes.append(_probe(sig, key, "103", now, "metabolic",
+                                         f"减脂场景午后补给窗：{payload}，维持下午体力"))
+                else:
+                    probes.append(_probe(sig, key, "204", now, "metabolic",
+                                         f"今日摄入与预算吻合（缺口仅 {gap} kcal），本窗口无需补给，主动静默"))
 
     # 522：最近连续 2 条探活超时 → 升级失联告警
     tail = [p for p in probes if p["status"] in ("timed_out", "open")][-2:]

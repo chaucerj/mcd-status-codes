@@ -160,6 +160,8 @@ TEMPLATE = """<!DOCTYPE html>
   /* 两级页面导航 */
   .tabs{{display:inline-flex;gap:2px;padding:2px;background:var(--panel2);
     border:1px solid var(--border);border-radius:3px;margin-bottom:14px}}
+  .pos-row{{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}}
+  .pos-hint{{font-size:11px;color:var(--dim)}}
   .tab-btn{{appearance:none;border:0;background:transparent;color:var(--muted);
     font-size:12px;font-family:inherit;padding:5px 16px;border-radius:2px;
     cursor:pointer;transition:all .15s ease;line-height:1.5;display:flex;
@@ -288,6 +290,54 @@ TEMPLATE = """<!DOCTYPE html>
 <script>
 const DATA = __DATA__;
 const OPS = __OPS__;
+const TOPPROTEIN = __TOPPROTEIN__;
+let POS = (() => {{
+  try {{ const v = localStorage.getItem('mcd.pos'); if (v) return v; }} catch (e) {{}}
+  return (OPS.metabolic && OPS.metabolic.goal && OPS.metabolic.goal !== 'keep')
+    ? OPS.metabolic.goal : 'keep';
+}})();
+
+function posBody() {{
+    const today = (DATA.orders || []).filter(o => o.date === new Date().toISOString().slice(0, 10));
+    const intake = today.reduce((a, o) => a + (o.kcal || 0), 0);
+    const protein = today.reduce((a, o) => a + (o.protein || 0), 0);
+    const mt = OPS.metabolic || {{}};
+    const breachesAll = (DATA.orders || []).flatMap(o => o.breaches || []);
+    const cnt = k => breachesAll.filter(b => b === k).length;
+    const cafToday = today.filter(o => o.items.some(i => ['咖啡', '拿铁', '美式', '摩卡'].some(k => i.name.includes(k)))).length;
+    const t599 = (OPS.probes || []).filter(p => p.code === '599').length;
+    const t418 = (DATA.orders || []).filter(o => o.httpStatus === '418').length;
+    const row = (k, v) => `<div class="meta-row"><span class="k">${{k}}</span><span class="v">${{v}}</span></div>`;
+
+    if (POS === 'cut') {{
+      const gap = mt.profileSet ? mt.target - intake : null;
+      return `<div class="meta-row"><span class="k">今日已摄入 / 目标</span><span class="v">${{intake}} / ${{mt.profileSet ? mt.target : '—'}} kcal</span></div>
+        <div class="gapbar"><div style="width:${{mt.profileSet ? Math.min(100, Math.round(intake / mt.target * 100)) : 0}}%;background:var(--blue)"></div></div>
+        ${{row('本期热量超配额', cnt('calorie_over') + ' 次')}}
+        ${{row('本期热量过载（P1）', cnt('calorie_overload') + ' 次')}}
+        ${{row('本期钠超标', cnt('sodium_over') + ' 次')}}
+        <div class="stat-note" style="margin-top:8px">针对性策略：午后补给窗按 TDEE 缺口下发 103 下午茶建议；超预算自动 412 拦截；告警侧重热量与钠。</div>`;
+    }}
+    if (POS === 'worker') {{
+      return `<div class="meta-row"><span class="k">今日咖啡因摄入</span><span class="v">${{cafToday}} 单</span></div>
+        ${{row('咖啡窗超时（599）', t599 + ' 次')}}
+        ${{row('纯饮料单（418）', t418 + ' 次')}}
+        <div class="stat-note" style="margin-top:8px">针对性策略：晨间 09:30–11:00 / 午后 13:30–15:30 两个咖啡窗，该喝没喝判 599；纯饮料单判 418 茶壶协议。</div>`;
+    }}
+    if (POS === 'bulk') {{
+      const w = (OPS.prefsLoaded || {{}}).profile && OPS.prefsLoaded.profile.weight;
+      const proteinTarget = w ? Math.round(w * 1.6) : null;
+      return `<div class="meta-row"><span class="k">今日蛋白质</span><span class="v">${{protein}} g${{proteinTarget ? ' / 目标 ' + proteinTarget + ' g（1.6g/kg）' : ''}}</span></div>
+        ${{row('热量盈余空间', mt.profileSet ? (mt.target - intake) + ' kcal' : '—')}}
+        <div class="panel-h" style="margin-top:11px"><span class="dot" style="background:var(--green)"></span><h3>高蛋白补给 Top3（营养表）</h3></div>
+        ${{TOPPROTEIN.map(x => row(`${{x.name}}（${{x.kcal}} kcal）`, `${{x.protein}} g 蛋白`)).join('')}}
+        <div class="stat-note" style="margin-top:8px">针对性策略：午后补给窗按盈余缺口下发 103 加餐建议，蛋白目标按 1.6g/kg 估算。</div>`;
+    }}
+    return `<div class="meta-row"><span class="k">Uptime</span><span class="v">${{(DATA.summary || {{}}).uptime ?? '—'}}%</span></div>
+      ${{row('累计摄入流量', (DATA.summary || {{}}).flowUnit || '—')}}
+      <div class="stat-note" style="margin-top:8px">均衡视角：切到「减脂 / 增肌 / 打工人」定位，面板与探活策略会针对性调整（本机记忆，配合对 Agent 说「切换到减脂定位」可同步探活档案）。</div>`;
+}}
+
 const FORCE_1024 = __FORCE_1024__;
 const CODES = __CODES__;
 const KCAL_OK = __KCAL_OK__;
@@ -1100,6 +1150,18 @@ function render(dim, logFilter, logPage) {{
     pagenav('overview') +
     `<div class="grid4">${{hero}}</div>
     <div class="grid">${{second}}</div>
+    <div class="panel" style="margin-bottom:10px">
+      <div class="panel-h row">
+        <div><span class="dot" style="background:var(--yellow)"></span><h3>定位视图 · 针对性优化</h3></div>
+        <div class="seg" role="radiogroup" aria-label="场景定位">
+          ${{[['keep', '均衡'], ['cut', '减脂'], ['bulk', '增肌'], ['worker', '打工人']]
+            .map(([v, t]) => `<button class="seg-btn${{POS === v ? ' on' : ''}}"
+              role="radio" aria-checked="${{POS === v}}" data-pos="${{v}}"
+              type="button">${{t}}</button>`).join('')}}
+        </div>
+      </div>
+      <div id="posBody">${{posBody()}}</div>
+    </div>
     <div class="grid4" style="margin-bottom:10px">
       <div class="panel">
         <div class="panel-h"><span class="dot" style="background:var(--yellow)"></span><h3>监控告警</h3></div>
@@ -1177,6 +1239,10 @@ function render(dim, logFilter, logPage) {{
 if (s.collectionStatus === '404') {{
   render404();
 }} else {{
+  // 五类交互状态：页面层级 / 统计维度 / 日志筛选 / 日志页码 / 场景定位
+  // 定位优先取本机记忆（localStorage），未设置时回落到 prefs.profile.goal
+
+
   // 四类交互状态彼此独立：页面层级 / 统计维度 / 日志筛选 / 日志页码
   // 全部支持 URL 深链：#gallery 图鉴页，#day / #week 监控台维度
   const HASH = (location.hash || '').replace('#', '');
@@ -1210,6 +1276,18 @@ if (s.collectionStatus === '404') {{
         history.replaceState(null, '', pg === 'gallery' ? '#gallery' : '#' + CURRENT);
         draw();
         window.scrollTo(0, 0);
+      }}
+      return;
+    }}
+    // 场景定位（本机记忆；探活档案同步由 Agent 写 prefs 完成）
+    const posBtn = e.target.closest('[data-pos]');
+    if (posBtn) {{
+      const v = posBtn.getAttribute('data-pos');
+      if (v !== POS) {{
+        POS = v;
+        localStorage.setItem('mcd.pos', v);
+        const body = document.getElementById('posBody');
+        if (body) body.innerHTML = posBody();
       }}
       return;
     }}
@@ -1287,6 +1365,14 @@ def main():
     # 若顺序颠倒，注入的 JSON 中嵌套对象天然的 }} 会被误还原，导致数据损坏。
     tpl = re.sub(r"\{\{|\}\}", lambda m: m.group(0)[0], TEMPLATE)
 
+    try:
+        nutr = json.loads((base / "data" / "nutrition_foods.json").read_text(encoding="utf-8"))
+        top_protein = sorted(
+            ({"name": r["productName"], "protein": float(r["protein"] or 0),
+              "kcal": int(r["energyKcal"] or 0)} for r in nutr),
+            key=lambda x: -x["protein"])[:3]
+    except Exception:
+        top_protein = []
     ops_path = base / "data" / "ops.json"
     ops = json.loads(ops_path.read_text(encoding="utf-8")) if ops_path.exists() else {
         "loopCount": 0, "level": {"score": 0, "level": "实习 on-call",
@@ -1298,6 +1384,7 @@ def main():
     html = (tpl
             .replace("__DATA__", json.dumps(data, ensure_ascii=False))
             .replace("__OPS__", json.dumps(ops, ensure_ascii=False))
+            .replace("__TOPPROTEIN__", json.dumps(top_protein, ensure_ascii=False))
             .replace("__CODES__", json.dumps(codes_view, ensure_ascii=False))
             .replace("__KCAL_OK__", str(KCAL_OK))
             .replace("__KCAL_OVERLOAD__", str(KCAL_OVERLOAD))

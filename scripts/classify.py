@@ -97,11 +97,13 @@ def classify_order(orders_raw: list, nutrition_index: dict) -> list:
                 "matched": row is not None,
                 "kcal": int(row["energyKcal"]) * qty if row else None,
                 "sodium": int(row["sodium"]) * qty if row else None,
+                "protein": round(float(row["protein"]) * qty) if row else None,
             })
 
         matched = [i for i in items if i["matched"]]
         kcal = sum(i["kcal"] for i in matched) if matched else None
         sodium = sum(i["sodium"] for i in matched) if matched else None
+        protein = sum(i["protein"] for i in matched if i["protein"] is not None) if matched else None
         total_qty = sum(i["qty"] for i in items)
         signature = ",".join(sorted(f"{normalize(i['name'])}x{i['qty']}" for i in items))
         date_key = dt.strftime("%Y-%m-%d")
@@ -164,6 +166,7 @@ def classify_order(orders_raw: list, nutrition_index: dict) -> list:
             "items": items,
             "kcal": kcal,
             "sodium": sodium,
+            "protein": protein,
             "matchCoverage": f"{len(matched)}/{len(items)}" if items else "0/0",
             "breaches": breaches,
             "httpStatus": status,

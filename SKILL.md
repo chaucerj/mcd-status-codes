@@ -59,6 +59,14 @@ python3 scripts/report.py      # 单文件 dashboard.html
 
 用户口述体重/身高/年龄/性别/活动量/场景（减脂 cut、增肌 bulk、保持 keep、打工人醒脑 worker）→ 写入 `data/prefs.json` 的 `profile` 区。**该文件已被 .gitignore，敏感数据绝不入库**。声明偏好（忌口/目标上限）写 goals/tastes 区；`learned` 区由 evolve.py 自动维护，勿手改。
 
+### 第 3.5 步：场景定位（控制台针对性展示）
+
+面板顶部「定位视图」支持四种定位：均衡 / 减脂 / 增肌 / 打工人——每种定位有专属指标卡
+（减脂=缺口与配额执行、增肌=蛋白目标与热量盈余、打工人=咖啡窗状态与 599 计数）。
+- 用户在面板上切换：存 localStorage（本机），立即生效
+- 用户对 Agent 说「切换到减脂定位」→ Agent 写 `data/prefs.json` 的 `profile.goal`，
+  下次 evolve.py 起探活窗口按定位调整（减脂/增肌启用午后补给窗，打工人侧重咖啡窗）
+
 ### 第 4 步：探活闭环维护
 
 - 窗口规则与探活码触发条件见 [references/state-codes.md](references/state-codes.md) 探活窗口一节
