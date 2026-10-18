@@ -30,6 +30,24 @@
 
 ![常规模式监控面板](docs/screenshot-normal.png)
 
+## 两级页面
+
+顶部导航在两个层级间切换（支持 URL 深链：`#gallery` 直达图鉴页）：
+
+- **监控台**（一级）：Uptime 仪表、摄入时间轴、状态码构成、热量分位、监控告警、SLA 分级、请求日志。日志展开后每件商品带官方缩略图与单件热量迷你条，最新一单默认展开。
+- **商品图鉴**（二级，`#gallery`）：同一商品跨单聚合的图形化营养账本——官方商品图、单件 kcal 热量条（≤800 绿 / 800–1500 琥珀 / >1500 红，对应 200/403/500 三档）、钠合计、出现轨迹。营养账本查无此品的商品以虚线卡与首字磁贴呈现 404。
+- **运维战情室**（三级，`#ops`）：**重生之我在麦门世界运维**——你是自己身体服务的 on-call 工程师。事故复盘（每笔 4xx/5xx 订单生成 INC 编号 / P1-P3 定级 / 根因 / 改进建议的 postmortem）、**待处理探活队列**（Agent 主动提醒的落地面）、代谢模型卡（BMR/TDEE/分餐预算/探活窗口）、运维对象口味画像、SRE 职级晋升通道（实习 on-call → 麦门世界 CTO）。
+
+**v3.0 双方向状态码宪法**：ingest 摄入方向 14 码（你的身体对每次摄入的响应）+ probe 探活方向 6 码（103 Early Hints 补给建议下发 / 204 主动静默 / 412 被目标否决 / 425 过早打扰 / 599 建议窗口超时 / 522 连续窗口失联）。Agent 按 Mifflin-St Jeor 代谢模型（体重/身高/年龄 → BMR → TDEE → 场景目标 → 分餐预算）在三个补给窗口主动探活：晨间/午后咖啡窗监测咖啡因摄入（打工人醒脑），午后补给窗按 TDEE 缺口决定是否建议下午茶（减脂人群），窗口关闭未采纳即 599 超时、连续失联升级 522。形态上致敬 @f-cfan 饭点雷达的「它来找你」——但信号源不同：它盯券池，我们盯你的代谢缺口。
+
+![商品图鉴](docs/screenshot-gallery.png)
+
+![运维战情室](docs/screenshot-ops.png)
+
+## Agent 自进化循环
+
+每次运行 `python3 scripts/evolve.py` 就是一次「交接班」：事故复盘、口味画像、职级、洞察全部由**确定性规则**重新计算（数值不进 LLM、逐条可复算），学习结果沉淀进 `data/prefs.json`——越用越懂你。Agent（WorkBuddy / Claude 等）负责编排循环、播报变化、把你口述的偏好（忌口 / 目标 / 预算）写进档案。
+
 *（按天维度：89 天里 9 天有响应，Uptime 10.1%）*
 
 <details>
@@ -86,6 +104,10 @@
 git clone https://github.com/chaucerj/mcd-status-codes.git
 cd mcd-status-codes
 ```
+
+### 作为 Agent Skill 导入
+
+本仓库即 Skill 目录（`SKILL.md` 在根目录，符合 Agent Skill 规范）。克隆后在 WorkBuddy / Claude / Cursor 等客户端中将仓库目录作为 Skill 加载，Agent 会按 `SKILL.md` 的值班手册工作：会话开始先播报待处理探活，再按需采集/分类/进化/出面板。`references/` 下有两份速查：`state-codes.md`（20 码语义全表，由 codes.py 单一事实源生成）与 `agent-playbook.md`（Agent 播报手册：开场模板、偏好代笔脚本、探活闭环话术）。
 
 配置 MCP Token（在 [open.mcd.cn/mcp](https://open.mcd.cn/mcp) 登录 → 控制台 → 激活获取）：
 

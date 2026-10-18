@@ -157,6 +157,94 @@ TEMPLATE = """<!DOCTYPE html>
   .seg-btn.on{{background:var(--blue);color:#fff;font-weight:600}}
   .seg-btn:focus-visible{{outline:2px solid var(--cyan);outline-offset:1px}}
 
+  /* 两级页面导航 */
+  .tabs{{display:inline-flex;gap:2px;padding:2px;background:var(--panel2);
+    border:1px solid var(--border);border-radius:3px;margin-bottom:14px}}
+  .tab-btn{{appearance:none;border:0;background:transparent;color:var(--muted);
+    font-size:12px;font-family:inherit;padding:5px 16px;border-radius:2px;
+    cursor:pointer;transition:all .15s ease;line-height:1.5;display:flex;
+    align-items:center;gap:6px}}
+  .tab-btn:hover{{color:var(--text)}}
+  .tab-btn.on{{background:var(--blue);color:#fff;font-weight:600}}
+  .tab-btn:focus-visible{{outline:2px solid var(--cyan);outline-offset:1px}}
+  .tab-btn .n{{font-family:"SF Mono",monospace;font-size:10px;opacity:.75}}
+
+  /* 商品图鉴 */
+  .gal-grid{{display:grid;grid-template-columns:repeat(auto-fill,minmax(236px,1fr));
+    gap:12px;margin-top:14px}}
+  .gal-card{{background:var(--panel);border:1px solid var(--border);border-radius:4px;
+    padding:12px;display:flex;flex-direction:column;gap:10px}}
+  .gal-card.nomatch{{border-style:dashed}}
+  .gal-head{{display:flex;gap:10px;align-items:center;min-width:0}}
+  .thumbbox{{position:relative;border-radius:4px;overflow:hidden;flex:none;
+    background:var(--panel2)}}
+  .thumbbox img{{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}}
+  .fallback-tile{{position:absolute;inset:0;display:flex;align-items:center;
+    justify-content:center;font-weight:700;letter-spacing:1px}}
+  .gal-name{{font-size:13px;font-weight:600;line-height:1.35;word-break:break-all}}
+  .gal-meta{{font-size:11px;color:var(--dim);margin-top:3px;line-height:1.6}}
+  .kbar{{height:5px;background:var(--panel2);border-radius:3px;overflow:hidden;flex:1}}
+  .kbar>div{{height:100%;border-radius:3px}}
+  .krow{{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted)}}
+  .krow .kv{{font-family:"SF Mono",monospace;color:var(--text);font-weight:600}}
+  .gal-foot{{display:flex;justify-content:space-between;align-items:center;
+    font-size:11px;margin-top:auto;padding-top:9px;border-top:1px solid var(--border)}}
+  .state-chip{{display:inline-block;padding:2px 8px;border-radius:2px;
+    font-size:10px;font-weight:700;font-family:"SF Mono",monospace;white-space:nowrap}}
+  .item-row{{display:flex;align-items:center;gap:8px;padding:3px 0}}
+  .item-row .nm{{flex:1;min-width:0;font-size:11px;white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis}}
+
+  /* 运维战情室（重生之我在麦门世界运维） */
+  .reborn{{display:flex;align-items:center;gap:14px;padding:16px 18px;
+    background:linear-gradient(120deg,rgba(50,116,217,.12),rgba(255,184,57,.06));
+    border:1px solid var(--border);border-radius:4px;margin-bottom:12px}}
+  .reborn .lv-big{{font-size:26px;font-weight:800;letter-spacing:-.5px;color:var(--yellow)}}
+  .reborn .lv-sub{{font-size:12px;color:var(--muted);line-height:1.6}}
+  .lvbar{{height:6px;background:var(--panel2);border-radius:3px;overflow:hidden;margin-top:7px}}
+  .lvbar>div{{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--blue),var(--yellow))}}
+  .pm-card{{border:1px solid var(--border);border-left:3px solid var(--red);
+    border-radius:3px;padding:12px 14px;margin-bottom:10px;background:var(--panel2)}}
+  .pm-card.sev2{{border-left-color:var(--orange)}}
+  .pm-card.sev3{{border-left-color:var(--yellow)}}
+  .pm-head{{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px}}
+  .pm-id{{font-family:"SF Mono",monospace;font-weight:700;color:var(--text)}}
+  .sev-chip{{padding:1px 8px;border-radius:2px;font-size:10px;font-weight:800;
+    font-family:"SF Mono",monospace;color:#fff}}
+  .pm-new{{background:var(--red);color:#fff;padding:1px 7px;border-radius:2px;
+    font-size:10px;font-weight:800}}
+  .pm-body{{font-size:12px;color:var(--muted);line-height:1.7;margin-top:7px}}
+  .pm-body b{{color:var(--text);font-weight:600}}
+  .taste-row{{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:12px}}
+  .taste-row .lb{{width:88px;flex:none;color:var(--muted)}}
+  .taste-row .barwrap{{flex:1;height:14px;background:var(--panel2);
+    border-radius:2px;overflow:hidden}}
+  .taste-row .barwrap>div{{height:100%;border-radius:2px;
+    background:linear-gradient(90deg,var(--purple),var(--cyan))}}
+  .taste-row .ct{{width:52px;text-align:right;font-family:"SF Mono",monospace;
+    color:var(--text);font-weight:600}}
+  .evo-item{{display:flex;gap:9px;padding:6px 0;font-size:12px;line-height:1.6;
+    border-bottom:1px dashed var(--border)}}
+  .evo-item:last-child{{border-bottom:0}}
+  .evo-n{{font-family:"SF Mono",monospace;font-weight:700;color:var(--cyan);
+    flex:none;width:34px}}
+  .probe-item{{display:flex;gap:8px;align-items:flex-start;padding:8px 10px;
+    background:var(--panel2);border-radius:3px;margin-bottom:6px;font-size:12px;
+    line-height:1.6}}
+  .probe-item .pn{{font-family:"SF Mono",monospace;font-weight:700;font-size:10px;
+    padding:1px 7px;border-radius:2px;color:#fff;flex:none;margin-top:1px}}
+  .probe-item .pd{{flex:1;min-width:0}}
+  .probe-item .pw{{color:var(--dim);font-size:10px;margin-top:2px}}
+  .st-chip{{padding:1px 7px;border-radius:2px;font-size:10px;font-weight:700;
+    font-family:"SF Mono",monospace;flex:none}}
+  .meta-row{{display:flex;justify-content:space-between;font-size:12px;
+    padding:5px 0;border-bottom:1px dashed var(--border)}}
+  .meta-row .k{{color:var(--muted)}}
+  .meta-row .v{{font-family:"SF Mono",monospace;font-weight:600;color:var(--text)}}
+  .gapbar{{height:10px;background:var(--panel2);border-radius:3px;overflow:hidden;
+    margin-top:8px}}
+  .gapbar>div{{height:100%;border-radius:3px}}
+
   .panel-h.row{{display:flex;align-items:center;justify-content:space-between;gap:10px}}
   .panel-h.row > div{{display:flex;align-items:center;gap:7px;min-width:0}}
 
@@ -199,6 +287,7 @@ TEMPLATE = """<!DOCTYPE html>
 <div id="app"></div>
 <script>
 const DATA = __DATA__;
+const OPS = __OPS__;
 const FORCE_1024 = __FORCE_1024__;
 const CODES = __CODES__;
 const KCAL_OK = __KCAL_OK__;
@@ -224,6 +313,99 @@ function topbar(cls, text) {{
     <span class="badge${{cls}}">${{text}}</span>
   </div>
   <div class="meta mono">数据采集 ${{DATA.generatedAt}} · 样本口径：麦当劳 MCP order-list 近期订单 · 全部指标确定性可复算 · 语义唯一来源 scripts/codes.py</div>`;
+}}
+
+/* ── 两级页面导航：监控台 / 商品图鉴（hash 路由） ────────────────── */
+function pagenav(active) {{
+  const itemCount = (DATA.orders || []).reduce((a, o) => a + (o.items || []).length, 0);
+  const tabs = [
+    ['overview', '监控台', ''],
+    ['gallery', '商品图鉴', itemCount],
+    ['ops', '运维战情室', OPS.loopCount || ''],
+  ];
+  return `<nav class="tabs" role="tablist" aria-label="页面层级">
+    ${{tabs.map(([v, t, n]) => `<button class="tab-btn${{active === v ? ' on' : ''}}"
+      role="tab" aria-selected="${{active === v}}" data-pagebtn="${{v}}" type="button">${{t}}${{n !== '' ? `<span class="n">${{n}}</span>` : ''}}</button>`).join('')}}
+  </nav>`;
+}}
+
+/** 商品缩略图：官方图优先，加载失败或无图时回退到品名首字磁贴（色调由品名确定性生成） */
+function thumbHtml(i, size) {{
+  const hue = [...i.name].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
+  return `<span class="thumbbox" style="width:${{size}}px;height:${{size}}px">
+    <span class="fallback-tile" style="background:hsl(${{hue}} 32% 24%);color:hsl(${{hue}} 58% 66%);
+      font-size:${{Math.round(size * 0.42)}}px">${{esc(i.name.slice(0, 1))}}</span>
+    ${{i.img ? `<img src="${{i.img}}" alt="${{esc(i.name)}}" loading="lazy" onerror="this.remove()">` : ''}}
+  </span>`;
+}}
+
+/** 单件热量迷你条：以 800 kcal（200/403 分界）为满量程，超档变色 */
+function kbarMini(kcal) {{
+  if (kcal == null) return '';
+  const w = Math.min(100, kcal / KCAL_OK * 100).toFixed(1);
+  const col = kcal <= KCAL_OK ? 'var(--green)' : (kcal <= KCAL_OVERLOAD ? 'var(--orange)' : 'var(--red)');
+  return `<span class="kbar" title="单件 ${{kcal}} kcal" style="max-width:64px"><div style="width:${{w}}%;background:${{col}}"></div></span>`;
+}}
+
+/* ── 二级页：商品图鉴 —— 按商品聚合的图形化营养账本 ────────────────
+   口径与监控台一致：kcal/件 以 800 分档着色；404 商品用虚线卡与首字磁贴，
+   承认「官方账本查无此品」本身就是数据的一部分。 */
+function renderGallery() {{
+  const agg = {{}};
+  (DATA.orders || []).forEach(o => (o.items || []).forEach(i => {{
+    if (!agg[i.name]) agg[i.name] = {{ name: i.name, img: i.img || '', matched: i.matched,
+      qty: 0, n: 0, kcal: 0, sodium: 0, first: o.date, last: o.date }};
+    const a = agg[i.name];
+    a.qty += i.qty; a.n += 1;
+    if (i.matched) {{ a.kcal += (i.kcal || 0); a.sodium += (i.sodium || 0); }}
+    if (o.date < a.first) a.first = o.date;
+    if (o.date > a.last) a.last = o.date;
+  }}));
+  const list = Object.values(agg).sort((a, b) => b.qty - a.qty || b.n - a.n);
+  const okCount = list.filter(x => x.matched).length;
+  const totalQty = list.reduce((a, x) => a + x.qty, 0);
+
+  const cards = list.map(x => {{
+    const per = x.matched && x.qty ? Math.round(x.kcal / x.qty) : null;
+    const col = x.matched ? 'var(--green)' : 'var(--red)';
+    return `<div class="gal-card${{x.matched ? '' : ' nomatch'}}">
+      <div class="gal-head">
+        ${{thumbHtml(x, 56)}}
+        <div style="min-width:0">
+          <div class="gal-name">${{esc(x.name)}}</div>
+          <div class="gal-meta">×${{x.qty}} 件次 · 出现 ${{x.n}} 单<br>首次 ${{x.first.slice(5)}} · 最近 ${{x.last.slice(5)}}</div>
+        </div>
+      </div>
+      ${{x.matched ? `
+        <div class="krow">
+          <span class="kv">${{per}}</span><span>kcal/件</span>
+          ${{kbarMini(per)}}
+          <span style="margin-left:auto">钠合计 <span class="kv">${{x.sodium}}</span> mg</span>
+        </div>
+        <div class="krow"><span>累计 <span class="kv">${{x.kcal}}</span> kcal</span></div>`
+      : `<div class="stat-note" style="margin:0">官方营养账本（160 项标准单品）查无此品，无法计量</div>`}}
+      <div class="gal-foot">
+        <span class="state-chip" style="background:${{col}};color:#fff">${{x.matched ? '可计量' : '404 查无此品'}}</span>
+        <span style="color:var(--dim)">${{x.matched ? '营养账本已收录' : '营养账本缺口'}}</span>
+      </div>
+    </div>`;
+  }}).join('');
+
+  document.getElementById('app').innerHTML =
+    topbar('', '商品图鉴') +
+    pagenav('gallery') +
+    `<div class="panel">
+      <div class="panel-h row" style="margin-bottom:4px">
+        <div><span class="dot" style="background:var(--cyan)"></span><h3>营养账本 · 商品视角</h3></div>
+        <span class="stat-note" style="margin:0">${{list.length}} 种商品 · ${{totalQty}} 件次 · ${{okCount}} 种可计量 · ${{list.length - okCount}} 种 404</span>
+      </div>
+      <div class="stat-note">同一商品跨单聚合。热量条以单件 kcal 计量、800 kcal 为满量程：≤800 绿（200 档）、800–1500 琥珀（403 档）、&gt;1500 红（500 档）。</div>
+      <div class="gal-grid">${{cards}}</div>
+    </div>
+    <footer>
+      语义唯一视角：你是主体，你的身体是服务端 —— 全部状态码只描述你的身体对这次摄入的响应<br>
+      麦门监控台 · 基于麦当劳中国官方 MCP 构建 · 独立开发，非官方产品 · 输出仅供参考，不构成营养或医疗建议
+    </footer>`;
 }}
 
 /* ── SVG 图表工厂：手绘，零依赖，配色取自 codes.py ─────────────── */
@@ -499,6 +681,237 @@ function kcalScale() {{
   </div>`;
 }}
 
+/* ── 三级页：运维战情室 —— 重生之我在麦门世界运维 ─────────────────
+   你重生成了自己身体服务的 on-call 工程师：事故复盘 / 运维对象画像 /
+   自进化日志。全部数值由 evolve.py 确定性计算，本页只做叙事编排。 */
+function renderOps() {{
+  const lv = OPS.level || {{score: 0, level: '实习 on-call', desc: '先运行 scripts/evolve.py', next: null}};
+  const pms = OPS.postmortems || [];
+  const fresh = new Set(OPS.newIncidents || []);
+  const nextTh = lv.next;
+  const prog = nextTh ? Math.min(100, Math.round(lv.score / nextTh * 100)) : 100;
+
+  const allProbes = OPS.probes || [];
+  const ST = {{open: ['待处理', 'var(--yellow)'], adopted: ['已采纳', 'var(--green)'],
+              timed_out: ['窗口超时', 'var(--red)'], ignored: ['已忽略', 'var(--dim)']}};
+  const probesHistory = allProbes.length ? allProbes.slice(-8).reverse().map(pr => `
+    <div class="evo-item">
+      <span class="pn mono" style="background:${{COLOR[pr.code]}};padding:1px 6px;
+        border-radius:2px;font-size:10px;color:#fff">${{SHORT[pr.code]}}</span>
+      <span style="flex:1;min-width:0">${{esc(pr.detail)}}</span>
+      <span class="st-chip" style="background:${{ST[pr.status]?.[1] || 'var(--dim)'}};
+        color:#fff">${{ST[pr.status]?.[0] || pr.status}}</span>
+    </div>`).join('') : '<div class="stat-note">尚无探活记录</div>';
+
+  const hourCount = {{}};
+  (DATA.orders || []).forEach(o => {{ hourCount[o.hour] = (hourCount[o.hour] || 0) + 1; }});
+  const hMax = Math.max(1, ...Object.values(hourCount));
+  const hourDist = Object.keys(hourCount).length
+    ? Object.entries(hourCount).sort((x, y) => x[0] - y[0]).map(([h, c]) => `
+        <div class="taste-row">
+          <span class="lb mono">${{h}}:00</span>
+          <div class="barwrap"><div style="width:${{c / hMax * 100}}%;background:var(--blue);opacity:.7"></div></div>
+          <span class="ct">${{c}}单</span>
+        </div>`).join('')
+    : '<div class="stat-note">无数据</div>';
+  const missTop = (s.missedItems || []).slice(0, 5);
+  const missedTop = missTop.length ? (() => {{
+    const mx = Math.max(...missTop.map(x => x[1]));
+    return missTop.map(([nm, q]) => `
+      <div class="taste-row">
+        <span class="lb" style="width:132px;color:var(--red)">${{esc(nm)}}</span>
+        <div class="barwrap"><div style="width:${{q / mx * 100}}%;background:var(--red);opacity:.55"></div></div>
+        <span class="ct">×${{q}}</span>
+      </div>`).join('');
+  }})() : '<div class="stat-note">无缺口商品</div>';
+
+  const probeAll = OPS.probes || [];
+  const closed = probeAll.filter(p => p.status === "adopted").length;
+  const decided = probeAll.filter(p => p.status === "adopted" || p.status === "timed_out").length;
+  const adoptRate = decided ? Math.round(closed / decided * 100) + "%" : "—";
+  const intervalDays = s.orderedDays ? (s.spanDays / s.orderedDays).toFixed(1) : "—";
+
+  const WINDOWS = [
+    {name: "晨间咖啡窗", h: 9, m: 30},
+    {name: "午后咖啡窗", h: 13, m: 30},
+    {name: "午后补给窗", h: 14, m: 30},
+  ];
+  const nowT = new Date();
+  let nextWin = null;
+  for (const w of WINDOWS) {{
+    const t = new Date(nowT); t.setHours(w.h, w.m, 0, 0);
+    if (t > nowT) {{
+      const mins = Math.round((t - nowT) / 60000);
+      nextWin = {{name: w.name, start: `${{String(w.h).padStart(2, "0")}}:${{String(w.m).padStart(2, "0")}}`,
+        countdown: `${{Math.floor(mins / 60)}} 小时 ${{mins % 60}} 分钟后`}};
+      break;
+    }}
+  }}
+  if (!nextWin) {{
+    nextWin = {{name: WINDOWS[0].name + "（明日）", start: "09:30", countdown: "今日窗口已全部关闭"}};
+  }}
+
+  const mt = OPS.metabolic || {{}};
+  const metaHtml = !mt.profileSet
+    ? `<div class="stat-note">${{esc(mt.hint || '')}}</div>`
+    : (() => {{
+        const today = (DATA.orders || []).filter(o => o.date === new Date().toISOString().slice(0, 10));
+        const intake = today.reduce((a, o) => a + (o.kcal || 0), 0);
+        const gap = mt.target - intake;
+        const pct = Math.min(100, Math.round(intake / mt.target * 100));
+        const gapCol = gap < 0 ? 'var(--red)' : gap < 250 ? 'var(--green)' : 'var(--cyan)';
+        return `
+          <div class="meta-row"><span class="k">BMR（Mifflin-St Jeor）</span><span class="v">${{mt.bmr}} kcal</span></div>
+          <div class="meta-row"><span class="k">TDEE 总消耗</span><span class="v">${{mt.tdee}} kcal</span></div>
+          <div class="meta-row"><span class="k">场景目标（${{mt.goal}}）</span><span class="v">${{mt.target}} kcal</span></div>
+          <div class="meta-row"><span class="k">今日已摄入</span><span class="v">${{intake}} kcal</span></div>
+          <div class="gapbar"><div style="width:${{pct}}%;background:${{pct > 100 ? 'var(--red)' : 'var(--blue)'}}"></div></div>
+          <div class="stat-note" style="margin-top:7px">预算执行 ${{pct}}% · 剩余缺口
+            <span class="mono" style="color:${{gapCol}}">${{gap}}</span> kcal
+            ${{gap >= 250 ? '—— 午后补给窗将据此下发 103 建议' : gap < 0 ? '—— 已超支，探活将下发 412' : '—— 204 主动静默区间'}}</div>
+          <div class="panel-h" style="margin-top:14px"><span class="dot" style="background:var(--blue)"></span><h3>分餐预算</h3></div>
+          ${{[['早餐 30%', mt.windows.breakfast], ['午餐 40%', mt.windows.lunch],
+              ['晚餐 25%', mt.windows.dinner], ['补给窗 5%', mt.windows.snack]]
+            .map(([k, v]) => `<div class="meta-row"><span class="k">${{k}}</span><span class="v">${{v}} kcal</span></div>`).join('')}}
+          <div class="panel-h" style="margin-top:14px"><span class="dot" style="background:var(--cyan)"></span><h3>探活窗口</h3></div>
+          ${{[['晨间咖啡窗', '09:30–11:00', '该喝没喝 → 599'],
+              ['午后咖啡窗', '13:30–15:30', '该喝没喝 → 599'],
+              ['午后补给窗', '14:30–16:00', '缺口驱动 → 103/204/412']]
+            .map(([k, t, s]) => `<div class="meta-row"><span class="k">${{k}} ${{t}}</span><span class="v" style="color:var(--muted);font-weight:400">${{s}}</span></div>`).join('')}}`;
+      }})();
+
+  const pmHtml = pms.length ? pms.map(pm => `
+    <div class="pm-card sev${{pm.sev.slice(1)}}">
+      <div class="pm-head">
+        <span class="pm-id">${{pm.id}}</span>
+        <span class="sev-chip" style="background:${{pm.sev === 'P1' ? 'var(--red)' : pm.sev === 'P2' ? 'var(--orange)' : 'var(--yellow)'}}">${{pm.sev}}</span>
+        <span class="code mono" style="background:${{COLOR[pm.code]}};color:#fff">${{SHORT[pm.code]}}</span>
+        ${{fresh.has(pm.id) ? '<span class="pm-new">NEW</span>' : ''}}
+        <span style="color:var(--dim)">${{pm.time}} · ${{esc(pm.store)}}</span>
+      </div>
+      <div class="pm-body">
+        <b>根因</b> ${{esc(pm.cause)}}<br>
+        <b>影响面</b> ${{esc(pm.impact)}}<br>
+        <b>改进建议</b> ${{esc(pm.advice)}}
+      </div>
+    </div>`).join('')
+    : '<div class="stat-note">本期无事故。值班手机一次都没响，这很不像运维。</div>';
+
+  const tastes = (OPS.tasteProfile || []).map(t => `
+    <div class="taste-row">
+      <span class="lb">${{esc(t.label)}}</span>
+      <div class="barwrap"><div style="width:${{t.rate}}%"></div></div>
+      <span class="ct">${{t.rate}}%</span>
+    </div>`).join('') || '<div class="stat-note">样本不足，画像待沉淀</div>';
+
+  const hab = OPS.habits || {{}};
+  const combos = (hab.topCombos || []).map(c => `
+    <span class="state-chip" style="background:var(--panel2);color:var(--text);
+      font-weight:400">${{esc(c.items.slice(0, 2).join(' + '))}} ×${{c.count}}</span>`).join('');
+
+  const insights = (OPS.insights || []).map((t, i) => `
+    <div class="alert" style="border-left-color:var(--cyan)">${{esc(t)}}</div>`).join('')
+    || '<div class="stat-note">暂无洞察</div>';
+
+  const evo = (OPS.evolutionLog || []).slice().reverse().map(e => `
+    <div class="evo-item"><span class="evo-n">#${{e.loop}}</span>
+      <span>${{esc(e.event)}}<span style="color:var(--dim)"> · ${{e.at}}</span></span>
+    </div>`).join('');
+
+  const goals = OPS.goals || {{}};
+  const goalOn = Object.values(goals).some(v => v != null);
+  const tasteOn = (OPS.prefsLoaded || {{}}).tastes || [];
+
+  document.getElementById('app').innerHTML =
+    topbar('', 'on-call 值班中') +
+    pagenav('ops') +
+    `<div class="reborn">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;color:var(--dim);letter-spacing:1px">重生之我在麦门世界运维</div>
+        <div class="lv-big">${{esc(lv.level)}} <span class="mono" style="font-size:14px;color:var(--muted)">综合 ${{lv.score}}</span></div>
+        <div class="lv-sub">${{esc(lv.desc)}}</div>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div class="lv-sub">晋升通道：下一级需综合 ≥ ${{nextTh ?? '—'}}</div>
+        <div class="lvbar"><div style="width:${{prog}}%"></div></div>
+        <div class="lv-sub" style="margin-top:6px">已交接班 ${{OPS.loopCount || 1}} 次 · 每次运行 evolve.py 都是一次进化</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="panel">
+        <div class="panel-h"><span class="dot" style="background:var(--cyan)"></span><h3>待处理探活 · Agent 主动提醒</h3></div>
+        ${{(OPS.probesOpen || []).length ? (OPS.probesOpen || []).map(pr => `
+          <div class="probe-item">
+            <span class="pn" style="background:${{COLOR[pr.code]}}">${{SHORT[pr.code]}}</span>
+            <div class="pd">${{esc(pr.detail)}}
+              <div class="pw">${{pr.at}} · 窗口：${{esc(pr.window)}} · 回复「采纳 / 忽略」即闭环</div>
+            </div>
+          </div>`).join('') : '<div class="stat-note">探活队列已清空——所有建议均已闭环或静默</div>'}}
+        <div class="panel-h" style="margin-top:13px"><span class="dot" style="background:var(--purple)"></span><h3>探活历史</h3></div>
+        <div style="margin-top:8px">${{probesHistory}}</div>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><span class="dot" style="background:var(--green)"></span><h3>代谢模型 · TDEE 探活口径</h3></div>
+        ${{metaHtml}}
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="panel">
+        <div class="panel-h"><span class="dot" style="background:var(--red)"></span><h3>事故复盘 · 值班日志</h3></div>
+        ${{pmHtml}}
+      </div>
+      <div class="panel">
+        <div class="panel-h"><span class="dot" style="background:var(--purple)"></span><h3>运维对象画像 · 口味摸排</h3></div>
+        ${{tastes}}
+        <div class="panel-h" style="margin-top:14px"><span class="dot" style="background:var(--cyan)"></span><h3>行为习惯</h3></div>
+        <div class="legend" style="border:0;padding:0;margin-top:8px">
+          <span class="legend-item"><span class="ln">夜宵率</span><span class="lv">${{hab.nightRate ?? '—'}}%</span></span>
+          <span class="legend-item"><span class="ln">单均预算</span><span class="lv">¥${{hab.avgBudget ?? '—'}}</span></span>
+        </div>
+        <div class="stat-note" style="margin-top:9px">高频组合：${{combos || '待沉淀'}}</div>
+        <div class="panel-h" style="margin-top:14px"><span class="dot" style="background:var(--blue)"></span><h3>点单时段分布</h3></div>
+        <div style="margin-top:8px">${{hourDist}}</div>
+        <div class="panel-h" style="margin-top:14px"><span class="dot" style="background:var(--red)"></span><h3>404 黑名单 Top5</h3></div>
+        <div style="margin-top:8px">${{missedTop}}</div>
+        <div class="panel-h" style="margin-top:14px"><span class="dot" style="background:var(--green)"></span><h3>闭环质量</h3></div>
+        <div style="margin-top:8px">
+          <div class="meta-row"><span class="k">探活建议采纳率</span><span class="v">${{adoptRate}}</span></div>
+          <div class="meta-row"><span class="k">平均响应间隔</span><span class="v">${{intervalDays}} 天/单</span></div>
+          <div class="meta-row"><span class="k">最长缓存连击（304）</span><span class="v">${{s.distribution["304"] || 0}} 次</span></div>
+          <div class="stat-note" style="margin-top:7px">采纳率 = 被你实际下单采纳的探活占比——这是 Agent 闭环的核心健康度</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="panel">
+        <div class="panel-h"><span class="dot" style="background:var(--cyan)"></span><h3>运维洞察 · 优化建议</h3></div>
+        ${{insights}}
+        <div class="panel-h" style="margin-top:14px"><span class="dot" style="background:var(--yellow)"></span><h3>下一次探活窗口</h3></div>
+        <div style="margin-top:8px">
+          <div class="meta-row"><span class="k">窗口</span><span class="v">${{nextWin.name}}</span></div>
+          <div class="meta-row"><span class="k">开启时间</span><span class="v">${{nextWin.start}}</span></div>
+          <div class="meta-row"><span class="k">倒计时</span><span class="v" style="color:var(--cyan)">${{nextWin.countdown}}</span></div>
+        </div>
+        <div class="stat-note" style="margin-top:9px">告警推送口径：新 4xx/5xx 事故即时告警；103/412/599/522 进入待处理队列随下次会话播报。全部由 evolve.py 确定性规则触发，可复算；偏好可在 prefs.json 声明（目标 / 忌口）</div>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><span class="dot" style="background:var(--green)"></span><h3>自进化日志 · 交接班记录</h3></div>
+        ${{evo || '<div class="stat-note">首次值班，记录即将开始</div>'}}
+        <div class="stat-note" style="margin-top:9px">
+          已加载用户声明偏好：${{tasteOn.length ? esc(tasteOn.join('、')) : '无'}} ·
+          目标设定：${{goalOn ? '生效中' : '未设定'}}
+        </div>
+      </div>
+    </div>
+    <footer>
+      重生设定纯属玩梗，监控数据全部真实 —— 每一条事故都来自你在麦当劳的真实订单<br>
+      麦门监控台 · 基于麦当劳中国官方 MCP 构建 · 独立开发，非官方产品 · 输出仅供参考，不构成营养或医疗建议
+    </footer>`;
+}}
+
 /* ── 集合层 404：订单为空 → 资源不存在，触发彩蛋 ─────────────────── */
 function render404() {{
   const egg = s.easterEgg || {{}};
@@ -620,15 +1033,22 @@ function render(dim, logFilter, logPage) {{
       ${{esc(t)}}<span class="n">${{n}}</span>
     </button>`).join('')}}</div>`;
 
-  const log = slice.map(o => `
+  const log = slice.map((o, idx) => `
     <tr>
       <td class="mono" style="white-space:nowrap">${{o.datetime.replace(' ','<br>')}}
         <div style="color:var(--dim);font-size:10px;margin-top:3px">${{esc(o.store)}}</div></td>
       <td><span class="code mono" style="background:${{COLOR[o.httpStatus]}};color:#fff">${{SHORT[o.httpStatus]}}</span>
         <div class="reason" style="color:${{COLOR[o.httpStatus]}}">${{esc(o.codeTitle)}}</div>
         <div class="reason">${{esc(o.reason)}}</div></td>
-      <td><details><summary>${{o.items.length}} 件商品（${{o.matchCoverage}} 可计量）▾</summary>
-        ${{o.items.map(i => `<div class="item ${{i.matched?'':'miss'}}">${{i.qty}}× ${{esc(i.name)}}${{i.matched?` · ${{i.kcal}} kcal`:''}}</div>`).join('')}}
+      <td><details${{idx === 0 ? ' open' : ''}}><summary>${{o.items.length}} 件商品（${{o.matchCoverage}} 可计量）▾</summary>
+        <div style="margin-top:5px">${{o.items.map(i => `
+          <div class="item-row">
+            ${{thumbHtml(i, 28)}}
+            <span class="nm" style="color:${{i.matched ? 'var(--text)' : 'var(--red)'}}">${{i.qty}}× ${{esc(i.name)}}</span>
+            ${{i.matched
+              ? `<span class="mono" style="font-size:10px;color:var(--muted)">${{i.kcal}} kcal</span>${{kbarMini(i.kcal)}}`
+              : `<span class="state-chip" style="background:var(--red);color:#fff">404</span>`}}
+          </div>`).join('')}}</div>
       </details></td>
       <td class="mono" style="text-align:right;white-space:nowrap">${{o.kcal ?? '—'}}
         <div style="color:var(--dim);font-size:10px">${{o.sodium!=null?o.sodium+' mg':''}}</div></td>
@@ -673,6 +1093,7 @@ function render(dim, logFilter, logPage) {{
 
   document.getElementById('app').innerHTML =
     topbar(on1024 ? ' on' : '', on1024 ? '1024 模式：已激活' : '1024 模式：10/20–10/26 自动激活') +
+    pagenav('overview') +
     `<div class="grid4">${{hero}}</div>
     <div class="grid">${{second}}</div>
     <div class="grid4" style="margin-bottom:10px">
@@ -718,7 +1139,10 @@ function render(dim, logFilter, logPage) {{
           <span class="stat-note" style="margin:0">副指标 · 不计入错误预算</span>
         </div>
         ${{gapList || '<div class="stat-note">全部商品均可计量</div>'}}
-        <div class="stat-note" style="margin-top:9px">官方营养账本仅收录 160 项标准单品所致</div>
+        <div class="stat-note" style="margin-top:9px">官方营养账本仅收录 160 项标准单品所致
+          <button class="tab-btn" data-pagebtn="gallery" type="button"
+            style="margin-top:8px;padding:3px 10px;border:1px solid var(--border)">在商品图鉴中查看 →</button>
+        </div>
       </div>
     </div>
     <div class="panel" id="logPanel" style="margin-bottom:10px">
@@ -749,16 +1173,42 @@ function render(dim, logFilter, logPage) {{
 if (s.collectionStatus === '404') {{
   render404();
 }} else {{
-  // 三类交互状态彼此独立：统计维度 / 日志筛选 / 日志页码
-  // 维度支持 URL 深链（#week / #day），便于按视图分享与回访
-  const HASH_DIM = (location.hash || '').replace('#', '');
-  let CURRENT = HASH_DIM === 'week' ? 'week' : 'day';
+  // 四类交互状态彼此独立：页面层级 / 统计维度 / 日志筛选 / 日志页码
+  // 全部支持 URL 深链：#gallery 图鉴页，#day / #week 监控台维度
+  const HASH = (location.hash || '').replace('#', '');
+  let PAGE = ['gallery', 'ops'].includes(HASH) ? HASH : 'overview';
+  let CURRENT = (HASH === 'week' || HASH === 'day') ? HASH : 'day';
   let LOG_FILTER = 'all';
   let LOG_PAGE = 1;
 
-  function draw() {{ render(CURRENT, LOG_FILTER, LOG_PAGE); }}
+  function draw() {{
+    if (PAGE === 'gallery') renderGallery();
+    else if (PAGE === 'ops') renderOps();
+    else render(CURRENT, LOG_FILTER, LOG_PAGE);
+  }}
+
+  function syncFromHash() {{
+    const h = (location.hash || '').replace('#', '');
+    PAGE = ['gallery', 'ops'].includes(h) ? h : 'overview';
+    if (h === 'day' || h === 'week') CURRENT = h;
+    LOG_PAGE = 1;
+    draw();
+  }}
+  window.addEventListener('hashchange', syncFromHash);
 
   document.addEventListener('click', e => {{
+    // 页面层级（监控台 / 商品图鉴）
+    const pageBtn = e.target.closest('[data-pagebtn]');
+    if (pageBtn) {{
+      const pg = pageBtn.getAttribute('data-pagebtn');
+      if (pg !== PAGE) {{
+        PAGE = pg;
+        history.replaceState(null, '', pg === 'gallery' ? '#gallery' : '#' + CURRENT);
+        draw();
+        window.scrollTo(0, 0);
+      }}
+      return;
+    }}
     // 统计维度
     const dimBtn = e.target.closest('[data-dim]');
     if (dimBtn) {{
@@ -818,6 +1268,9 @@ def main():
     base = Path(__file__).resolve().parent.parent
     data = json.loads((base / "data" / "classified.json").read_text(encoding="utf-8"))
     force = "--1024" in sys.argv
+    if data.get("dataset") == "live":
+        print("⚠ 当前为真实消费数据，dashboard.html 将嵌入真实门店/订单信息——"
+              "公开仓库请先运行：python3 scripts/classify.py demo/demo_orders.json")
     logo_b64 = base64.b64encode((base / "docs" / "logo.png").read_bytes()).decode()
 
     # 只注入面板需要的字段，避免把完整语义字典（含 evidence 文案）塞进前端
@@ -830,8 +1283,17 @@ def main():
     # 若顺序颠倒，注入的 JSON 中嵌套对象天然的 }} 会被误还原，导致数据损坏。
     tpl = re.sub(r"\{\{|\}\}", lambda m: m.group(0)[0], TEMPLATE)
 
+    ops_path = base / "data" / "ops.json"
+    ops = json.loads(ops_path.read_text(encoding="utf-8")) if ops_path.exists() else {
+        "loopCount": 0, "level": {"score": 0, "level": "实习 on-call",
+        "desc": "先运行 scripts/evolve.py 完成首次交接班", "next": None},
+        "postmortems": [], "newIncidents": [], "tasteProfile": [],
+        "habits": {}, "insights": ["运行 scripts/evolve.py 开始第一次自进化"],
+        "evolutionLog": [], "goals": {}, "prefsLoaded": {}}
+
     html = (tpl
             .replace("__DATA__", json.dumps(data, ensure_ascii=False))
+            .replace("__OPS__", json.dumps(ops, ensure_ascii=False))
             .replace("__CODES__", json.dumps(codes_view, ensure_ascii=False))
             .replace("__KCAL_OK__", str(KCAL_OK))
             .replace("__KCAL_OVERLOAD__", str(KCAL_OVERLOAD))

@@ -92,6 +92,7 @@ def classify_order(orders_raw: list, nutrition_index: dict) -> list:
             qty = int(p.get("quantity", 1))
             items.append({
                 "name": p["productName"],
+                "img": p.get("productImage", ""),
                 "qty": qty,
                 "matched": row is not None,
                 "kcal": int(row["energyKcal"]) * qty if row else None,
@@ -273,6 +274,7 @@ def main():
     summary = build_summary(orders)
 
     out = {"rulesVersion": RULES_VERSION,
+           "dataset": "demo" if "demo" in str(orders_path) else "live",
            "generatedAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
            "orders": list(reversed(orders)), "summary": summary}
     out_path = base / "data" / "classified.json"

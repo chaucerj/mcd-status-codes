@@ -55,10 +55,27 @@ def main():
 
     _, resp = c.rpc("tools/call", {"name": "order-list", "arguments": {}})
     orders = unwrap(resp)
-    (base / "data" / "orders.parsed.json").write_text(
-        json.dumps(orders, ensure_ascii=False, indent=1), encoding="utf-8")
     n = len(orders["data"]["list"])
     print(f"✓ order-list：{n} 单已保存")
+
+    # 商品官方图片：order-list 不带图，逐单调 query-order 取 productImage
+    # 按「订单号+品名」回填到 order-list 的商品行（详情无 productCode，只能按名对齐）
+    img_miss = 0
+    for o in orders["data"]["list"]:
+        try:
+            _, r = c.rpc("tools/call", {"name": "query-order",
+                                        "arguments": {"orderId": o["orderId"]}})
+            detail = unwrap(r)["data"]
+            imgs = {p["productName"]: p.get("productImage", "")
+                    for p in detail.get("orderProductList", [])}
+            for p in o["orderProductList"]:
+                p["productImage"] = imgs.get(p["productName"], "")
+                img_miss += not p["productImage"]
+        except Exception as e:  # 单单失败不阻断整体采集
+            print(f"  ⚠ 订单 {o['orderId']} 图片获取失败：{e}")
+    (base / "data" / "orders.parsed.json").write_text(
+        json.dumps(orders, ensure_ascii=False, indent=1), encoding="utf-8")
+    print(f"✓ 商品图片回填完成（{img_miss} 项无官方图，前端将使用回退磁贴）")
 
     _, resp = c.rpc("tools/call", {"name": "list-nutrition-foods", "arguments": {}})
     raw = unwrap(resp)

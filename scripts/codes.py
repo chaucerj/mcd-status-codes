@@ -2,23 +2,28 @@
 """麦门状态码 · 语义单一事实源（Single Source of Truth）
 
 ═══════════════════════════════════════════════════════════════════════════
-【语义宪法】唯一视角：你是主体，你的身体是服务端。
+【语义宪法 v3.0】唯一视角：你是主体，你的身体是服务端。
+v3.0 新增双方向声明制——状态码必须归属以下两个方向之一：
 
-每一笔订单 = 一次摄入请求 → 打向「你的身体」这台服务实例。
-状态码 = **你的身体**对这批摄入的响应。
+  ingest 摄入方向（你发起）：每一笔订单 = 一次摄入请求 →
+      打向「你的身体」这台服务实例，状态码 = 你的身体对摄入的响应。
+  probe  探活方向（运维 Agent 发起，v3.0 新增）：
+      你的 on-call 运维 Agent 依据代谢模型主动向「你的身体」发起探活/补给建议，
+      状态码 = 这次探活的结果（建议下发 / 被目标否决 / 窗口超时 / 主动静默）。
 
 铁律（违反即视为语义 bug）：
-  1. 每个状态码的定义句，主语只能是「你 / 你的身体 / 你的摄入行为」。
+  1. 每个状态码的定义句，ingest 类主语只能是「你 / 你的身体 / 你的摄入行为」；
+     probe 类主语只能是「你的运维 Agent」，被探对象仍然是你。
   2. 麦当劳官方数据、MCP 接口、营养表等平台侧事实，
      只能出现在「诊断证据」里（reason / evidence），绝不能充当状态码的定义。
-  3. 一个状态码只有**一个**含义，全项目（SKILL.md / README / DESIGN.md /
-     dashboard / classify.py）必须逐字一致。
+  3. 一个状态码只有**一个**含义、一个方向，全项目（SKILL.md / README /
+     DESIGN.md / dashboard / classify.py / evolve.py）必须逐字一致。
 
 ═══════════════════════════════════════════════════════════════════════════
 """
 import re
 
-RULES_VERSION = "2.0"
+RULES_VERSION = "3.0"
 
 # ── Grafana 官方调色板（面板与本文件共用，保证视觉与语义同源）────────────
 GF = {
@@ -161,6 +166,68 @@ EASTER_EGG_404 = {
         "别慌，这不是故障。把任意一单麦当劳下进来，资源即被创建，状态码会立刻跳到 200。",
     ],
     "cta": "执行 `python3 scripts/order.py` 下你的第一单巨无霸套餐，即可让资源从 404 变为 200。",
+}
+
+
+# ════════════════════════════════════════════════════════════════════════
+# probe 探活方向状态码族（v3.0 新增，全部为真实 HTTP 语义）
+# 由 evolve.py 的探活循环产生，classify.py 不产生探活码。
+# ════════════════════════════════════════════════════════════════════════
+PROBE_CODE_META = {
+    "103": {
+        "name": "103 Early Hints", "short": "103 Hints", "class": "info", "color": GF["cyan"],
+        "title": "补给建议下发",
+        "meaning": "你的运维 Agent 在你发起摄入之前，依据你的代谢曲线提前给出补给提示",
+        "evidence": "当日已摄入与分餐预算存在缺口，且探活窗口开启",
+    },
+    "204": {
+        "name": "204 No Content", "short": "204 Quiet", "class": "ok", "color": GF["green"],
+        "title": "主动静默",
+        "meaning": "你的运维 Agent 探活后确认本窗口无需任何摄入，正确地保持了沉默",
+        "evidence": "当日摄入与预算吻合，无缺口可补",
+    },
+    "412": {
+        "name": "412 Precondition Failed", "short": "412 Denied", "class": "warn", "color": GF["orange"],
+        "title": "建议被目标否决",
+        "meaning": "你的运维 Agent 收回了一条与你声明目标冲突的补给建议",
+        "evidence": "建议内容与 prefs.json 中 goals（热量/钠/预算上限）矛盾",
+    },
+    "425": {
+        "name": "425 Too Early", "short": "425 Too Early", "class": "warn", "color": GF["orange"],
+        "title": "过早打扰判定",
+        "meaning": "你的运维 Agent 判定此刻探活为时过早，主动推迟了这次提醒",
+        "evidence": "前一晚存在 408 深夜摄入，晨间窗口按规则顺延",
+    },
+    "599": {
+        "name": "599 Network Timeout", "short": "599 Timeout", "class": "error", "color": GF["red"],
+        "title": "建议窗口超时",
+        "meaning": "你的运维 Agent 在补给窗口内给出的建议直到窗口关闭都未被你采纳",
+        "evidence": "窗口期内无对应摄入请求，也无忽略反馈",
+    },
+    "522": {
+        "name": "522 Connection Timed Out", "short": "522 Lost", "class": "error", "color": GF["darkred"],
+        "title": "连续窗口失联",
+        "meaning": "你的运维 Agent 连续多个探活窗口与你完全失去联系，升级了告警级别",
+        "evidence": "连续 2 个窗口既无采纳也无忽略反馈",
+    },
+}
+
+# 方向声明：每个状态码必须归属的方向（宪法铁律 3）
+DIRECTION = {}
+for _c, _m in CODE_META.items():
+    DIRECTION[_c] = "ingest"
+for _c, _m in PROBE_CODE_META.items():
+    DIRECTION[_c] = "probe"
+CODE_META.update(PROBE_CODE_META)
+
+# 探活窗口（北京时间，确定性）
+PROBE_WINDOWS = {
+    "morning_coffee": {"start": (9, 30), "end": (11, 0), "domain": "caffeine",
+                       "hint": "晨间咖啡窗：按打工人醒脑场景推荐鲜煮咖啡"},
+    "afternoon_coffee": {"start": (13, 30), "end": (15, 30), "domain": "caffeine",
+                         "hint": "午后咖啡窗：推荐麦咖啡维持下午清醒"},
+    "afternoon_snack": {"start": (14, 30), "end": (16, 0), "domain": "metabolic",
+                        "hint": "午后补给窗：按 TDEE 缺口判定是否建议下午茶"},
 }
 
 
