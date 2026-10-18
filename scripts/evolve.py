@@ -20,7 +20,7 @@ from pathlib import Path
 BASE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE / "scripts"))
 from codes import (KCAL_OK, KCAL_OVERLOAD, SODIUM_DENIED,  # noqa: E402
-                   CODE_META, PROBE_WINDOWS)
+                   CODE_META, PROBE_WINDOWS, METRIC_ALERTS)
 
 # 口味关键词 → 画像标签（确定性聚合）
 TASTE_KEYWORDS = {
@@ -39,16 +39,13 @@ CAFFEINE_KEYWORDS = ["咖啡", "拿铁", "美式", "摩卡"]
 # 事故根因与改进建议（确定性映射，per 状态码）
 POSTMORTEM = {
     "504": {"cause": "上游请求中止：订单在完成前被取消", "advice": "下单前核对门店营业状态与取餐时段；预约单提前确认场次"},
-    "500": {"cause": f"系统过载：单餐热量突破 {KCAL_OVERLOAD} kcal", "advice": "主餐拆半、饮料换 0 卡；或按 200 档组合重开一单"},
     "429": {"cause": "短时重复写入：同日多次下单触发限流", "advice": "合并需求一次下单；错开与上一单的间隔"},
     "408": {"cause": "深夜窗口收到摄入请求", "advice": "22:00 后改轻量补给；把大餐挪进白天窗口"},
-    "403": {"cause": f"营养署拒绝放行：热量 >{KCAL_OK} 或钠 >{SODIUM_DENIED} mg", "advice": "酱料减配、小份替换；对照商品图鉴的 200 档组合重建订单"},
     "418": {"cause": "纯饮料请求命中茶壶协议", "advice": "补水即可，无需经麦门"},
     "304": {"cause": "缓存命中：与上一单完全一致", "advice": "轮换 1 个单品打破缓存，避免味觉回路固化"},
     "502": {"cause": "多人聚合网关：单笔承载过多上游", "advice": "拆分为多单分别结算，便于按人分摊"},
 }
-SEV = {"504": "P1", "500": "P1", "429": "P2", "408": "P2", "403": "P2",
-       "502": "P3", "418": "P3", "304": "P3"}
+SEV = {"504": "P1", "429": "P2", "408": "P2", "502": "P3", "418": "P3", "304": "P3"}
 
 LEVELS = [
     (95, "麦门世界 CTO", "你的身体服务进入了 SLA 黄金档，可以给别人做 postmortem 了"),
@@ -111,21 +108,42 @@ def habits(orders):
             "topCombos": top}
 
 
+METRIC_ADVICE = {
+    "calorie_overload": "主餐拆半、饮料换 0 卡；对照商品图鉴重建一份配额内组合",
+    "calorie_over": "下一餐减量回补；酱料与饮料是最好压缩的两项",
+    "sodium_over": "酱料减配或换小份；查看商品图鉴里钠密度更低的替代品",
+}
+
+
 def postmortems(orders):
     out = []
     for o in sorted(orders, key=lambda x: x["datetime"], reverse=True):
         c = o["httpStatus"]
-        if c not in POSTMORTEM:
-            continue
-        pm = POSTMORTEM[c]
-        out.append({
-            "id": f"INC-{o['datetime'].replace('-','').replace(':','').replace(' ','-')[:13]}",
-            "time": o["datetime"], "sev": SEV.get(c, "P3"), "code": c,
-            "label": o["codeLabel"], "store": o.get("store", ""),
-            "cause": pm["cause"], "advice": pm["advice"],
-            "impact": f"{o['kcal'] if o.get('kcal') is not None else '?'} kcal / "
-                      f"{o['sodium'] if o.get('sodium') is not None else '?'} mg 钠 · ¥{o.get('amount','?')}",
-        })
+        if c in POSTMORTEM:
+            pm = POSTMORTEM[c]
+            out.append({
+                "id": f"INC-{o['datetime'].replace('-','').replace(':','').replace(' ','-')[:13]}",
+                "time": o["datetime"], "sev": SEV.get(c, "P3"), "code": c,
+                "kind": "code", "metric": None,
+                "label": o["codeLabel"], "store": o.get("store", ""),
+                "cause": pm["cause"], "advice": pm["advice"],
+                "impact": f"{o['kcal'] if o.get('kcal') is not None else '?'} kcal / "
+                          f"{o['sodium'] if o.get('sodium') is not None else '?'} mg 钠 · ¥{o.get('amount','?')}",
+            })
+        # 指标型事故：营养负荷超标（状态码不受影响，独立立案）
+        for b in o.get("breaches", []):
+            ma = METRIC_ALERTS[b]
+            out.append({
+                "id": f"INC-{o['datetime'].replace('-','').replace(':','').replace(' ','-')[:13]}-{b}",
+                "time": o["datetime"], "sev": ma["sev"], "code": None,
+                "kind": "metric", "metric": b,
+                "label": ma["short"], "store": o.get("store", ""),
+                "cause": f"指标告警：{ma['desc']}（实测 {o['kcal'] if o.get('kcal') is not None else '?'} kcal / 钠 {o['sodium'] if o.get('sodium') is not None else '?'} mg）",
+                "advice": METRIC_ADVICE[b],
+                "impact": f"{o['kcal'] if o.get('kcal') is not None else '?'} kcal / "
+                          f"{o['sodium'] if o.get('sodium') is not None else '?'} mg 钠 · ¥{o.get('amount','?')}",
+            })
+    out.sort(key=lambda x: x["time"], reverse=True)
     return out
 
 

@@ -109,6 +109,15 @@ def classify_order(orders_raw: list, nutrition_index: dict) -> list:
         nth_today = per_date_count[date_key]
         new_names = [i["name"] for i in items if normalize(i["name"]) not in seen_names]
 
+        # 指标告警（v4.0）：营养负荷超标记 breaches，不改变状态码
+        breaches = []
+        if kcal is not None and kcal > KCAL_OVERLOAD:
+            breaches.append("calorie_overload")
+        elif kcal is not None and kcal > KCAL_OK:
+            breaches.append("calorie_over")
+        if sodium is not None and sodium > SODIUM_DENIED:
+            breaches.append("sodium_over")
+
         # 判定阶梯：首个命中即停（集合层 404 不在此列，见 build_summary）
         if "取消" in o.get("orderStatus", ""):
             status = "504"
@@ -118,10 +127,6 @@ def classify_order(orders_raw: list, nutrition_index: dict) -> list:
             status = "408"
         elif items and all(is_drink(i["name"]) for i in items):
             status = "418"
-        elif kcal is not None and kcal > KCAL_OVERLOAD:
-            status = "500"
-        elif kcal is not None and (kcal > KCAL_OK or (sodium or 0) > SODIUM_DENIED):
-            status = "403"
         elif total_qty >= BIG_ORDER_QTY:
             status = "502"
         elif prev_signature is not None and signature == prev_signature:
@@ -160,6 +165,7 @@ def classify_order(orders_raw: list, nutrition_index: dict) -> list:
             "kcal": kcal,
             "sodium": sodium,
             "matchCoverage": f"{len(matched)}/{len(items)}" if items else "0/0",
+            "breaches": breaches,
             "httpStatus": status,
             "codeLabel": label(status),
             "codeTitle": CODE_META[status]["title"],

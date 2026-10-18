@@ -339,7 +339,7 @@ function thumbHtml(i, size) {{
   </span>`;
 }}
 
-/** 单件热量迷你条：以 800 kcal（200/403 分界）为满量程，超档变色 */
+/** 单件热量迷你条：以 800 kcal 配额为满量程，超档变色（指标告警口径） */
 function kbarMini(kcal) {{
   if (kcal == null) return '';
   const w = Math.min(100, kcal / KCAL_OK * 100).toFixed(1);
@@ -399,7 +399,7 @@ function renderGallery() {{
         <div><span class="dot" style="background:var(--cyan)"></span><h3>营养账本 · 商品视角</h3></div>
         <span class="stat-note" style="margin:0">${{list.length}} 种商品 · ${{totalQty}} 件次 · ${{okCount}} 种可计量 · ${{list.length - okCount}} 种 404</span>
       </div>
-      <div class="stat-note">同一商品跨单聚合。热量条以单件 kcal 计量、800 kcal 为满量程：≤800 绿（200 档）、800–1500 琥珀（403 档）、&gt;1500 红（500 档）。</div>
+      <div class="stat-note">同一商品跨单聚合。热量条以单件 kcal 计量、800 kcal 为满量程：≤800 绿（配额内）、800–1500 琥珀（热量超配额告警）、&gt;1500 红（过载事故）。</div>
       <div class="gal-grid">${{cards}}</div>
     </div>
     <footer>
@@ -468,7 +468,7 @@ function weekStart(d) {{
   return t.toISOString().slice(0, 10);
 }}
 
-const SEV = {{'504':5,'503':4,'500':4,'429':3,'408':3,'403':3,'502':2,'418':2,'206':1,'304':1,'301':1,'201':0,'200':0}};
+const SEV = {{'504':5,'503':4,'429':3,'408':3,'502':2,'418':2,'206':1,'304':1,'301':1,'201':0,'200':0}};
 
 /** 构造按当前维度聚合后的桶数组 */
 function buildBuckets(dim) {{
@@ -673,9 +673,9 @@ function kcalScale() {{
     </div>
   </div>
   <div class="legend">
-    <span class="legend-item"><span class="sw" style="background:rgba(55,135,45,.65)"></span><span class="ln">≤ ${{KCAL_OK}} → 200</span></span>
-    <span class="legend-item"><span class="sw" style="background:rgba(224,131,0,.6)"></span><span class="ln">→ 403 营养署拒绝</span></span>
-    <span class="legend-item"><span class="sw" style="background:rgba(226,77,66,.5)"></span><span class="ln">>${{KCAL_OVERLOAD}} → 500 过载</span></span>
+    <span class="legend-item"><span class="sw" style="background:rgba(55,135,45,.65)"></span><span class="ln">配额 ≤ ${{KCAL_OK}} kcal</span></span>
+    <span class="legend-item"><span class="sw" style="background:rgba(224,131,0,.6)"></span><span class="ln">超配额 → 告警 P2</span></span>
+    <span class="legend-item"><span class="sw" style="background:rgba(226,77,66,.5)"></span><span class="ln">> ${{KCAL_OVERLOAD}} → 事故 P1</span></span>
     ${{p50 != null ? `<span class="legend-item"><span class="sw" style="background:var(--cyan);width:2px;border-radius:0"></span><span class="lv">P50 ${{p50}}</span><span class="ln">kcal 中位单餐</span></span>` : ''}}
     ${{p99 != null ? `<span class="legend-item"><span class="sw" style="background:var(--purple);width:2px;border-radius:0"></span><span class="lv">P99 ${{p99}}</span><span class="ln">kcal</span></span>` : ''}}
   </div>`;
@@ -785,7 +785,9 @@ function renderOps() {{
       <div class="pm-head">
         <span class="pm-id">${{pm.id}}</span>
         <span class="sev-chip" style="background:${{pm.sev === 'P1' ? 'var(--red)' : pm.sev === 'P2' ? 'var(--orange)' : 'var(--yellow)'}}">${{pm.sev}}</span>
-        <span class="code mono" style="background:${{COLOR[pm.code]}};color:#fff">${{SHORT[pm.code]}}</span>
+        ${{pm.kind === 'metric'
+          ? `<span class="code mono" style="background:var(--panel2);color:var(--orange);border:1px solid var(--orange)">⚠ 指标告警</span>`
+          : `<span class="code mono" style="background:${{COLOR[pm.code]}};color:#fff">${{SHORT[pm.code]}}</span>`}}
         ${{fresh.has(pm.id) ? '<span class="pm-new">NEW</span>' : ''}}
         <span style="color:var(--dim)">${{pm.time}} · ${{esc(pm.store)}}</span>
       </div>
@@ -1051,7 +1053,9 @@ function render(dim, logFilter, logPage) {{
           </div>`).join('')}}</div>
       </details></td>
       <td class="mono" style="text-align:right;white-space:nowrap">${{o.kcal ?? '—'}}
-        <div style="color:var(--dim);font-size:10px">${{o.sodium!=null?o.sodium+' mg':''}}</div></td>
+        <div style="color:var(--dim);font-size:10px">${{o.sodium!=null?o.sodium+' mg':''}}</div>
+        ${{(o.breaches||[]).map(b => `
+          <div style="margin-top:3px"><span class="st-chip" style="background:${{b === 'calorie_overload' ? 'var(--red)' : 'var(--orange)'}};color:#fff">⚠ ${{b === 'sodium_over' ? '钠超标' : b === 'calorie_overload' ? '热量过载' : '热量超配额'}}</span></div>`).join('')}}</td>
     </tr>`).join('');
 
   // 分页器：首/末 + 当前页邻域，页码用省略号收敛
