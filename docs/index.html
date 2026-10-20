@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>麦门状态码 · 试玩间（无需 Token）</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 84'><path d='M6 84 L6 32 Q6 6 28 6 Q46 6 50 50 Q54 6 72 6 Q94 6 94 32 L94 84' fill='none' stroke='%23FFC72C' stroke-width='13'/></svg>">
+<style>
+  :root{--bg:#111217;--panel:#181b20;--panel2:#1f232a;--border:#2a2f38;--text:#d8d9da;
+    --muted:#8e9095;--dim:#6a6d73;--green:#37872D;--red:#E24D42;--orange:#E98300;
+    --yellow:#EAB839;--blue:#3274D9;--cyan:#6ED0E0;--purple:#705DA0;--gold:#FFC72C}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:"PingFang SC","Microsoft YaHei",sans-serif;
+    max-width:1080px;margin:0 auto;padding:24px 18px 40px}
+  .mono{font-family:"SF Mono","JetBrains Mono",Consolas,monospace;font-variant-numeric:tabular-nums}
+  header{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+  header img{width:40px;height:34px}
+  h1{font-size:20px;font-weight:700}
+  h1 .accent{color:var(--gold)}
+  .sub{color:var(--muted);font-size:12px;margin-bottom:18px;line-height:1.8}
+  .sub a{color:var(--blue);text-decoration:none}
+  .step{display:flex;align-items:center;gap:8px;margin:20px 0 10px}
+  .step .no{width:22px;height:22px;border-radius:3px;background:var(--gold);color:#111;
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px}
+  .step h2{font-size:15px}
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:14px}
+  .scene-chips,.menu{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{appearance:none;border:1px solid var(--border);background:var(--panel2);color:var(--muted);
+    padding:6px 14px;border-radius:3px;font-size:13px;cursor:pointer;font-family:inherit;transition:all .15s}
+  .chip:hover{color:var(--text)}
+  .chip.on{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:600}
+  .mi{width:calc(25% - 6px);min-width:150px;flex:1;background:var(--panel2);border:1px solid var(--border);
+    border-radius:4px;padding:9px 11px;cursor:pointer;transition:border-color .15s}
+  .mi:hover{border-color:var(--dim)}
+  .mi .n{font-size:12px;font-weight:600}
+  .mi .v{font-size:10px;color:var(--muted);margin-top:3px;font-family:"SF Mono",monospace}
+  .cart{margin-top:12px;min-height:38px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .cart-empty{color:var(--dim);font-size:12px}
+  .cart-it{display:inline-flex;align-items:center;gap:7px;background:var(--panel2);
+    border:1px solid var(--border);border-radius:3px;padding:4px 8px;font-size:12px}
+  .cart-it button{appearance:none;border:0;background:transparent;color:var(--muted);cursor:pointer;
+    font-size:13px;width:18px;height:18px;line-height:1}
+  .cart-it button:hover{color:var(--text)}
+  .totals{margin-top:10px;font-size:12px;color:var(--muted)}
+  .totals b{color:var(--text)}
+  .go{appearance:none;border:0;background:var(--gold);color:#111;font-weight:700;font-size:14px;
+    padding:10px 26px;border-radius:4px;cursor:pointer;margin-top:12px;font-family:inherit}
+  .go:active{transform:scale(.98)}
+  .go:disabled{opacity:.4;cursor:not-allowed}
+  .judge{margin-top:14px}
+  .verdict{display:flex;gap:14px;align-items:flex-start;background:var(--panel2);
+    border:1px solid var(--border);border-radius:4px;padding:14px}
+  .vcode{font-size:42px;font-weight:800;font-family:"SF Mono",monospace;line-height:1}
+  .vlabel{font-size:14px;font-weight:700;margin-bottom:6px}
+  .vreason{font-size:12px;color:var(--muted);line-height:1.7}
+  .badges{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap}
+  .bdg{padding:2px 9px;border-radius:2px;font-size:10px;font-weight:700;
+    font-family:"SF Mono",monospace;color:#fff}
+  .probe-hint{margin-top:10px;padding:8px 11px;border-left:3px solid var(--cyan);
+    background:var(--panel2);font-size:12px;line-height:1.6;border-radius:0 2px 2px 0}
+  .share-row{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap}
+  .share-row .go{margin-top:0;background:var(--blue);color:#fff}
+  .share-row .dl{appearance:none;border:1px solid var(--border);background:transparent;
+    color:var(--text);font-weight:600;font-size:13px;padding:9px 20px;border-radius:4px;
+    cursor:pointer;font-family:inherit}
+  #shot{max-width:100%;border:1px solid var(--border);border-radius:4px;margin-top:12px;display:none}
+  .real{margin-top:26px}
+  .real ol{margin:8px 0 0 20px;font-size:13px;color:var(--muted);line-height:2}
+  .real code{background:var(--panel2);padding:1px 7px;border-radius:2px;font-size:12px;
+    font-family:"SF Mono",monospace}
+  footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--border);color:var(--dim);
+    font-size:11px;text-align:center;line-height:1.9}
+  @media (max-width:640px){.mi{width:calc(50% - 4px)}}
+</style>
+</head>
+<body>
+<header>
+  <img src="logo.png" alt="Golden Arches">
+  <h1>麦门状态码 <span class="accent">// 试玩间</span></h1>
+</header>
+<div class="sub">
+  模拟点餐 · 实时判定你的身体服务状态码 · 一键生成晒卡。<b>无需 Token</b>，营养数值取自麦当劳官方营养表（160 项标准单品）。
+  想用<b>你的真实订单</b>跑完整版？见页底三步。<a href="https://github.com/chaucerj/mcd-status-codes" target="_blank">GitHub 仓库 →</a>
+</div>
+
+<div class="step"><span class="no">1</span><h2>选一个场景</h2></div>
+<div class="scene-chips" id="scenes"></div>
+
+<div class="step"><span class="no">2</span><h2>点一单（点击加入购物车）</h2></div>
+<div class="panel">
+  <div class="menu" id="menu"></div>
+  <div class="cart" id="cart"></div>
+  <div class="totals">本单合计：<b class="mono" id="tKcal">0</b> kcal · 钠 <b class="mono" id="tSodium">0</b> mg · 蛋白质 <b class="mono" id="tProtein">0</b> g · <span id="tQty">0</span> 件</div>
+  <button class="go" id="submit" disabled>-food- 提交这笔摄入（当前 <span id="clock">--:--</span>）</button>
+</div>
+
+<div class="step"><span class="no">3</span><h2>你的身体服务响应</h2></div>
+<div class="judge">
+  <div class="verdict" id="verdict">
+    <div style="color:var(--dim);font-size:13px;padding:6px 0">提交一单，这里会实时返回状态码与诊断。</div>
+  </div>
+  <div id="probe"></div>
+  <div class="share-row" id="shareRow" style="display:none">
+    <button class="go" id="share">📸 生成晒卡 PNG</button>
+    <a class="dl" id="dl" download="mcd-status-card.png" style="display:none;align-items:center">⬇ 保存图片</a>
+  </div>
+  <canvas id="shot" width="900" height="1150"></canvas>
+</div>
+
+<div class="real">
+  <div class="step" style="margin-top:0"><span class="no">★</span><h2>用你的真实订单跑完整版</h2></div>
+  <div class="panel">
+    <ol>
+      <li>在 <a href="https://open.mcd.cn/mcp" target="_blank">open.mcd.cn/mcp</a> 登录并激活 MCP Token</li>
+      <li><code>git clone https://github.com/chaucerj/mcd-status-codes && cd mcd-status-codes && export MCD_MCP_TOKEN=你的Token</code></li>
+      <li><code>python3 scripts/collect.py && python3 scripts/classify.py && python3 scripts/evolve.py && python3 scripts/report.py</code> → 打开 <code>dashboard.html</code></li>
+    </ol>
+    <div style="font-size:12px;color:var(--dim);margin-top:9px">完整版含：真实历史订单判定、商品图鉴、Agent 主动探活提醒、事故复盘、SRE 职级晋升。</div>
+  </div>
+</div>
+
+<footer>
+  麦门监控台 · 基于麦当劳中国官方 MCP 构建 · 独立开发，非官方产品<br>
+  本页为模拟试玩，营养数据取自官方营养表；输出仅供参考，不构成营养或医疗建议
+</footer>
+
+<script>
+/* ── 菜单（真实营养数值，1 项周边演示 404）────────────────────── */
+const MENU = [
+  {name:'巨无霸', kcal:513, sod:961,  protein:27, tag:'牛肉'},
+  {name:'麦辣鸡腿汉堡', kcal:485, sod:1208, protein:24, tag:'禽类·辣'},
+  {name:'板烧鸡腿堡', kcal:391, sod:1041, protein:23, tag:'禽类'},
+  {name:'麦香鱼', kcal:325, sod:556,  protein:16, tag:'鳕鱼'},
+  {name:'吉士汉堡包', kcal:294, sod:673,  protein:16, tag:'牛肉'},
+  {name:'中薯条', kcal:289, sod:165,  protein:4,  tag:'小食'},
+  {name:'大薯条', kcal:379, sod:216,  protein:6,  tag:'小食'},
+  {name:'麦乐鸡5块', kcal:213, sod:422,  protein:12, tag:'小食'},
+  {name:'圆筒冰淇淋', kcal:93, sod:36,   protein:2,  tag:'甜品'},
+  {name:'朱古力新地', kcal:282, sod:126,  protein:5,  tag:'甜品'},
+  {name:'可乐中杯', kcal:147, sod:0,    protein:0,  tag:'饮料'},
+  {name:'无糖可口可乐中杯', kcal:0, sod:35,  protein:0,  tag:'饮料'},
+  {name:'冰美式小杯', kcal:10, sod:0,   protein:1,  tag:'咖啡'},
+  {name:'麦当劳联名复古棒球帽', kcal:null, sod:null, protein:null, tag:'周边'},
+];
+const SCENES = [
+  {id:'worker', t:'打工人醒脑'},
+  {id:'cut',    t:'减脂控卡'},
+  {id:'bulk',   t:'增肌加餐'},
+  {id:'night',  t:'深夜放题'},
+];
+const SCENE_HINT = {
+  worker:'打工人策略：本场景提交【无咖啡因】订单会收到 599 Coffee Timeout 预警——建议加一杯冰美式（10 kcal）保持清醒。',
+  cut:'减脂策略：单餐 800 kcal 为配额线，超线会触发热量告警（P2），破 1500 直接 P1 过载事故。',
+  bulk:'增肌策略：关注蛋白质——高蛋白组合（麦乐鸡+板烧）比纯碳水更接近你的目标。',
+  night:'深夜放题：22:00 后提交一律判 408 Request Timeout（当前页面按你本机时间判定）。',
+};
+const COLOR = {'200':'#37872D','201':'#37872D','206':'#6ED0E0','301':'#705DA0','304':'#6ED0E0',
+  '404':'#E24D42','408':'#E98300','418':'#705DA0','429':'#E98300','502':'#705DA0','504':'#E24D42'};
+const NAME = {'200':'200 OK','201':'201 Created','206':'206 Partial','301':'301 Moved',
+  '304':'304 Not Modified','404':'404 Not Found','408':'408 Timeout','418':'418 teapot',
+  '429':'429 Too Many','502':'502 Bad Gateway','504':'504 Timeout'};
+
+/* ── 状态 ── */
+let SCENE = 'worker';
+let CART = [];              // {name, kcal, sod, protein, matched, qty}
+let LAST_SIG = null;
+let SEEN = new Set();
+let SUBMITS = 0;
+let LAST = null;            // 最近一次判定结果（晒卡用）
+
+/* ── 场景选择 ── */
+document.getElementById('scenes').innerHTML = SCENES.map((s, i) =>
+  `<button class="chip${i === 0 ? ' on' : ''}" data-scene="${s.id}">${s.t}</button>`).join('');
+document.getElementById('scenes').addEventListener('click', e => {
+  const b = e.target.closest('[data-scene]');
+  if (!b) return;
+  SCENE = b.getAttribute('data-scene');
+  document.querySelectorAll('[data-scene]').forEach(x => x.classList.toggle('on', x === b));
+});
+
+/* ── 菜单 ── */
+document.getElementById('menu').innerHTML = MENU.map((m, i) => `
+  <div class="mi" data-i="${i}">
+    <div class="n">${m.name}</div>
+    <div class="v">${m.kcal != null ? m.kcal + ' kcal · 钠 ' + m.sod + 'mg' : '官方营养表 404'}</div>
+  </div>`).join('');
+document.getElementById('menu').addEventListener('click', e => {
+  const c = e.target.closest('.mi');
+  if (!c) return;
+  const m = MENU[+c.getAttribute('data-i')];
+  const it = CART.find(x => x.name === m.name);
+  if (it) it.qty += 1;
+  else CART.push({...m, matched: m.kcal != null, qty: 1});
+  drawCart();
+});
+
+function drawCart() {
+  const el = document.getElementById('cart');
+  el.innerHTML = CART.length ? CART.map((it, i) => `
+    <span class="cart-it">${it.qty}× ${it.name}
+      <button data-plus="${i}" aria-label="加">+</button>
+      <button data-minus="${i}" aria-label="减">−</button>
+    </span>`).join('') : '<span class="cart-empty">购物车是空的——你的身体服务正等着接单</span>';
+  const kcal = CART.reduce((a, x) => a + (x.kcal || 0) * x.qty, 0);
+  const sod = CART.reduce((a, x) => a + (x.sod || 0) * x.qty, 0);
+  const pro = CART.reduce((a, x) => a + (x.protein || 0) * x.qty, 0);
+  const qty = CART.reduce((a, x) => a + x.qty, 0);
+  document.getElementById('tKcal').textContent = kcal;
+  document.getElementById('tSodium').textContent = sod;
+  document.getElementById('tProtein').textContent = pro;
+  document.getElementById('tQty').textContent = qty;
+  document.getElementById('submit').disabled = qty === 0;
+}
+document.getElementById('cart').addEventListener('click', e => {
+  const p = e.target.getAttribute('data-plus'), m = e.target.getAttribute('data-minus');
+  if (p != null) { CART[+p].qty += 1; drawCart(); }
+  if (m != null) { CART[+m].qty -= 1; if (CART[+m].qty <= 0) CART.splice(+m, 1); drawCart(); }
+});
+
+/* ── v4.0 判定阶梯（与 scripts/classify.py 同源移植）────────────── */
+function judge(cart) {
+  const items = cart.map(x => ({name: x.name, matched: x.matched, kcal: x.kcal != null ? x.kcal * x.qty : null,
+    sod: x.sod != null ? x.sod * x.qty : null, qty: x.qty}));
+  const matched = items.filter(i => i.matched);
+  const kcal = matched.length ? matched.reduce((a, i) => a + i.kcal, 0) : null;
+  const sodium = matched.length ? matched.reduce((a, i) => a + i.sod, 0) : null;
+  const qty = items.reduce((a, i) => a + i.qty, 0);
+  const sig = [...items].sort((a, b) => a.name.localeCompare(b.name)).map(i => i.name + 'x' + i.qty).join(',');
+  const hour = new Date().getHours();
+  const isDrink = n => ['可乐','雪碧','芬达','美汁源','咖啡','拿铁','美式','摩卡','奶茶','茶','豆浆','牛奶','冰美式'].some(k => n.includes(k));
+  SUBMITS += 1;
+
+  let code, reason;
+  if (hour >= 22 || hour < 5)                     { code = '408'; reason = `你在 ${String(hour).padStart(2,'0')}:${String(new Date().getMinutes()).padStart(2,'0')} 发起摄入——身体服务已不在供餐时段（22:00–05:00 判 408）`; }
+  else if (SUBMITS > 1 && new Date().getHours() < 16) { code = '429'; reason = `今日第 ${SUBMITS} 次摄入请求，触发限流——合并需求一次下单可避免 429`; }
+  else if (items.length && items.every(i => isDrink(i.name))) { code = '418'; reason = '整单均为饮料，请求命中茶壶协议（418 I\'m a teapot）'; }
+  else if (qty >= 6)                              { code = '502'; reason = `单笔聚合 ${qty} 件商品——多人网关请求，建议拆单分摊`; }
+  else if (LAST_SIG && sig === LAST_SIG)          { code = '304'; reason = '与上一单完全一致，缓存直接命中——连续 304 会触发味觉固化告警'; }
+  else if (items.length && !matched.length)       { code = '404'; reason = '全部商品不在官方营养账本（160 项标准单品）——真·404 数据缺口'; }
+  else if (items.some(i => !SEEN.has(i.name)))    { code = '201'; reason = '出现本会话从未点过的新品，身体账本新建记录'; }
+  else if (matched.length < items.length)         { code = '206'; reason = `${matched.length}/${items.length} 项商品可计量，返回部分内容`; }
+  else                                            { code = '200'; reason = '摄入成功入账，全部商品营养可计算'; }
+
+  const breaches = [];
+  if (kcal != null && kcal > 1500) breaches.push({t:'热量过载（P1 事故）', c:'#E24D42'});
+  else if (kcal != null && kcal > 800) breaches.push({t:'热量超配额（P2 告警）', c:'#E98300'});
+  if (sodium != null && sodium > 1200) breaches.push({t:'钠超标（P2 告警）', c:'#E98300'});
+
+  items.forEach(i => SEEN.add(i.name));
+  LAST_SIG = sig;
+
+  // 场景探活提示
+  let probe = '';
+  const hasCaf = items.some(i => isDrink(i.name) && (i.name.includes('咖啡') || i.name.includes('美式')));
+  if (SCENE === 'worker' && !hasCaf && hour >= 9 && hour < 16)
+    probe = '☕ 打工人探活：本单无咖啡因——按你的醒脑定位，建议补一杯冰美式小杯（10 kcal），否则咖啡窗关闭将判 599 Timeout';
+  if (SCENE === 'cut' && kcal != null && kcal <= 400 && sodium != null && sodium <= 800)
+    probe = '🥗 减脂探活：本单在配额内且钠友好——今天可以安心吃，204 主动静默中';
+  if (SCENE === 'bulk' && sodium != null && sodium <= 600)
+    probe = '💪 增肌探活：本单蛋白质尚可——距盈余目标还差一截，可加一份麦乐鸡（12g 蛋白）';
+  if (SCENE === 'night' && code !== '408')
+    probe = '🌙 深夜放题：现在提交还赶得上服务时段——22:00 之后再试就能拿到 408';
+
+  LAST = {code, reason, items, kcal, sodium, qty, breaches, scene: SCENES.find(s => s.id === SCENE).t};
+  return {code, reason, probe};
+}
+
+/* ── 提交 ── */
+document.getElementById('clock').textContent =
+  String(new Date().getHours()).padStart(2,'0') + ':' + String(new Date().getMinutes()).padStart(2,'0');
+document.getElementById('submit').addEventListener('click', () => {
+  if (!CART.length) return;
+  const r = judge(CART.slice());
+  const v = document.getElementById('verdict');
+  v.innerHTML = `
+    <div class="vcode mono" style="color:${COLOR[r.code]}">${r.code}</div>
+    <div style="min-width:0">
+      <div class="vlabel" style="color:${COLOR[r.code]}">${NAME[r.code]}</div>
+      <div class="vreason">${r.reason}</div>
+      ${LAST.breaches.length ? `<div class="badges">${LAST.breaches.map(b =>
+        `<span class="bdg" style="background:${b.c}">⚠ ${b.t}</span>`).join('')}</div>` : ''}
+    </div>`;
+  document.getElementById('probe').innerHTML = r.probe
+    ? `<div class="probe-hint">${r.probe}</div>` : '';
+  document.getElementById('shareRow').style.display = 'flex';
+  drawCard();
+  document.getElementById('shareRow').scrollIntoView({behavior: 'smooth', block: 'center'});
+});
+
+/* ── 晒卡：canvas 原生绘制，零依赖 ── */
+function drawCard() {
+  const cv = document.getElementById('shot'), ctx = cv.getContext('2d');
+  const W = 900, H = 1150;
+  ctx.fillStyle = '#111217'; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = '#2a2f38'; ctx.lineWidth = 2; ctx.strokeRect(14, 14, W-28, H-28);
+
+  // 金色拱门（双弧）
+  ctx.strokeStyle = '#FFC72C'; ctx.lineWidth = 13; ctx.lineCap = 'butt';
+  ctx.beginPath(); ctx.moveTo(60, 128); ctx.lineTo(60, 76);
+  ctx.quadraticCurveTo(60, 30, 100, 30); ctx.quadraticCurveTo(142, 30, 148, 118);
+  ctx.quadraticCurveTo(154, 30, 196, 30); ctx.quadraticCurveTo(236, 30, 236, 76);
+  ctx.lineTo(236, 128); ctx.stroke();
+
+  ctx.fillStyle = '#d8d9da'; ctx.font = '600 30px "PingFang SC", sans-serif';
+  ctx.fillText('麦门状态码', 268, 78);
+  ctx.fillStyle = '#FFC72C'; ctx.font = '600 20px "PingFang SC", sans-serif';
+  ctx.fillText('身体服务响应卡', 268, 110);
+
+  // 大状态码
+  ctx.fillStyle = COLOR[LAST.code];
+  ctx.font = '800 130px "SF Mono", Consolas, monospace';
+  ctx.fillText(LAST.code, 60, 300);
+  ctx.fillStyle = '#d8d9da'; ctx.font = '700 34px "PingFang SC", sans-serif';
+  ctx.fillText(NAME[LAST.code], 60, 356);
+  ctx.fillStyle = '#8e9095'; ctx.font = '400 17px "PingFang SC", sans-serif';
+  wrap(ctx, LAST.reason, 60, 396, W-120, 28);
+
+  // 分隔线
+  ctx.strokeStyle = '#2a2f38'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(60, 470); ctx.lineTo(W-60, 470); ctx.stroke();
+
+  // 摄入清单
+  ctx.fillStyle = '#8e9095'; ctx.font = '600 15px "PingFang SC", sans-serif';
+  ctx.fillText('本次摄入', 60, 505);
+  let y = 540;
+  LAST.items.slice(0, 7).forEach(i => {
+    ctx.fillStyle = i.matched ? '#d8d9da' : '#E24D42';
+    ctx.font = '400 18px "PingFang SC", sans-serif';
+    ctx.fillText(`${i.qty}× ${i.name}`, 60, y);
+    ctx.fillStyle = '#8e9095'; ctx.font = '400 15px "SF Mono", monospace';
+    ctx.fillText(i.matched ? i.kcal + ' kcal' : '404', W-160, y);
+    y += 34;
+  });
+  if (LAST.items.length > 7) { ctx.fillStyle = '#6a6d73'; ctx.fillText(`…共 ${LAST.items.length} 件`, 60, y); y += 34; }
+
+  // 指标告警
+  y = Math.max(y + 16, 820);
+  ctx.fillStyle = '#8e9095'; ctx.font = '600 15px "PingFang SC", sans-serif';
+  ctx.fillText('指标告警', 60, y); y += 30;
+  if (LAST.breaches.length) {
+    LAST.breaches.forEach(b => {
+      ctx.fillStyle = b.c; ctx.font = '700 18px "PingFang SC", sans-serif';
+      ctx.fillText('⚠ ' + b.t, 60, y); y += 32;
+    });
+  } else {
+    ctx.fillStyle = '#37872D'; ctx.font = '400 16px "PingFang SC", sans-serif';
+    ctx.fillText('✓ 无超标指标', 60, y); y += 32;
+  }
+
+  // 汇总
+  y = Math.max(y + 14, 960);
+  ctx.fillStyle = '#8e9095'; ctx.font = '400 16px "SF Mono", monospace';
+  ctx.fillText(`合计 ${LAST.kcal ?? '?'} kcal · 钠 ${LAST.sodium ?? '?'} mg · ${LAST.qty} 件`, 60, y);
+  ctx.fillStyle = '#EAB839'; ctx.font = '600 18px "PingFang SC", sans-serif';
+  ctx.fillText('场景：' + LAST.scene, 60, y + 40);
+
+  // 底部
+  ctx.fillStyle = '#6a6d73'; ctx.font = '400 14px "PingFang SC", sans-serif';
+  ctx.fillText('麦门状态码 · 基于麦当劳中国官方 MCP · 独立开发非官方产品', 60, H-72);
+  ctx.fillText('github.com/chaucerj/mcd-status-codes', 60, H-44);
+
+  document.getElementById('shot').style.display = 'block';
+  const dl = document.getElementById('dl');
+  dl.style.display = 'inline-flex';
+  dl.href = cv.toDataURL('image/png');
+}
+
+function wrap(ctx, text, x, y, maxW, lh) {
+  let line = '', yy = y;
+  for (const ch of text) {
+    if (ctx.measureText(line + ch).width > maxW) { ctx.fillText(line, x, yy); line = ch; yy += lh; }
+    else line += ch;
+  }
+  if (line) ctx.fillText(line, x, yy);
+}
+
+drawCart();
+</script>
+</body>
+</html>
