@@ -1,72 +1,56 @@
 #!/usr/bin/env node
-/* 试玩间 e2e 测试：官方菜单 + 时间驱动探活（三段会话，真实浏览器） */
+/* 试玩间 v4 e2e：Agent 对话点餐 + 时间轴探活（真实浏览器） */
 const { chromium } = require('playwright-core');
 const EXEC = process.env.HOME + '/Library/Caches/ms-playwright/chromium-1248/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing';
-const URL = 'file://' + require('path').resolve(__dirname, '..', 'docs', 'index.html');
+const PAGE_URL = 'file://' + require('path').resolve(__dirname, '..', 'docs', 'index.html');
 
 (async () => {
   const b = await chromium.launch({ executablePath: EXEC, args: ['--no-sandbox', '--disable-gpu'] });
   let pass = 0, total = 0;
   const check = (desc, cond) => { total++; cond ? (pass++, console.log('✓', desc)) : console.log('✗', desc); };
-  const setClock = async (page, min) => {
-    await page.evaluate(v => {
-      const s = document.getElementById('clockSlider');
-      s.value = v; s.dispatchEvent(new Event('input'));
-    }, min);
-  };
-  const feedHas = async (page, text) =>
-    (await page.locator('#feed').innerHTML()).includes(text);
+  const page = await b.newPage({ viewport: { width: 900, height: 1000 } });
+  const pageErrors = [];
+  page.on('pageerror', e => pageErrors.push(e.message));
+  await page.goto(PAGE_URL);
 
-  // ── 会话 A：10:00 点板烧（无咖啡）→ 201 + 103 晨间咖啡 → 11:40 → 599 ──
-  {
-    const page = await b.newPage();
-    await page.goto(URL);
-    await page.evaluate(() => setClock(600));
-    await page.click('.mi:has-text("板烧鸡腿堡")');
-    await page.click('#submit');
-    check('A1: 10:00 提交板烧（新品）→ 201 Created',
-      (await page.locator('#verdict').innerHTML()).includes('201 Created'));
-    check('A2: 晨间咖啡窗探活 → 103 Hints', await feedHas(page, '103 Hints'));
-    await setClock(page, 700);
-    check('A3: 拨到 11:40 未采纳 → 599 Timeout', await feedHas(page, '599 Timeout'));
-    await page.close();
-  }
+  // T1 欢迎语
+  check('T1 Agent 开场欢迎', (await page.locator('#msgs').textContent()).includes('值班运维 Agent'));
 
-  // ── 会话 B：12:00 点巨无霸 → 200；15:00 缺口 1287 → 103 补给 ──
-  {
-    const page = await b.newPage();
-    await page.goto(URL);
-    await page.evaluate(() => setClock(720));
-    await page.click('.mi:has-text("巨无霸")');
-    await page.click('#submit');
-    check('B1: 12:00 首单巨无霸 → 201 Created（新品优先于 200）',
-      (await page.locator('#verdict').innerHTML()).includes('201 Created'));
-    await setClock(page, 900);
-    check('B2: 15:00 缺口 1287 → 103 补给', await feedHas(page, '缺口 1287'));
-    await page.close();
-  }
+  // T2 对话推荐：20块吃什么
+  await page.fill('#chatIn', '20块吃什么');
+  await page.click('#chatSend');
+  const lastAgent = await page.locator('.msg.agent .bubble').last().innerHTML();
+  check('T2 组合卡出现（主餐+确认按钮）', lastAgent.includes('就这样下单') && lastAgent.includes('kcal'));
 
-  // ── 会话 C：12:00 双份巨无霸+双份麦辣（1996 kcal）→ 200 + 双指标告警；15:00 → 412；16:05 → 522 ──
-  {
-    const page = await b.newPage();
-    await page.goto(URL);
-    await page.evaluate(() => setClock(720));
-    await page.click('.mi:has-text("巨无霸")');
-    await page.click('.mi:has-text("巨无霸")');
-    await page.click('.mi:has-text("麦辣鸡腿汉堡")');
-    await page.click('.mi:has-text("麦辣鸡腿汉堡")');
-    await page.click('#submit');
-    const v = await page.locator('#verdict').innerHTML();
-    check('C1: 1996 kcal 大单 → 201 + 双指标告警（状态码不受负荷影响）',
-      v.includes('201 Created') && v.includes('热量过载') && v.includes('钠超标'));
-    check('C2: 指标告警双 chip（热量过载 P1 + 钠超标 P2）',
-      v.includes('热量过载') && v.includes('钠超标'));
-    await setClock(page, 900);
-    check('C3: 15:00 超预算 → 412 目标否决', await feedHas(page, '412 Denied'));
-    await setClock(page, 966);
-    check('C4: 16:06 双窗超时 → 522 失联升级', await feedHas(page, '522 Lost'));
-    await page.close();
-  }
+  // T3 确认下单 → 状态码出现
+  await page.click('[data-act="confirm"]');
+  const all1 = await page.locator('#msgs').textContent();
+  check('T3 确认后返回状态码判定', /20[0-9]|429|206|404/.test(all1));
+
+  // T4 时间轴拨到 10:00 → 晨间咖啡探活 103
+  await page.evaluate(() => setClock(600));
+  const feed1 = await page.locator('#msgs').textContent();
+  check('T4 拨到 10:00 → 103 咖啡窗探活', feed1.includes('103 Hints'));
+
+  // T5 拨到 11:40 → 599
+  await page.evaluate(() => setClock(700));
+  check('T5 拨到 11:40 → 599 Timeout', (await page.locator('#msgs').textContent()).includes('599 Timeout'));
+
+  // T6 对话：来杯咖啡 → 推荐饮品 → 确认
+  await page.fill('#chatIn', '来杯咖啡');
+  await page.click('#chatSend');
+  await page.click('[data-act="confirm"]');
+  const all2 = await page.locator('#msgs').textContent();
+  check('T6 咖啡推荐可确认下单', /200 OK|201 Created|429|206/.test(all2));
+
+  // T7 深夜场景 → 408
+  await page.fill('#chatIn', '深夜饿了');
+  await page.click('#chatSend');
+  await page.click('[data-act="confirm"]');
+  check('T7 深夜提交 → 408 Timeout', (await page.locator('#msgs').textContent()).includes('408 Timeout'));
+
+  check('T8 无 JS 运行时错误', pageErrors.length === 0);
+  if (pageErrors.length) console.log('JS errors:', pageErrors.slice(0, 3));
 
   await b.close();
   console.log(`\ne2e ${pass}/${total} 通过`);
