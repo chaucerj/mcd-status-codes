@@ -76,6 +76,9 @@ details[open] summary{border-bottom:1px solid var(--border)}
 .real code{background:var(--panel2);padding:1px 7px;border-radius:2px;font-size:12px;font-family:"SF Mono",monospace}
 footer{margin-top:22px;padding-top:14px;border-top:1px solid var(--border);color:var(--dim);font-size:11px;text-align:center;line-height:1.9}
 @media (max-width:640px){.menu{grid-template-columns:repeat(auto-fill,minmax(116px,1fr))}}
+  .meta-row{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px dashed var(--border)}
+  .meta-row .k{color:var(--muted)}
+  .meta-row .v{font-family:"SF Mono",monospace;font-weight:600;color:var(--text)}
 </style>
 </head>
 <body>
@@ -368,55 +371,97 @@ function renderWishBoard() {
 }
 
 function diyOpen(name) {
-  const bases = ITEMS.filter(function(it) { return it.matched && it.kcal && it.kcal >= 300; })
-    .sort(function(a, b) { return b.protein - a.protein; }).slice(0, 6);
-  const addons = ITEMS.filter(function(it) { return it.matched && it.kcal != null && it.kcal > 0 && it.kcal <= 250; })
-    .sort(function(a, b) { return (b.protein || 0) - (a.protein || 0); }).slice(0, 6);
+  // 全场任意搭配：所有官方餐品都是配料，不设基底
   const b = agentSay('🧪 <b>DIY 新品工坊</b>' + (name ? '（方向：' + esc(name) + '）' : '') +
-    '<br>选一个基底 + 至多两份加料，营养按成分加和确定性地算出来——不编数据。<br>' +
-    '<div style="margin-top:8px"><input id="diyName" placeholder="给你的新品起名（如：麻辣香锅堡）" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:3px;color:var(--text);padding:6px 10px;font-size:12px;font-family:inherit"></div>' +
-    '<div class="stat-note" style="margin-top:8px">基底（单选）：</div><div class="chips" id="diyBase">' +
-    bases.map(function(x, i) { return '<button class="chip' + (i === 0 ? ' on' : '') + '" data-diybase="' + esc(x.name) + '">' + esc(x.name) + ' ' + x.kcal + 'kcal</button>'; }).join('') + '</div>' +
-    '<div class="stat-note" style="margin-top:8px">加料（可多选）：</div><div class="chips" id="diyAdd">' +
-    addons.map(function(x) { return '<button class="chip" data-diyadd="' + esc(x.name) + '">' + esc(x.name) + ' +' + x.kcal + 'kcal</button>'; }).join('') + '</div>' +
-    '<div class="acts"><button class="abtn gold" id="diyGo">🧪 合成新品（201）</button></div>' +
-    '<div class="dim2" style="margin-top:6px">合成品营养 = 各成分官方营养加和，确定性可复算。</div>');
-  let base = bases[0] ? bases[0].name : null;
-  const adds = [];
-  b.querySelector('#diyBase').addEventListener('click', function(e) {
-    const c = e.target.closest('[data-diybase]');
+    '<br>全场 107 项官方餐品任意搭配——薯条蘸甜筒、鸡块配鳕鱼堡，都行。营养按成分官方值加和，确定性可算，不编数据。<br>' +
+    '<div style="margin-top:8px"><input id="diyName" placeholder="给你的新品起名（留空则自动按配料命名）" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:3px;color:var(--text);padding:6px 10px;font-size:12px;font-family:inherit"></div>' +
+    '<div class="stat-note" style="margin-top:8px">点击下方餐品加入/移出配方（≥2 项即可合成）：</div>' +
+    '<div class="combo" id="diyPick"></div>' +
+    '<div class="chips scroll" id="diyPool" style="max-height:150px;margin-top:8px">' +
+    ITEMS.filter(function(it) { return !it._skip && it.kcal != null; }).map(function(x) {
+      return '<button class="chip" data-diypick="' + esc(x.name) + '">' + esc(x.name) + ' ' + x.kcal + 'kcal</button>';
+    }).join('') + '</div>' +
+    '<div class="stat-note" id="diyTotal" style="margin-top:8px">尚未选配料</div>' +
+    '<div class="acts"><button class="abtn gold" id="diyGo" disabled>🧪 合成新品（201）</button></div>' +
+    '<div class="dim2" style="margin-top:6px">合成品营养 = 各成分官方营养加和，确定性可复算；超配额会当场亮指标告警。</div>');
+  let picks = [];
+  const pickEl = b.querySelector('#diyPick');
+  const totalEl = b.querySelector('#diyTotal');
+  const goBtn = b.querySelector('#diyGo');
+
+  function redraw() {
+    pickEl.innerHTML = picks.length ? picks.map(function(p) {
+      return '<div class="ci">' + (p.img ? '<img src="' + p.img + '" alt="">' : '') +
+        '<span class="cn">' + p.qty + '× <b>' + esc(p.name) + '</b></span>' +
+        '<span class="cv">' + p.kcal + ' kcal</span></div>';
+    }).join('') : '<div class="dim2" style="font-size:11px">还没有选配料——全场任搭，例如：中薯条 + 圆筒冰淇淋</div>';
+    const kcal = picks.reduce(function(a, p) { return a + p.kcal * p.qty; }, 0);
+    const sod = picks.reduce(function(a, p) { return a + p.sod * p.qty; }, 0);
+    const pro = picks.reduce(function(a, p) { return a + (p.protein || 0) * p.qty; }, 0);
+    const warns = [];
+    if (kcal > 1500) warns.push('P1 热量过载');
+    else if (kcal > 800) warns.push('P2 热量超配额');
+    if (sod > 1200) warns.push('P2 钠超标');
+    totalEl.innerHTML = picks.length
+      ? '配方合计 <b class="mono">' + kcal + ' kcal · 钠 ' + sod + ' mg · 蛋白 ' + pro + ' g</b>' +
+        (warns.length ? ' —— <span style="color:var(--orange)">⚠ ' + warns.join('、') + '</span>' : ' ✓ 配额内')
+      : '尚未选配料';
+    goBtn.disabled = picks.length < 2;
+  }
+
+  b.querySelector('#diyPool').addEventListener('click', function(e) {
+    const c = e.target.closest('[data-diypick]');
     if (!c) return;
-    base = c.getAttribute('data-diybase');
-    this.querySelectorAll('.chip').forEach(function(x) { x.classList.remove('on'); });
-    c.classList.add('on');
+    const nm = c.getAttribute('data-diypick');
+    const it = ITEMS.find(function(x) { return x.name === nm; });
+    if (!it || it.kcal == null) { c.style.opacity = .4; return; }
+    const ex = picks.find(function(p) { return p.name === nm; });
+    if (ex) { ex.qty += 1; }
+    else { picks.push({name: nm, img: it.img || '', kcal: it.kcal, sod: it.sod, protein: it.protein, qty: 1}); c.classList.add('on'); }
+    redraw();
   });
-  b.querySelector('#diyAdd').addEventListener('click', function(e) {
-    const c = e.target.closest('[data-diyadd]');
-    if (!c) return;
-    const nm = c.getAttribute('data-diyadd');
-    const idx = adds.indexOf(nm);
-    if (idx >= 0) { adds.splice(idx, 1); c.classList.remove('on'); }
-    else { adds.push(nm); c.classList.add('on'); }
+  pickEl.addEventListener('click', function(e) {
+    const ci = e.target.closest('.ci');
+    if (!ci) return;
+    const nm = ci.querySelector('.cn b').textContent;
+    picks = picks.filter(function(p) { return p.name !== nm; });
+    redraw();
   });
-  b.querySelector('#diyGo').addEventListener('click', function() {
-    const nm = ($id('diyName') && $id('diyName').value.trim()) || ('自制·' + base);
-    const parts = ITEMS.filter(function(it) { return adds.indexOf(it.name) !== -1; });
-    const baseIt = ITEMS.find(function(it) { return it.name === base; }) || {kcal: 0, sod: 0, protein: 0};
-    const kcal = (baseIt.kcal || 0) + parts.reduce(function(a, x) { return a + x.kcal; }, 0);
-    const sod = (baseIt.sod || 0) + parts.reduce(function(a, x) { return a + x.sod; }, 0);
-    const protein = Math.round((baseIt.protein || 0) + parts.reduce(function(a, x) { return a + (x.protein || 0); }, 0));
-    const diy = {code: 'DIY-' + Date.now(), name: nm, img: '', cat: '自制新品',
-      tags: ['自制'], matched: true, kcal: kcal, sod: sod, protein: protein,
-      parts: [base].concat(adds), at: fmt(SIM_MIN)};
+
+  goBtn.addEventListener('click', function() {
+    if (picks.length < 2) return;
+    const autoName = picks.map(function(p) { return p.name.slice(0, 4); }).join('+');
+    const nm = ($id('diyName') && $id('diyName').value.trim()) || autoName;
+    const kcal = picks.reduce(function(a, p) { return a + p.kcal * p.qty; }, 0);
+    const sod = picks.reduce(function(a, p) { return a + p.sod * p.qty; }, 0);
+    const protein = Math.round(picks.reduce(function(a, p) { return a + (p.protein || 0) * p.qty; }, 0));
+    const diy = {code: 'DIY-' + Date.now(), name: nm, img: (picks[0] && picks[0].img) || '', cat: '自制新品',
+      tags: ['自制', 'DIY'], matched: true, kcal: kcal, sod: sod, protein: protein,
+      parts: picks.map(function(p) { return p.name; }), at: fmt(SIM_MIN)};
     DIYS.push(diy); ITEMS.push(diy);
     try { localStorage.setItem('mcd.diys', JSON.stringify(DIYS)); } catch (e) {}
+    ITEMS.forEach(function(it) { if (it.name === nm) it._skip = false; });
     drawMenu($id('search').value);
+    const w2 = [];
+    if (kcal > 1500) w2.push('P1 热量过载');
+    else if (kcal > 800) w2.push('P2 热量超配额');
+    if (sod > 1200) w2.push('P2 钠超标');
+    agentSay('🧪 <b>' + esc(nm) + '</b> 已合成入库（<b>201 Created · 自制新品</b>）。' +
+      '配方：' + esc(diy.parts.join(' + ')) + '，合计 <b>' + kcal + ' kcal / 钠 ' + sod + ' mg / 蛋白 ' + protein + ' g</b>' +
+      (w2.length ? '，含指标告警：⚠ ' + w2.join('、') : '，配额内 ✓') + '。<br>已进你的菜单「自制新品」分类，随时可下单；想要官方做出来？说「心愿榜」拉愿力。');
     CART = [{...diy, qty: 1}];
     submitOrder();
-    agentSay('🧪 <b>' + esc(nm) + '</b> 已合成入库（201 Created·自制区）。营养 = ' +
-      esc([base].concat(adds).join(' + ')) + ' 的官方营养加和。<br>想让它成为官方真品？去<b>新品心愿榜</b>给它拉愿力。');
     renderWishBoard();
   });
+}
+function renderWishBoard() {
+  const sorted = WISHES.slice().sort(function(a, b) { return b.votes - a.votes; });
+  const rows = sorted.map(function(w, i) {
+    return '<div class="meta-row"><span class="k">#' + (i + 1) + ' ' + esc(w.name) + '</span>' +
+      '<span class="v">愿力 ' + w.votes + '</span></div>';
+  }).join('');
+  agentSay('📮 <b>新品心愿榜</b>（本机档案）<br>' + (rows || '（空）') +
+    '<div class="dim2" style="margin-top:6px">生成晒卡分享， collecting 愿力——愿力榜就是「最想让官方做出来」的民意。</div>');
 }
 function renderWishBoard() {}
 
