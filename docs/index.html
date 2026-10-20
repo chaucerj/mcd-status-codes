@@ -17,23 +17,35 @@
   header img{width:40px;height:34px}
   h1{font-size:20px;font-weight:700}
   h1 .accent{color:var(--gold)}
-  .sub{color:var(--muted);font-size:12px;margin-bottom:18px;line-height:1.8}
+  .sub{color:var(--muted);font-size:12px;margin-bottom:14px;line-height:1.8}
   .sub a{color:var(--blue);text-decoration:none}
-  .step{display:flex;align-items:center;gap:8px;margin:20px 0 10px}
+  .step{display:flex;align-items:center;gap:8px;margin:18px 0 10px}
   .step .no{width:22px;height:22px;border-radius:3px;background:var(--gold);color:#111;
     display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px}
   .step h2{font-size:15px}
   .panel{background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:14px}
-  .scene-chips,.menu{display:flex;flex-wrap:wrap;gap:8px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
   .chip{appearance:none;border:1px solid var(--border);background:var(--panel2);color:var(--muted);
     padding:6px 14px;border-radius:3px;font-size:13px;cursor:pointer;font-family:inherit;transition:all .15s}
   .chip:hover{color:var(--text)}
   .chip.on{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:600}
-  .mi{width:calc(25% - 6px);min-width:150px;flex:1;background:var(--panel2);border:1px solid var(--border);
-    border-radius:4px;padding:9px 11px;cursor:pointer;transition:border-color .15s}
+  .clock{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .clock input[type=range]{flex:1;min-width:220px;accent-color:var(--gold)}
+  .clock .t{font-size:22px;font-weight:800;color:var(--gold);font-family:"SF Mono",monospace;min-width:70px}
+  .clock .d{font-size:11px;color:var(--dim)}
+  .search{width:100%;background:var(--panel2);border:1px solid var(--border);border-radius:3px;
+    color:var(--text);padding:7px 11px;font-size:13px;margin-bottom:10px;font-family:inherit}
+  .search::placeholder{color:var(--dim)}
+  .menu{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px}
+  .mi{background:var(--panel2);border:1px solid var(--border);border-radius:4px;overflow:hidden;
+    cursor:pointer;transition:border-color .15s}
   .mi:hover{border-color:var(--dim)}
-  .mi .n{font-size:12px;font-weight:600}
-  .mi .v{font-size:10px;color:var(--muted);margin-top:3px;font-family:"SF Mono",monospace}
+  .mi img{width:100%;height:86px;object-fit:cover;display:block;background:#fff}
+  .mi .nofb{width:100%;height:86px;display:flex;align-items:center;justify-content:center;
+    font-size:26px;font-weight:700;background:var(--panel2)}
+  .mi .n{font-size:11px;font-weight:600;padding:6px 8px 2px;line-height:1.3;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;height:34px}
+  .mi .v{font-size:10px;color:var(--muted);padding:0 8px 8px;font-family:"SF Mono",monospace}
   .cart{margin-top:12px;min-height:38px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
   .cart-empty{color:var(--dim);font-size:12px}
   .cart-it{display:inline-flex;align-items:center;gap:7px;background:var(--panel2);
@@ -56,13 +68,14 @@
   .badges{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap}
   .bdg{padding:2px 9px;border-radius:2px;font-size:10px;font-weight:700;
     font-family:"SF Mono",monospace;color:#fff}
-  .probe-hint{margin-top:10px;padding:8px 11px;border-left:3px solid var(--cyan);
-    background:var(--panel2);font-size:12px;line-height:1.6;border-radius:0 2px 2px 0}
+  .feed{margin-top:8px}
+  .feed-item{display:flex;gap:8px;align-items:flex-start;padding:7px 9px;background:var(--panel2);
+    border-radius:3px;margin-bottom:6px;font-size:12px;line-height:1.6}
+  .feed-item .pc{font-family:"SF Mono",monospace;font-weight:700;font-size:10px;
+    padding:1px 7px;border-radius:2px;color:#fff;flex:none;margin-top:1px}
+  .feed-item .pt{color:var(--dim);font-size:10px;margin-top:2px}
   .share-row{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap}
   .share-row .go{margin-top:0;background:var(--blue);color:#fff}
-  .share-row .dl{appearance:none;border:1px solid var(--border);background:transparent;
-    color:var(--text);font-weight:600;font-size:13px;padding:9px 20px;border-radius:4px;
-    cursor:pointer;font-family:inherit}
   #shot{max-width:100%;border:1px solid var(--border);border-radius:4px;margin-top:12px;display:none}
   .real{margin-top:26px}
   .real ol{margin:8px 0 0 20px;font-size:13px;color:var(--muted);line-height:2}
@@ -70,7 +83,7 @@
     font-family:"SF Mono",monospace}
   footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--border);color:var(--dim);
     font-size:11px;text-align:center;line-height:1.9}
-  @media (max-width:640px){.mi{width:calc(50% - 4px)}}
+  @media (max-width:640px){.menu{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}}
 </style>
 </head>
 <body>
@@ -79,27 +92,37 @@
   <h1>麦门状态码 <span class="accent">// 试玩间</span></h1>
 </header>
 <div class="sub">
-  模拟点餐 · 实时判定你的身体服务状态码 · 一键生成晒卡。<b>无需 Token</b>，营养数值取自麦当劳官方营养表（160 项标准单品）。
-  想用<b>你的真实订单</b>跑完整版？见页底三步。<a href="https://github.com/chaucerj/mcd-status-codes" target="_blank">GitHub 仓库 →</a>
+  在官方真实菜单上模拟点餐 · 拖动时间轴让 <b>Agent 主动探活</b> · 一键生成晒卡。<b>无需 Token</b>。
+  商品与图片来自官方 MCP 菜单快照，营养数值来自官方营养表（160 项标准单品）。
+  <a href="https://github.com/chaucerj/mcd-status-codes" target="_blank">GitHub 仓库 →</a>
 </div>
 
-<div class="step"><span class="no">1</span><h2>选一个场景</h2></div>
-<div class="scene-chips" id="scenes"></div>
-
-<div class="step"><span class="no">2</span><h2>点一单（点击加入购物车）</h2></div>
+<div class="step"><span class="no">1</span><h2>拨动时间（Agent 按此刻探活）</h2></div>
 <div class="panel">
+  <div class="clock">
+    <span class="t mono" id="clockT">12:00</span>
+    <input type="range" id="clockSlider" min="0" max="1429" value="720" step="1" aria-label="模拟时间">
+    <span class="d">拖动 = 时间旅行 · Agent 探活随时钟触发</span>
+  </div>
+</div>
+
+<div class="step"><span class="no">2</span><h2>点一单（按当前模拟时间提交）</h2></div>
+<div class="panel">
+  <input class="search" id="search" placeholder="搜索商品（共 107 项在售）">
   <div class="menu" id="menu"></div>
   <div class="cart" id="cart"></div>
   <div class="totals">本单合计：<b class="mono" id="tKcal">0</b> kcal · 钠 <b class="mono" id="tSodium">0</b> mg · 蛋白质 <b class="mono" id="tProtein">0</b> g · <span id="tQty">0</span> 件</div>
-  <button class="go" id="submit" disabled>-food- 提交这笔摄入（当前 <span id="clock">--:--</span>）</button>
+  <button class="go" id="submit" disabled>提交这笔摄入（将于 <span id="submitAt">12:00</span> 送达身体服务）</button>
 </div>
 
-<div class="step"><span class="no">3</span><h2>你的身体服务响应</h2></div>
+<div class="step"><span class="no">3</span><h2>你的身体服务响应 + Agent 探活</h2></div>
 <div class="judge">
   <div class="verdict" id="verdict">
-    <div style="color:var(--dim);font-size:13px;padding:6px 0">提交一单，这里会实时返回状态码与诊断。</div>
+    <div style="color:var(--dim);font-size:13px;padding:6px 0">提交一单，这里会实时返回状态码与诊断；Agent 会按模拟时间发起探活。</div>
   </div>
-  <div id="probe"></div>
+  <div class="panel-h" style="margin-top:14px;margin-bottom:8px;font-size:13px;font-weight:700">
+    🛰️ Agent 探活日志（拖动上方时间轴重放）</div>
+  <div class="feed" id="feed"><div class="stat-note" style="color:var(--dim);font-size:12px">提交一单后，Agent 将按窗口探活：晨间咖啡窗 09:30–11:00 · 午后咖啡窗 13:30–15:30 · 午后补给窗 14:30–16:00</div></div>
   <div class="share-row" id="shareRow" style="display:none">
     <button class="go" id="share">📸 生成晒卡 PNG</button>
     <a class="dl" id="dl" download="mcd-status-card.png" style="display:none;align-items:center">⬇ 保存图片</a>
@@ -115,213 +138,227 @@
       <li><code>git clone https://github.com/chaucerj/mcd-status-codes && cd mcd-status-codes && export MCD_MCP_TOKEN=你的Token</code></li>
       <li><code>python3 scripts/collect.py && python3 scripts/classify.py && python3 scripts/evolve.py && python3 scripts/report.py</code> → 打开 <code>dashboard.html</code></li>
     </ol>
-    <div style="font-size:12px;color:var(--dim);margin-top:9px">完整版含：真实历史订单判定、商品图鉴、Agent 主动探活提醒、事故复盘、SRE 职级晋升。</div>
+    <div style="font-size:12px;color:var(--dim);margin-top:9px">完整版含：真实历史订单判定、商品图鉴、代谢模型探活（体重身高年龄→TDEE）、事故复盘、SRE 职级晋升。</div>
   </div>
 </div>
 
 <footer>
   麦门监控台 · 基于麦当劳中国官方 MCP 构建 · 独立开发，非官方产品<br>
-  本页为模拟试玩，营养数据取自官方营养表；输出仅供参考，不构成营养或医疗建议
+  本页为单日模拟试玩（完整判定口径见仓库），营养数值取自官方营养表；输出仅供参考，不构成营养或医疗建议
 </footer>
 
 <script>
-/* ── 菜单（真实营养数值，1 项周边演示 404）────────────────────── */
-const MENU = [
-  {name:'巨无霸', kcal:513, sod:961,  protein:27, tag:'牛肉'},
-  {name:'麦辣鸡腿汉堡', kcal:485, sod:1208, protein:24, tag:'禽类·辣'},
-  {name:'板烧鸡腿堡', kcal:391, sod:1041, protein:23, tag:'禽类'},
-  {name:'麦香鱼', kcal:325, sod:556,  protein:16, tag:'鳕鱼'},
-  {name:'吉士汉堡包', kcal:294, sod:673,  protein:16, tag:'牛肉'},
-  {name:'中薯条', kcal:289, sod:165,  protein:4,  tag:'小食'},
-  {name:'大薯条', kcal:379, sod:216,  protein:6,  tag:'小食'},
-  {name:'麦乐鸡5块', kcal:213, sod:422,  protein:12, tag:'小食'},
-  {name:'圆筒冰淇淋', kcal:93, sod:36,   protein:2,  tag:'甜品'},
-  {name:'朱古力新地', kcal:282, sod:126,  protein:5,  tag:'甜品'},
-  {name:'可乐中杯', kcal:147, sod:0,    protein:0,  tag:'饮料'},
-  {name:'无糖可口可乐中杯', kcal:0, sod:35,  protein:0,  tag:'饮料'},
-  {name:'冰美式小杯', kcal:10, sod:0,   protein:1,  tag:'咖啡'},
-  {name:'麦当劳联名复古棒球帽', kcal:null, sod:null, protein:null, tag:'周边'},
-];
-const SCENES = [
-  {id:'worker', t:'打工人醒脑'},
-  {id:'cut',    t:'减脂控卡'},
-  {id:'bulk',   t:'增肌加餐'},
-  {id:'night',  t:'深夜放题'},
-];
-const SCENE_HINT = {
-  worker:'打工人策略：本场景提交【无咖啡因】订单会收到 599 Coffee Timeout 预警——建议加一杯冰美式（10 kcal）保持清醒。',
-  cut:'减脂策略：单餐 800 kcal 为配额线，超线会触发热量告警（P2），破 1500 直接 P1 过载事故。',
-  bulk:'增肌策略：关注蛋白质——高蛋白组合（麦乐鸡+板烧）比纯碳水更接近你的目标。',
-  night:'深夜放题：22:00 后提交一律判 408 Request Timeout（当前页面按你本机时间判定）。',
-};
+/* ── 在售商品：官方 MCP query-meals × query-meal-detail 构建期快照 ── */
+const ITEMS = [{"code": "9900016076", "name": "“我就喜欢”鸡薯双全盒", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900016076_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900016075", "name": "龙焰芝士棒鸡腿堡三件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900016075_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900016073", "name": "龙焰鸡腿堡三件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900016073_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "521955", "name": "麦当劳联名徽章", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_521955_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900016311", "name": "龙焰美味四件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900016311_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900004064", "name": "精选单人餐三件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900004064_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "521950", "name": "蓝莓爆爆珠麦旋风", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_521950_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "521929", "name": "旋旋水手帽", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260916/product/MS_521929_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "521946", "name": "旋旋星愿贴", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_521946_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "515946", "name": "冰浓浓黑巧中杯", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20250611/product/MS_515946_600.png", "kcal": 135, "sod": 77, "protein": 8, "matched": true}, {"code": "9900016309", "name": "龙焰鸡腿堡四件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900016309_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900016310", "name": "龙焰芝士棒鸡腿堡四件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900016310_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900004236", "name": "人气超值四件套随心选", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900004236_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900010110", "name": "鱼牛汉堡四件套随心选", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900010110_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900006957", "name": "安格斯厚牛堡四件套随心选", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900006957_600.gif", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900000884", "name": "酥酥多笋卷四件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900000884_600.png", "kcal": 342, "sod": 1044, "protein": 14, "matched": true}, {"code": "9900011056", "name": "全明星双人分享餐八件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20261008/product/MS_9900011056_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900005321", "name": "BFF四宫格小食盘双人餐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260304/product/MS_9900005321_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "507328", "name": "麦咖啡™热奶铁中杯", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20250324/product/MS_507328_600.png", "kcal": 186, "sod": 99, "protein": 11, "matched": true}, {"code": "521953", "name": "龙焰芝士棒鸡腿堡", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_521953_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "521952", "name": "龙焰鸡腿堡", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_521952_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900015850", "name": "咸蛋黄鸡腿蛋月堡三件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900015850_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "521900", "name": "咸蛋黄鸡腿蛋月堡", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_521900_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900005462", "name": "板烧鸡腿堡三件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900005462_600.png", "kcal": 391, "sod": 1041, "protein": 23, "matched": true}, {"code": "9900005456", "name": "麦辣鸡腿汉堡三件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900005456_600.png", "kcal": 485, "sod": 1208, "protein": 24, "matched": true}, {"code": "9900005453", "name": "麦香鸡中套餐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900005453_600.png", "kcal": 369, "sod": 731, "protein": 15, "matched": true}, {"code": "9900015008", "name": "酥酥多笋卷三件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900015008_600.png", "kcal": 342, "sod": 1044, "protein": 14, "matched": true}, {"code": "9900003537", "name": "学生专享汉堡小食随心选", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20250420/product/MS_9900003537_600_0_1744785039883.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "1440", "name": "麦辣鸡腿汉堡", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20250420/product/MS_1440_600_0_1744772198163.png", "kcal": 485, "sod": 1208, "protein": 24, "matched": true}, {"code": "1406", "name": "板烧鸡腿堡", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20241008/product/MS_1406_600.png", "kcal": 391, "sod": 1041, "protein": 23, "matched": true}, {"code": "1450", "name": "麦香鸡", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260520/product/MS_1450_600.png", "kcal": 369, "sod": 731, "protein": 15, "matched": true}, {"code": "521816", "name": "酥酥多笋卷", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_521816_600.png", "kcal": 342, "sod": 1044, "protein": 14, "matched": true}, {"code": "9900008746", "name": "鸡肉堡单品精选", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260708/product/MS_9900008746_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900015726", "name": "韩式甜辣酱鸡块8块", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260815/product/MS_9900015726_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900006332", "name": "薄皮V翅双拼十翅", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20250423/product/MS_9900006332_600_1745288015452.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900015730", "name": "BFF四宫格小食盘", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900015730_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900004066", "name": "堡堡随心拼（7件任选）", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20250420/product/MS_9900004066_600_0_1744772565664.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900013304", "name": "人气经典随心配", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900013304_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900015568", "name": "精选超值随心配", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900015568_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900015602", "name": "大堡口福三件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900015602_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900015851", "name": "三文鱼双虾至尊月堡三件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900015851_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "521903", "name": "三文鱼双虾至尊月堡", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_521903_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900005411", "name": "不素之霸双层牛堡三件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900005411_600.png", "kcal": 493, "sod": 1012, "protein": 28, "matched": true}, {"code": "9900005466", "name": "巨无霸三件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900005466_600.png", "kcal": 513, "sod": 961, "protein": 27, "matched": true}, {"code": "9900005468", "name": "培根蔬萃双层牛堡三件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900005468_600.png", "kcal": 442, "sod": 728, "protein": 24, "matched": true}, {"code": "9900005413", "name": "双层深海鳕鱼堡三件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900005413_600.png", "kcal": 485, "sod": 917, "protein": 28, "matched": true}, {"code": "9900005460", "name": "麦香鱼中套餐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900005460_600.png", "kcal": 325, "sod": 556, "protein": 16, "matched": true}, {"code": "9900005464", "name": "双层吉士汉堡中套餐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900005464_600.png", "kcal": 429, "sod": 1017, "protein": 27, "matched": true}, {"code": "9900005449", "name": "吉士汉堡包中套餐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900005449_600.png", "kcal": 294, "sod": 673, "protein": 16, "matched": true}, {"code": "1100", "name": "巨无霸", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20250611/product/MS_1100_600_1749175370846.png", "kcal": 513, "sod": 961, "protein": 27, "matched": true}, {"code": "9900003586", "name": "双层深海鳕鱼堡", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900003586_600.png", "kcal": 485, "sod": 917, "protein": 28, "matched": true}, {"code": "1600", "name": "麦香鱼", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260520/product/MS_1600_600.png", "kcal": 325, "sod": 556, "protein": 16, "matched": true}, {"code": "4648", "name": "不素之霸双层牛堡", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20250611/product/MS_4648_600_1749175329279.png", "kcal": 493, "sod": 1012, "protein": 28, "matched": true}, {"code": "1106", "name": "培根蔬萃双层牛堡", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20250804/product/MS_1106_600.png", "kcal": 442, "sod": 728, "protein": 24, "matched": true}, {"code": "1120", "name": "双层吉士汉堡", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260101/product/MS_1120_600.png", "kcal": 429, "sod": 1017, "protein": 27, "matched": true}, {"code": "521316", "name": "高达吉士双牛堡", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260101/product/MS_521316_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900008747", "name": "牛肉堡单品精选", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900008747_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900005428", "name": "培根安格斯厚牛堡三件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900005428_600.png", "kcal": 707, "sod": 1037, "protein": 34, "matched": true}, {"code": "9900005430", "name": "芝士安格斯厚牛堡三件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900005430_600.png", "kcal": 696, "sod": 897, "protein": 32, "matched": true}, {"code": "511781", "name": "培根安格斯厚牛堡", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20251022/product/MS_511781_600.png", "kcal": 707, "sod": 1037, "protein": 34, "matched": true}, {"code": "511782", "name": "芝士安格斯厚牛堡", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20251022/product/MS_511782_600.png", "kcal": 696, "sod": 897, "protein": 32, "matched": true}, {"code": "521881", "name": "马来咖喱风味薄皮肉骨鸡3块", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_521881_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900005451", "name": "麦辣鸡翅4块中套餐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900005451_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900004835", "name": "麦乐鸡经典中套餐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900004835_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "1700", "name": "麦辣鸡翅2块", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260219/product/MS_1700_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "520445", "name": "薄皮焦香V翅", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20241028/product/MS_520445_600.png", "kcal": 192, "sod": 594, "protein": 17, "matched": true}, {"code": "1401", "name": "麦乐鸡5块", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260529/product/MS_1401_600.png", "kcal": 213, "sod": 422, "protein": 12, "matched": true}, {"code": "521156", "name": "那么大鸡排（椒盐风味）", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260520/product/MS_521156_600.png", "kcal": 385, "sod": 996, "protein": 24, "matched": true}, {"code": "9900005432", "name": "麦麦脆汁鸡1块", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20241204/product/MS_9900005432_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900016082", "name": "心形薯饼5块", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900016082_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "521951", "name": "灰焰圆筒", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_521951_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "521908", "name": "黑洋酥小圆子风味派", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_521908_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "521914", "name": "“葱不求人“按摩捶痒痒挠", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20261008/product/MS_521914_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "521901", "name": "月下相思扭扭薯", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_521901_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "521917", "name": "泷愿成真麦旋风——大米风味", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_521917_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "4810", "name": "中薯条", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20250423/product/MS_4810_600_1745199801147.png", "kcal": 289, "sod": 165, "protein": 4, "matched": true}, {"code": "4437", "name": "小杯玉米杯", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260101/product/MS_4437_600.png", "kcal": 53, "sod": 1, "protein": 2, "matched": true}, {"code": "6102", "name": "苹果片", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_6102_600.png", "kcal": 32, "sod": 0, "protein": 0, "matched": true}, {"code": "521750", "name": "泷盐星星麦旋风", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_521750_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900008754", "name": "经典麦旋风", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900008754_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900008745", "name": "新地", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900008745_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "515837", "name": "圆筒冰淇淋", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20250813/product/MS_515837_600.png", "kcal": 93, "sod": 36, "protein": 2, "matched": true}, {"code": "9900008752", "name": "派", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900008752_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900016057", "name": "汉堡开心乐园餐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900016057_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900016058", "name": "鱼排堡开心乐园餐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900016058_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900016056", "name": "麦乐鸡开心乐园餐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900016056_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900016055", "name": "开心亲子双人餐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900016055_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "507411", "name": "麦咖啡™冰美式中杯", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20250804/product/MS_507411_600.png", "kcal": 13, "sod": 0, "protein": 1, "matched": true}, {"code": "507409", "name": "麦咖啡™冰奶铁中杯", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20250324/product/MS_507409_600.png", "kcal": 148, "sod": 77, "protein": 8, "matched": true}, {"code": "510479", "name": "冰燕麦奶铁中杯", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20250324/product/MS_510479_600.png", "kcal": 132, "sod": 87, "protein": 3, "matched": true}, {"code": "520689", "name": "小杯鲜萃咖啡", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_520689_600.png", "kcal": 15, "sod": 2, "protein": 1, "matched": true}, {"code": "507394", "name": "热牛奶中杯", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_507394_600.png", "kcal": 176, "sod": 101, "protein": 10, "matched": true}, {"code": "9900011128", "name": "“堡”你欢乐套餐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900011128_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900011121", "name": "“苹”水相“鱼”套餐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900011121_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900011126", "name": "酥脆无双套餐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260701/product/MS_9900011126_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900011123", "name": "“辣”么快乐套餐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900011123_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900009245", "name": "牛气满满套餐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900009245_600.png", "kcal": 495, "sod": 764, "protein": 26, "matched": true}, {"code": "9900009242", "name": "“苹板”支撑Pro套餐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900009242_600.png", "kcal": 476, "sod": 1077, "protein": 25, "matched": true}, {"code": "521817", "name": "【美汁源】“多汁柠柠”", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260807/product/MS_521817_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "9900008751", "name": "可乐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900008751_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "3010", "name": "雪碧（小杯）", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_3010_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "2430", "name": "【美汁源】“黄金橙橙”", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20240904/product/MS_2430_600.png", "kcal": 165, "sod": 53, "protein": 0, "matched": true}, {"code": "515280", "name": "阳光柠檬红茶小杯", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_515280_600.png", "kcal": 85, "sod": 12, "protein": 0, "matched": true}, {"code": "3755", "name": "纯牛奶(盒装)", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20240731/product/MS_3755_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "6362", "name": "100% 苹果汁(盒装)", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20250430/product/MS_6362_600_1745552990018.png", "kcal": 88, "sod": 0, "protein": 0, "matched": true}, {"code": "9900003538", "name": "学生专享饮品随心选", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900003538_600.png", "kcal": null, "sod": null, "protein": null, "matched": false}, {"code": "3505", "name": "锡兰红茶", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_3505_600.png", "kcal": 2, "sod": 0, "protein": 0, "matched": true}];
+const CAFE_KW = ['咖啡', '拿铁', '美式', '摩卡'];
+const SNACK_TARGET = 1800;   // 试玩间预设减脂目标（完整版按个人 TDEE 计算）
+
 const COLOR = {'200':'#37872D','201':'#37872D','206':'#6ED0E0','301':'#705DA0','304':'#6ED0E0',
   '404':'#E24D42','408':'#E98300','418':'#705DA0','429':'#E98300','502':'#705DA0','504':'#E24D42'};
 const NAME = {'200':'200 OK','201':'201 Created','206':'206 Partial','301':'301 Moved',
   '304':'304 Not Modified','404':'404 Not Found','408':'408 Timeout','418':'418 teapot',
   '429':'429 Too Many','502':'502 Bad Gateway','504':'504 Timeout'};
 
-/* ── 状态 ── */
-let SCENE = 'worker';
-let CART = [];              // {name, kcal, sod, protein, matched, qty}
-let LAST_SIG = null;
+/* ── 模拟时钟与状态 ── */
+let SIM_MIN = 720;           // 12:00
+let ORDERS = [];             // {min, name, matched, kcal, sod, qty, code}
 let SEEN = new Set();
-let SUBMITS = 0;
-let LAST = null;            // 最近一次判定结果（晒卡用）
+let LAST_SIG = null;
 
-/* ── 场景选择 ── */
-document.getElementById('scenes').innerHTML = SCENES.map((s, i) =>
-  `<button class="chip${i === 0 ? ' on' : ''}" data-scene="${s.id}">${s.t}</button>`).join('');
-document.getElementById('scenes').addEventListener('click', e => {
-  const b = e.target.closest('[data-scene]');
-  if (!b) return;
-  SCENE = b.getAttribute('data-scene');
-  document.querySelectorAll('[data-scene]').forEach(x => x.classList.toggle('on', x === b));
-});
+const fmt = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+const $ = id => document.getElementById(id);
 
-/* ── 菜单 ── */
-document.getElementById('menu').innerHTML = MENU.map((m, i) => `
-  <div class="mi" data-i="${i}">
-    <div class="n">${m.name}</div>
-    <div class="v">${m.kcal != null ? m.kcal + ' kcal · 钠 ' + m.sod + 'mg' : '官方营养表 404'}</div>
-  </div>`).join('');
-document.getElementById('menu').addEventListener('click', e => {
+/* ── 菜单渲染（搜索过滤）────────────────────────────── */
+function drawMenu(q) {
+  q = (q || '').trim();
+  const list = ITEMS.filter(it => !q || it.name.includes(q));
+  $('menu').innerHTML = list.map(it => {
+    const i = ITEMS.indexOf(it);
+    return `<div class="mi" data-i="${i}">
+      ${it.img ? `<img src="${it.img}" loading="lazy" alt="${it.name}">`
+               : `<div class="nofb">${it.name.slice(0, 1)}</div>`}
+      <div class="n">${it.name}</div>
+      <div class="v">${it.matched ? it.kcal + ' kcal' : '营养账本 404'}</div>
+    </div>`;
+  }).join('') || '<div style="color:var(--dim);font-size:12px">无匹配商品</div>';
+}
+$('search').addEventListener('input', e => drawMenu(e.target.value));
+$('menu').addEventListener('click', e => {
   const c = e.target.closest('.mi');
   if (!c) return;
-  const m = MENU[+c.getAttribute('data-i')];
-  const it = CART.find(x => x.name === m.name);
-  if (it) it.qty += 1;
-  else CART.push({...m, matched: m.kcal != null, qty: 1});
+  const it = ITEMS[+c.getAttribute('data-i')];
+  const ex = CART.find(x => x.code === it.code);
+  if (ex) ex.qty += 1; else CART.push({...it, qty: 1});
   drawCart();
 });
 
+/* ── 购物车 ── */
+let CART = [];
 function drawCart() {
-  const el = document.getElementById('cart');
-  el.innerHTML = CART.length ? CART.map((it, i) => `
+  $('cart').innerHTML = CART.length ? CART.map((it, i) => `
     <span class="cart-it">${it.qty}× ${it.name}
-      <button data-plus="${i}" aria-label="加">+</button>
-      <button data-minus="${i}" aria-label="减">−</button>
-    </span>`).join('') : '<span class="cart-empty">购物车是空的——你的身体服务正等着接单</span>';
+      <button data-plus="${i}" aria-label="加">＋</button>
+      <button data-minus="${i}" aria-label="减">－</button>
+    </span>`).join('') : '<span class="cart-empty">购物车是空的——身体服务正在等单</span>';
   const kcal = CART.reduce((a, x) => a + (x.kcal || 0) * x.qty, 0);
   const sod = CART.reduce((a, x) => a + (x.sod || 0) * x.qty, 0);
   const pro = CART.reduce((a, x) => a + (x.protein || 0) * x.qty, 0);
   const qty = CART.reduce((a, x) => a + x.qty, 0);
-  document.getElementById('tKcal').textContent = kcal;
-  document.getElementById('tSodium').textContent = sod;
-  document.getElementById('tProtein').textContent = pro;
-  document.getElementById('tQty').textContent = qty;
-  document.getElementById('submit').disabled = qty === 0;
+  $('tKcal').textContent = kcal; $('tSodium').textContent = sod;
+  $('tProtein').textContent = pro; $('tQty').textContent = qty;
+  $('submit').disabled = qty === 0;
 }
-document.getElementById('cart').addEventListener('click', e => {
+$('cart').addEventListener('click', e => {
   const p = e.target.getAttribute('data-plus'), m = e.target.getAttribute('data-minus');
   if (p != null) { CART[+p].qty += 1; drawCart(); }
-  if (m != null) { CART[+m].qty -= 1; if (CART[+m].qty <= 0) CART.splice(+m, 1); drawCart(); }
+  if (m != null) { CART[+m].qty -= 1; if (CART[+m].qty <= 0) CART.slice ? CART.splice(+m, 1) : null; drawCart(); }
 });
 
-/* ── v4.0 判定阶梯（与 scripts/classify.py 同源移植）────────────── */
-function judge(cart) {
-  const items = cart.map(x => ({name: x.name, matched: x.matched, kcal: x.kcal != null ? x.kcal * x.qty : null,
+/* ── 时钟 ── */
+function setClock(m) {
+  SIM_MIN = +m;
+  $('clockT').textContent = fmt(SIM_MIN);
+  $('submitAt').textContent = fmt(SIM_MIN);
+  if (ORDERS.length) runProbes();
+}
+$('clockSlider').addEventListener('input', e => setClock(e.target.value));
+
+/* ── v4.0 ingest 判定（与 classify.py 同源）──────────────────────── */
+function judge(cart, atMin) {
+  const items = cart.map(x => ({name: x.name, matched: x.matched,
+    kcal: x.kcal != null ? x.kcal * x.qty : null,
     sod: x.sod != null ? x.sod * x.qty : null, qty: x.qty}));
   const matched = items.filter(i => i.matched);
   const kcal = matched.length ? matched.reduce((a, i) => a + i.kcal, 0) : null;
   const sodium = matched.length ? matched.reduce((a, i) => a + i.sod, 0) : null;
   const qty = items.reduce((a, i) => a + i.qty, 0);
   const sig = [...items].sort((a, b) => a.name.localeCompare(b.name)).map(i => i.name + 'x' + i.qty).join(',');
-  const hour = new Date().getHours();
-  const isDrink = n => ['可乐','雪碧','芬达','美汁源','咖啡','拿铁','美式','摩卡','奶茶','茶','豆浆','牛奶','冰美式'].some(k => n.includes(k));
-  SUBMITS += 1;
+  const hour = Math.floor(atMin / 60);
+  const isDrink = n => ['可乐', '雪碧', '芬达', '美汁源', '咖啡', '拿铁', '美式', '摩卡', '奶茶', '茶', '豆浆', '牛奶'].some(k => n.includes(k));
+  const dupToday = ORDERS.filter(o => o.min <= atMin).length;
 
   let code, reason;
-  if (hour >= 22 || hour < 5)                     { code = '408'; reason = `你在 ${String(hour).padStart(2,'0')}:${String(new Date().getMinutes()).padStart(2,'0')} 发起摄入——身体服务已不在供餐时段（22:00–05:00 判 408）`; }
-  else if (SUBMITS > 1 && new Date().getHours() < 16) { code = '429'; reason = `今日第 ${SUBMITS} 次摄入请求，触发限流——合并需求一次下单可避免 429`; }
-  else if (items.length && items.every(i => isDrink(i.name))) { code = '418'; reason = '整单均为饮料，请求命中茶壶协议（418 I\'m a teapot）'; }
-  else if (qty >= 6)                              { code = '502'; reason = `单笔聚合 ${qty} 件商品——多人网关请求，建议拆单分摊`; }
-  else if (LAST_SIG && sig === LAST_SIG)          { code = '304'; reason = '与上一单完全一致，缓存直接命中——连续 304 会触发味觉固化告警'; }
-  else if (items.length && !matched.length)       { code = '404'; reason = '全部商品不在官方营养账本（160 项标准单品）——真·404 数据缺口'; }
-  else if (items.some(i => !SEEN.has(i.name)))    { code = '201'; reason = '出现本会话从未点过的新品，身体账本新建记录'; }
-  else if (matched.length < items.length)         { code = '206'; reason = `${matched.length}/${items.length} 项商品可计量，返回部分内容`; }
-  else                                            { code = '200'; reason = '摄入成功入账，全部商品营养可计算'; }
+  if (hour >= 22 || hour < 5)                { code = '408'; reason = `你在 ${fmt(atMin)} 发起摄入——身体服务已不在供餐时段（22:00–05:00 判 408）`; }
+  else if (dupToday >= 1)                    { code = '429'; reason = `今日第 ${dupToday + 1} 次摄入请求，触发限流——模拟日内多单即 429`; }
+  else if (items.length && items.every(i => isDrink(i.name))) { code = '418'; reason = '整单均为饮料，命中茶壶协议（418 I\'m a teapot）'; }
+  else if (qty >= 6)                         { code = '502'; reason = `单笔聚合 ${qty} 件商品——多人网关请求`; }
+  else if (LAST_SIG && sig === LAST_SIG)     { code = '304'; reason = '与上一单完全一致，缓存直接命中'; }
+  else if (items.length && !matched.length)  { code = '404'; reason = '全部商品不在官方营养账本（160 项标准单品）——真·404 数据缺口'; }
+  else if (items.some(i => !SEEN.has(i.name))) { code = '201'; reason = '本模拟日首次出现的新品，身体账本新建记录'; }
+  else if (matched.length < items.length)    { code = '206'; reason = `${matched.length}/${items.length} 项商品可计量，返回部分内容`; }
+  else                                       { code = '200'; reason = '摄入成功入账，全部商品营养可计算'; }
 
   const breaches = [];
-  if (kcal != null && kcal > 1500) breaches.push({t:'热量过载（P1 事故）', c:'#E24D42'});
-  else if (kcal != null && kcal > 800) breaches.push({t:'热量超配额（P2 告警）', c:'#E98300'});
-  if (sodium != null && sodium > 1200) breaches.push({t:'钠超标（P2 告警）', c:'#E98300'});
+  if (kcal != null && kcal > 1500) breaches.push({t: '热量过载（P1 事故）', c: '#E24D42'});
+  else if (kcal != null && kcal > 800) breaches.push({t: '热量超配额（P2 告警）', c: '#E98300'});
+  if (sodium != null && sodium > 1200) breaches.push({t: '钠超标（P2 告警）', c: '#E98300'});
 
   items.forEach(i => SEEN.add(i.name));
   LAST_SIG = sig;
+  return {code, reason, items, kcal, sodium, qty, breaches};
+}
 
-  // 场景探活提示
-  let probe = '';
-  const hasCaf = items.some(i => isDrink(i.name) && (i.name.includes('咖啡') || i.name.includes('美式')));
-  if (SCENE === 'worker' && !hasCaf && hour >= 9 && hour < 16)
-    probe = '☕ 打工人探活：本单无咖啡因——按你的醒脑定位，建议补一杯冰美式小杯（10 kcal），否则咖啡窗关闭将判 599 Timeout';
-  if (SCENE === 'cut' && kcal != null && kcal <= 400 && sodium != null && sodium <= 800)
-    probe = '🥗 减脂探活：本单在配额内且钠友好——今天可以安心吃，204 主动静默中';
-  if (SCENE === 'bulk' && sodium != null && sodium <= 600)
-    probe = '💪 增肌探活：本单蛋白质尚可——距盈余目标还差一截，可加一份麦乐鸡（12g 蛋白）';
-  if (SCENE === 'night' && code !== '408')
-    probe = '🌙 深夜放题：现在提交还赶得上服务时段——22:00 之后再试就能拿到 408';
+/* ── Agent 探活引擎（模拟时间驱动，与 evolve.py 窗口同源）────────── */
+function runProbes() {
+  const t = SIM_MIN;
+  const caf = ORDERS.filter(o => o.items.some(i => CAFE_KW.some(k => i.name.includes(k))));
+  const cafBefore = caf.filter(o => o.min <= t);
+  const intake = ORDERS.filter(o => o.min <= t).reduce((a, o) => a + (o.kcal || 0), 0);
+  const feed = [];
+  const push = (min, code, text) => feed.push({min, code, text});
 
-  LAST = {code, reason, items, kcal, sodium, qty, breaches, scene: SCENES.find(s => s.id === SCENE).t};
-  return {code, reason, probe};
+  // 晨间咖啡窗 09:30–11:00
+  if (t >= 570 && t <= 660 && !cafBefore.length)
+    push(Math.max(t, 570), '103', '晨间咖啡窗探活：检测到你今日尚无咖啡因摄入——建议一杯小杯鲜萃咖啡（15 kcal），保持上午清醒');
+  if (t > 660 && !caf.filter(o => o.min <= 660 && o.min >= 570).length)
+    push(660, '599', '晨间咖啡窗关闭：09:30–11:00 的补给建议始终未被采纳，上午清醒度预算透支');
+
+  // 午后咖啡窗 13:30–15:30
+  if (t >= 810 && t <= 930 && !cafBefore.length)
+    push(Math.max(t, 810), '103', '午后咖啡窗探活：困倦谷将至——建议麦咖啡™冰美式中杯（13 kcal）');
+  if (t > 930 && !caf.filter(o => o.min <= 930 && o.min >= 810).length)
+    push(930, '599', '午后咖啡窗关闭：13:30–15:30 仍未摄入咖啡因，下午 CPU 降频已记录在案');
+
+  // 午后补给窗 14:30–16:00（试玩间预设减脂目标 1800 kcal）
+  if (t >= 870 && t <= 960) {
+    const gap = SNACK_TARGET - intake;
+    if (gap < 0)
+      push(Math.max(t, 870), '412', `今日已超减脂预算 ${-gap} kcal，下午茶建议被你的目标否决——412 在保护你`);
+    else if (gap >= 250) {
+      const snack = ITEMS.filter(i => i.matched && i.kcal && i.kcal <= gap && i.protein >= 8)
+        .sort((a, b) => b.protein - a.protein)[0];
+      push(Math.max(t, 870), '103', `减脂补给窗：缺口 ${gap} kcal——建议 ${snack ? snack.name + '（' + snack.kcal + ' kcal / 蛋白 ' + snack.protein + 'g）' : '轻量蛋白加餐'}，维持下午体力`);
+    } else
+      push(Math.max(t, 870), '204', `今日摄入与预算吻合（缺口仅 ${gap} kcal），本窗口无需补给，主动静默`);
+  }
+
+  // 522：两个窗口均超时
+  const t599 = feed.filter(f => f.code === '599').length;
+  if (t599 >= 2)
+    push(960, '522', '连续窗口失联：探活建议始终未获反馈，告警级别已升级');
+
+  feed.sort((a, b) => a.min - b.min);
+  const COLOR = {103: '#6ED0E0', '204': '#37872D', '412': '#E98300', '425': '#E98300', '599': '#E24D42', '522': '#96222A'};
+  const NAME = {103: '103 Hints', '204': '204 Quiet', '412': '412 Denied', '425': '425 Too Early', '599': '599 Timeout', '522': '522 Lost'};
+  $('feed').innerHTML = feed.map(f => `
+    <div class="feed-item">
+      <span class="pc" style="background:${COLOR[f.code]}">${NAME[f.code]}</span>
+      <div style="flex:1;min-width:0">${f.text}<div class="pt">${fmt(f.min)} · probe 探活方向 · 状态码不受影响</div></div>
+    </div>`).join('') || '<div style="color:var(--dim);font-size:12px">此刻没有探活动作</div>';
 }
 
 /* ── 提交 ── */
-document.getElementById('clock').textContent =
-  String(new Date().getHours()).padStart(2,'0') + ':' + String(new Date().getMinutes()).padStart(2,'0');
-document.getElementById('submit').addEventListener('click', () => {
+$('submit').addEventListener('click', () => {
   if (!CART.length) return;
-  const r = judge(CART.slice());
-  const v = document.getElementById('verdict');
+  const r = judge(CART.slice(), SIM_MIN);
+  const order = {min: SIM_MIN, items: r.items, kcal: r.kcal, code: r.code};
+  ORDERS.push(order);
+  ORDERS.sort((a, b) => a.min - b.min);
+  CART = []; drawCart();
+
+  const v = $('verdict');
   v.innerHTML = `
     <div class="vcode mono" style="color:${COLOR[r.code]}">${r.code}</div>
     <div style="min-width:0">
-      <div class="vlabel" style="color:${COLOR[r.code]}">${NAME[r.code]}</div>
+      <div class="vlabel" style="color:${COLOR[r.code]}">${NAME[r.code]} <span style="color:var(--dim);font-weight:400;font-size:11px">于 ${fmt(SIM_MIN)} 提交</span></div>
       <div class="vreason">${r.reason}</div>
-      ${LAST.breaches.length ? `<div class="badges">${LAST.breaches.map(b =>
+      ${r.breaches.length ? `<div class="badges">${r.breaches.map(b =>
         `<span class="bdg" style="background:${b.c}">⚠ ${b.t}</span>`).join('')}</div>` : ''}
     </div>`;
-  document.getElementById('probe').innerHTML = r.probe
-    ? `<div class="probe-hint">${r.probe}</div>` : '';
-  document.getElementById('shareRow').style.display = 'flex';
+  runProbes();
+  LAST = {code: r.code, reason: r.reason, items: r.items, kcal: r.kcal,
+          sodium: r.sodium, qty: r.qty, breaches: r.breaches,
+          scene: '模拟时间 ' + fmt(SIM_MIN)};
+  $('shareRow').style.display = 'flex';
   drawCard();
-  document.getElementById('shareRow').scrollIntoView({behavior: 'smooth', block: 'center'});
+  $('shareRow').scrollIntoView({behavior: 'smooth', block: 'center'});
 });
 
-/* ── 晒卡：canvas 原生绘制，零依赖 ── */
+/* ── 晒卡 canvas ── */
 function drawCard() {
   const cv = document.getElementById('shot'), ctx = cv.getContext('2d');
   const W = 900, H = 1150;
   ctx.fillStyle = '#111217'; ctx.fillRect(0, 0, W, H);
   ctx.strokeStyle = '#2a2f38'; ctx.lineWidth = 2; ctx.strokeRect(14, 14, W-28, H-28);
-
-  // 金色拱门（双弧）
-  ctx.strokeStyle = '#FFC72C'; ctx.lineWidth = 13; ctx.lineCap = 'butt';
+  ctx.strokeStyle = '#FFC72C'; ctx.lineWidth = 13;
   ctx.beginPath(); ctx.moveTo(60, 128); ctx.lineTo(60, 76);
   ctx.quadraticCurveTo(60, 30, 100, 30); ctx.quadraticCurveTo(142, 30, 148, 118);
   ctx.quadraticCurveTo(154, 30, 196, 30); ctx.quadraticCurveTo(236, 30, 236, 76);
   ctx.lineTo(236, 128); ctx.stroke();
-
   ctx.fillStyle = '#d8d9da'; ctx.font = '600 30px "PingFang SC", sans-serif';
   ctx.fillText('麦门状态码', 268, 78);
   ctx.fillStyle = '#FFC72C'; ctx.font = '600 20px "PingFang SC", sans-serif';
-  ctx.fillText('身体服务响应卡', 268, 110);
-
-  // 大状态码
-  ctx.fillStyle = COLOR[LAST.code];
-  ctx.font = '800 130px "SF Mono", Consolas, monospace';
+  ctx.fillText('身体服务响应卡 · 模拟点单', 268, 110);
+  ctx.fillStyle = COLOR[LAST.code]; ctx.font = '800 130px "SF Mono", Consolas, monospace';
   ctx.fillText(LAST.code, 60, 300);
   ctx.fillStyle = '#d8d9da'; ctx.font = '700 34px "PingFang SC", sans-serif';
   ctx.fillText(NAME[LAST.code], 60, 356);
   ctx.fillStyle = '#8e9095'; ctx.font = '400 17px "PingFang SC", sans-serif';
   wrap(ctx, LAST.reason, 60, 396, W-120, 28);
-
-  // 分隔线
   ctx.strokeStyle = '#2a2f38'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(60, 470); ctx.lineTo(W-60, 470); ctx.stroke();
-
-  // 摄入清单
   ctx.fillStyle = '#8e9095'; ctx.font = '600 15px "PingFang SC", sans-serif';
-  ctx.fillText('本次摄入', 60, 505);
+  ctx.fillText('本次摄入（' + fmt(SIM_MIN) + '）', 60, 505);
   let y = 540;
   LAST.items.slice(0, 7).forEach(i => {
     ctx.fillStyle = i.matched ? '#d8d9da' : '#E24D42';
@@ -332,8 +369,6 @@ function drawCard() {
     y += 34;
   });
   if (LAST.items.length > 7) { ctx.fillStyle = '#6a6d73'; ctx.fillText(`…共 ${LAST.items.length} 件`, 60, y); y += 34; }
-
-  // 指标告警
   y = Math.max(y + 16, 820);
   ctx.fillStyle = '#8e9095'; ctx.font = '600 15px "PingFang SC", sans-serif';
   ctx.fillText('指标告警', 60, y); y += 30;
@@ -346,21 +381,16 @@ function drawCard() {
     ctx.fillStyle = '#37872D'; ctx.font = '400 16px "PingFang SC", sans-serif';
     ctx.fillText('✓ 无超标指标', 60, y); y += 32;
   }
-
-  // 汇总
   y = Math.max(y + 14, 960);
   ctx.fillStyle = '#8e9095'; ctx.font = '400 16px "SF Mono", monospace';
   ctx.fillText(`合计 ${LAST.kcal ?? '?'} kcal · 钠 ${LAST.sodium ?? '?'} mg · ${LAST.qty} 件`, 60, y);
   ctx.fillStyle = '#EAB839'; ctx.font = '600 18px "PingFang SC", sans-serif';
-  ctx.fillText('场景：' + LAST.scene, 60, y + 40);
-
-  // 底部
+  ctx.fillText('模拟时间：' + fmt(SIM_MIN), 60, y + 40);
   ctx.fillStyle = '#6a6d73'; ctx.font = '400 14px "PingFang SC", sans-serif';
   ctx.fillText('麦门状态码 · 基于麦当劳中国官方 MCP · 独立开发非官方产品', 60, H-72);
   ctx.fillText('github.com/chaucerj/mcd-status-codes', 60, H-44);
-
-  document.getElementById('shot').style.display = 'block';
-  const dl = document.getElementById('dl');
+  $('shot').style.display = 'block';
+  const dl = $('dl');
   dl.style.display = 'inline-flex';
   dl.href = cv.toDataURL('image/png');
 }
@@ -374,7 +404,10 @@ function wrap(ctx, text, x, y, maxW, lh) {
   if (line) ctx.fillText(line, x, yy);
 }
 
+/* ── init ── */
+drawMenu('');
 drawCart();
+setClock(720);
 </script>
 </body>
 </html>
