@@ -381,9 +381,9 @@ function diyOpen(name) {
     ITEMS.filter(function(it) { return !it._skip && it.kcal != null; }).map(function(x) {
       return '<button class="chip" data-diypick="' + esc(x.name) + '">' + esc(x.name) + ' ' + x.kcal + 'kcal</button>';
     }).join('') + '</div>' +
-    '<div class="stat-note" id="diyTotal" style="margin-top:8px">尚未选配料</div>' +
+    '<div class="stat-note" id="diyTotal" style="margin-top:8px">尚未选配料——创意优先，营养不参与评审</div>' +
     '<div class="acts"><button class="abtn gold" id="diyGo" disabled>🧪 合成新品（201）</button></div>' +
-    '<div class="dim2" style="margin-top:6px">合成品营养 = 各成分官方营养加和，确定性可复算；超配额会当场亮指标告警。</div>');
+    '<div class="dim2" style="margin-top:6px">创意组合优先——官方营养表管不到你发明的味道。</div>');
   let picks = [];
   const pickEl = b.querySelector('#diyPick');
   const totalEl = b.querySelector('#diyTotal');
@@ -393,18 +393,10 @@ function diyOpen(name) {
     pickEl.innerHTML = picks.length ? picks.map(function(p) {
       return '<div class="ci">' + (p.img ? '<img src="' + p.img + '" alt="">' : '') +
         '<span class="cn">' + p.qty + '× <b>' + esc(p.name) + '</b></span>' +
-        '<span class="cv">' + p.kcal + ' kcal</span></div>';
+        '<span class="cv" style="color:var(--gold)">★</span></div>';
     }).join('') : '<div class="dim2" style="font-size:11px">还没有选配料——全场任搭，例如：中薯条 + 圆筒冰淇淋</div>';
-    const kcal = picks.reduce(function(a, p) { return a + p.kcal * p.qty; }, 0);
-    const sod = picks.reduce(function(a, p) { return a + p.sod * p.qty; }, 0);
-    const pro = picks.reduce(function(a, p) { return a + (p.protein || 0) * p.qty; }, 0);
-    const warns = [];
-    if (kcal > 1500) warns.push('P1 热量过载');
-    else if (kcal > 800) warns.push('P2 热量超配额');
-    if (sod > 1200) warns.push('P2 钠超标');
     totalEl.innerHTML = picks.length
-      ? '配方合计 <b class="mono">' + kcal + ' kcal · 钠 ' + sod + ' mg · 蛋白 ' + pro + ' g</b>' +
-        (warns.length ? ' —— <span style="color:var(--orange)">⚠ ' + warns.join('、') + '</span>' : ' ✓ 配额内')
+      ? '已选 <b>' + picks.length + '</b> 项配料（共 ' + picks.reduce(function(a, p) { return a + p.qty; }, 0) + ' 件）——创意组合优先'
       : '尚未选配料';
     goBtn.disabled = picks.length < 2;
   }
@@ -432,26 +424,19 @@ function diyOpen(name) {
     if (picks.length < 2) return;
     const autoName = picks.map(function(p) { return p.name.slice(0, 4); }).join('+');
     const nm = ($id('diyName') && $id('diyName').value.trim()) || autoName;
-    const kcal = picks.reduce(function(a, p) { return a + p.kcal * p.qty; }, 0);
-    const sod = picks.reduce(function(a, p) { return a + p.sod * p.qty; }, 0);
-    const protein = Math.round(picks.reduce(function(a, p) { return a + (p.protein || 0) * p.qty; }, 0));
-    const diy = {code: 'DIY-' + Date.now(), name: nm, img: (picks[0] && picks[0].img) || '', cat: '自制新品',
-      tags: ['自制', 'DIY'], matched: true, kcal: kcal, sod: sod, protein: protein,
-      parts: picks.map(function(p) { return p.name; }), at: fmt(SIM_MIN)};
+    const diy = {code: 'DIY-' + Date.now(), name: nm, img: '', cat: '自制新品',
+      tags: ['自制', 'DIY'], matched: false, kcal: null, sod: null, protein: null,
+      parts: picks.map(function(p) { return p.name; }), at: fmt(SIM_MIN), creative: true};
     DIYS.push(diy); ITEMS.push(diy);
     try { localStorage.setItem('mcd.diys', JSON.stringify(DIYS)); } catch (e) {}
-    ITEMS.forEach(function(it) { if (it.name === nm) it._skip = false; });
     drawMenu($id('search').value);
-    const w2 = [];
-    if (kcal > 1500) w2.push('P1 热量过载');
-    else if (kcal > 800) w2.push('P2 热量超配额');
-    if (sod > 1200) w2.push('P2 钠超标');
-    agentSay('🧪 <b>' + esc(nm) + '</b> 已合成入库（<b>201 Created · 自制新品</b>）。' +
-      '配方：' + esc(diy.parts.join(' + ')) + '，合计 <b>' + kcal + ' kcal / 钠 ' + sod + ' mg / 蛋白 ' + protein + ' g</b>' +
-      (w2.length ? '，含指标告警：⚠ ' + w2.join('、') : '，配额内 ✓') + '。<br>已进你的菜单「自制新品」分类，随时可下单；想要官方做出来？说「心愿榜」拉愿力。');
-    CART = [{...diy, qty: 1}];
-    submitOrder();
-    renderWishBoard();
+    const synth = agentSay('🧪 <b>' + esc(nm) + '</b> 合成入库（<b>201 Created · 自制新品</b>）！<br>' +
+      '配方：' + esc(diy.parts.join(' + ')) + '<br>' +
+      '<div class="dim2" style="margin-top:6px">创意组合优先——官方营养表管不到你发明的味道，这正是 DIY 的浪漫。</div>' +
+      '<div class="acts"><button class="abtn" data-act="wishdiy">📮 加入心愿榜，让官方做出来</button></div>');
+    synth.querySelector('[data-act="wishdiy"]').addEventListener('click', function() {
+      wishFlow(nm);
+    });
   });
 }
 function renderWishBoard() {
