@@ -10,7 +10,7 @@
 > 1024 程序员节 × 麦当劳官方 MCP 参赛作品。
 
 <p align="center">
-  <a href="https://chaucerj.github.io/mcd-status-codes/"><b>🎮 在线试玩面板（免Token、零安装）→</b></a>
+  <a href="https://chaucerj.github.io/mcd-status-codes/"><b>🎮 在线试玩间（免Token、零安装，官方菜单+时间轴探活）→</b></a>
 </p>
 
 <p align="center">
@@ -25,7 +25,7 @@
 | **形态** | Agent Skill + 本地 Python 确定性分类器 + 单文件 HTML 监控面板 |
 | **数据来源** | 麦当劳中国官方 MCP（`https://mcp.mcd.cn`），只读采集 |
 | **运行环境** | Python 3.10+，纯标准库，零第三方依赖 |
-| **在线试玩** | [chaucerj.github.io/mcd-status-codes](https://chaucerj.github.io/mcd-status-codes/) —— 免 Token、零安装 |
+| **在线试玩** | [chaucerj.github.io/mcd-status-codes](https://chaucerj.github.io/mcd-status-codes/) —— 免 Token、零安装；官方菜单 107 项带图，时间轴驱动 Agent 探活 |
 | **仓库导航** | 见 [HOMEPAGE.md](HOMEPAGE.md) |
 
 ![常规模式监控面板](docs/screenshot-normal.png)
