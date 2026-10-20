@@ -170,7 +170,8 @@ function agentRecommend(text) {
     '<div class="dim2" style="margin-top:6px">提交后我会按当前模拟时间 ' + fmt(SIM_MIN) + ' 判定状态码并触发探活。</div>' +
     '<div class="acts"><button class="abtn" data-act="confirm">✅ 就这样下单</button>' +
     '<button class="abtn" data-act="again">🔁 换一换</button>' +
-    '<button class="abtn gold" data-act="browse">☰ 我自己逛菜单</button></div>');
+    '<button class="abtn gold" data-act="browse">☰ 我自己逛菜单</button>' +
+    '<button class="abtn" data-act="wish">📮 都不对？许个愿</button></div>');
   b.querySelectorAll('[data-act]').forEach(function(btn) { btn.addEventListener('click', function() {
     const act = btn.getAttribute('data-act');
     if (act === 'confirm') {
@@ -179,6 +180,8 @@ function agentRecommend(text) {
     } else if (act === 'again') {
       if (PENDING && PENDING.combo[0]) { const used = PENDING.combo[0].name; ITEMS.forEach(function(it) { if (it.name === used) it._skip = true; }); }
       agentRecommend($id('chatIn').value || text || '随便推荐');
+    } else if (act === 'wish') {
+      wishFlow(text.slice(0, 20));
     } else { document.querySelector('details').open = true; document.querySelector('details').scrollIntoView({behavior: 'smooth', block: 'center'}); }
   }); });
 }
@@ -256,7 +259,107 @@ function judge(cart, atMin) {
   return {code: code, reason: reason, items: items, kcal: kcal, sodium: sodium, qty: qty, breaches: breaches};
 }
 
-const QUICK = ['20块吃什么', '减脂能吃啥', '来杯咖啡', '新品有什么', '深夜饿了', '随便推荐'];
+/* ── 新品心愿榜 + DIY 新品工坊（localStorage 持久化）────────────── */
+let WISHES = [];
+let DIYS = [];
+try {
+  WISHES = JSON.parse(localStorage.getItem('mcd.wishes') || '[]');
+  DIYS = JSON.parse(localStorage.getItem('mcd.diys') || '[]');
+  DIYS.forEach(function(d) { ITEMS.push(d); });
+} catch (e) {}
+
+function wishFlow(name) {
+  const exists = WISHES.some(function(w) { return w.name === name; });
+  const b = agentSay('「<b>' + esc(name) + '</b>」——官方菜单和营养账本里都查不到（404）。<br>要把它送进<b>新品心愿榜</b>吗？愿力最高的心愿，就是最该被官方做成真品的那个。<br>' +
+    (exists ? '<div class="dim2">（它已经在你的心愿榜里，愿力 +1）</div>' : '') +
+    '<div class="acts">' +
+    '<button class="abtn gold" data-wish="1">📮 加入心愿榜（愿力 +1）</button>' +
+    '<button class="abtn" data-wish="diy">🧪 去 DIY 工坊自己合成一个</button>' +
+    '<button class="abtn" data-wish="no">❌ 随便说说</button></div>');
+  b.querySelectorAll('[data-wish]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      const w = btn.getAttribute('data-wish');
+      if (w === '1') {
+        const hit = WISHES.find(function(x) { return x.name === name; });
+        if (hit) hit.votes += 1;
+        else WISHES.push({name: name, votes: 1, at: fmt(SIM_MIN)});
+        saveWishes(); renderWishBoard();
+        agentSay('📮 已入榜！「' + esc(name) + '」当前愿力 <b>' + (hit ? hit.votes : 1) + '</b>。生成晒卡发出去拉票——愿力代表「最想让官方做出来」的呼声。');
+      } else if (w === 'diy') {
+        diyOpen(name);
+      } else {
+        agentSay('好的，就当刚才那句是许愿前的深呼吸 🌬️');
+      }
+    });
+  });
+}
+function saveWishes() {
+  try { localStorage.setItem('mcd.wishes', JSON.stringify(WISHES)); } catch (e) {}
+}
+function renderWishBoard() {
+  const sorted = WISHES.slice().sort(function(a, b) { return b.votes - a.votes; });
+  const rows = sorted.map(function(w, i) {
+    return '<div class="meta-row"><span class="k">#' + (i + 1) + ' ' + esc(w.name) + '</span>' +
+      '<span class="v">愿力 ' + w.votes + '</span></div>';
+  }).join('');
+  agentSay('📮 <b>新品心愿榜</b>（本机档案）<br>' + (rows || '（空）') +
+    '<div class="dim2" style="margin-top:6px">生成晒卡分享， collecting 愿力——愿力榜就是「最想让官方做出来」的民意。</div>');
+}
+
+function diyOpen(name) {
+  const bases = ITEMS.filter(function(it) { return it.matched && it.kcal && it.kcal >= 300; })
+    .sort(function(a, b) { return b.protein - a.protein; }).slice(0, 6);
+  const addons = ITEMS.filter(function(it) { return it.matched && it.kcal != null && it.kcal > 0 && it.kcal <= 250; })
+    .sort(function(a, b) { return (b.protein || 0) - (a.protein || 0); }).slice(0, 6);
+  const b = agentSay('🧪 <b>DIY 新品工坊</b>' + (name ? '（方向：' + esc(name) + '）' : '') +
+    '<br>选一个基底 + 至多两份加料，营养按成分加和确定性地算出来——不编数据。<br>' +
+    '<div style="margin-top:8px"><input id="diyName" placeholder="给你的新品起名（如：麻辣香锅堡）" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:3px;color:var(--text);padding:6px 10px;font-size:12px;font-family:inherit"></div>' +
+    '<div class="stat-note" style="margin-top:8px">基底（单选）：</div><div class="chips" id="diyBase">' +
+    bases.map(function(x, i) { return '<button class="chip' + (i === 0 ? ' on' : '') + '" data-diybase="' + esc(x.name) + '">' + esc(x.name) + ' ' + x.kcal + 'kcal</button>'; }).join('') + '</div>' +
+    '<div class="stat-note" style="margin-top:8px">加料（可多选）：</div><div class="chips" id="diyAdd">' +
+    addons.map(function(x) { return '<button class="chip" data-diyadd="' + esc(x.name) + '">' + esc(x.name) + ' +' + x.kcal + 'kcal</button>'; }).join('') + '</div>' +
+    '<div class="acts"><button class="abtn gold" id="diyGo">🧪 合成新品（201）</button></div>' +
+    '<div class="dim2" style="margin-top:6px">合成品营养 = 各成分官方营养加和，确定性可复算。</div>');
+  let base = bases[0] ? bases[0].name : null;
+  const adds = [];
+  b.querySelector('#diyBase').addEventListener('click', function(e) {
+    const c = e.target.closest('[data-diybase]');
+    if (!c) return;
+    base = c.getAttribute('data-diybase');
+    this.querySelectorAll('.chip').forEach(function(x) { x.classList.remove('on'); });
+    c.classList.add('on');
+  });
+  b.querySelector('#diyAdd').addEventListener('click', function(e) {
+    const c = e.target.closest('[data-diyadd]');
+    if (!c) return;
+    const nm = c.getAttribute('data-diyadd');
+    const idx = adds.indexOf(nm);
+    if (idx >= 0) { adds.splice(idx, 1); c.classList.remove('on'); }
+    else { adds.push(nm); c.classList.add('on'); }
+  });
+  b.querySelector('#diyGo').addEventListener('click', function() {
+    const nm = ($id('diyName') && $id('diyName').value.trim()) || ('自制·' + base);
+    const parts = ITEMS.filter(function(it) { return adds.indexOf(it.name) !== -1; });
+    const baseIt = ITEMS.find(function(it) { return it.name === base; }) || {kcal: 0, sod: 0, protein: 0};
+    const kcal = (baseIt.kcal || 0) + parts.reduce(function(a, x) { return a + x.kcal; }, 0);
+    const sod = (baseIt.sod || 0) + parts.reduce(function(a, x) { return a + x.sod; }, 0);
+    const protein = Math.round((baseIt.protein || 0) + parts.reduce(function(a, x) { return a + (x.protein || 0); }, 0));
+    const diy = {code: 'DIY-' + Date.now(), name: nm, img: '', cat: '自制新品',
+      tags: ['自制'], matched: true, kcal: kcal, sod: sod, protein: protein,
+      parts: [base].concat(adds), at: fmt(SIM_MIN)};
+    DIYS.push(diy); ITEMS.push(diy);
+    try { localStorage.setItem('mcd.diys', JSON.stringify(DIYS)); } catch (e) {}
+    drawMenu($id('search').value);
+    CART = [{...diy, qty: 1}];
+    submitOrder();
+    agentSay('🧪 <b>' + esc(nm) + '</b> 已合成入库（201 Created·自制区）。营养 = ' +
+      esc([base].concat(adds).join(' + ')) + ' 的官方营养加和。<br>想让它成为官方真品？去<b>新品心愿榜</b>给它拉愿力。');
+    renderWishBoard();
+  });
+}
+function renderWishBoard() {}
+
+const QUICK = ['20块吃什么', '减脂能吃啥', '来杯咖啡', '新品有什么', '深夜饿了', '随便推荐', '🧪 DIY 新品', '📮 新品心愿榜'];
 $id('quick').innerHTML = QUICK.map(function(q) { return '<button data-q="' + q + '">' + q + '</button>'; }).join('');
 $id('quick').addEventListener('click', function(e) {
   const b = e.target.closest('[data-q]');
@@ -267,12 +370,18 @@ $id('quick').addEventListener('click', function(e) {
 function sendChat() {
   const text = $id('chatIn').value.trim();
   if (!text) return;
+  if (/DIY/.test(text)) { meSay('🧪 DIY 工坊已打开'); diyOpen(text.replace(/DIY|🧪|工坊/g, '').trim()); return; }
+  if (/心愿/.test(text)) { renderWishBoard(); return; }
   meSay(text);
   $id('chatIn').value = '';
   const r = parseIntent(text);
   if (r.scene === 'night' && (SIM_MIN < 1230 || SIM_MIN > 1260)) {
     setClock(1320);
     agentSay('深夜场景——已把模拟时间拨到 <b class="mono">' + fmt(SIM_MIN) + '</b>。现在提交一单会判 <b style="color:var(--orange)">408 Request Timeout</b>（身体服务不在供餐时段）。试试提交，或把时间拨回白天。');
+    return;
+  }
+  if (!r.wants && !r.budget && !r.kcalCap && !r.scene && !r.random && t.length <= 20 && !/菜单|帮助|怎么用|探活/.test(t)) {
+    wishFlow(t);
     return;
   }
   agentRecommend(text);
