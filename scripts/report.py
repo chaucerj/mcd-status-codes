@@ -435,7 +435,7 @@ function renderGallery() {{
         <div class="krow"><span>累计 <span class="kv">${{x.kcal}}</span> kcal</span></div>`
       : `<div class="stat-note" style="margin:0">官方营养账本（160 项标准单品）查无此品，无法计量</div>`}}
       <div class="gal-foot">
-        <span class="state-chip" style="background:${{col}};color:#fff">${{x.matched ? '可计量' : '404 查无此品'}}</span>
+        <span class="state-chip" style="background:${{col}};color:#fff">${{x.matched ? '可计量' : '账本未收录'}}</span>
         <span style="color:var(--dim)">${{x.matched ? '营养账本已收录' : '营养账本缺口'}}</span>
       </div>
     </div>`;
