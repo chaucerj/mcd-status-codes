@@ -96,6 +96,7 @@ const NAME = {'200':'200 OK','201':'201 Created','206':'206 Partial','301':'301 
 const COLORP = {'103':'#6ED0E0','204':'#37872D','412':'#E98300','425':'#E98300','599':'#E24D42','522':'#96222A'};
 const NAMEP = {'103':'103 Hints','204':'204 Quiet','412':'412 Denied','425':'425 Too Early','599':'599 Timeout','522':'522 Lost'};
 let SIM_MIN = 720, ORDERS = [], SEEN = new Set(), LAST_SIG = null, LAST = null, PENDING = null, CART = [], CUR_CAT = '全部';
+let INTERACTED = false;   // 首次交互前探活保持静默——不 nag 刚打开页面的用户
 const fmt = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
 const $id = id => document.getElementById(id);
 const esc = s => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -187,6 +188,7 @@ function agentRecommend(text) {
 }
 
 function submitOrder() {
+  INTERACTED = true;
   if (!CART.length) return null;
   const r = judge(CART.slice(), SIM_MIN);
   ORDERS.push({min: SIM_MIN, items: r.items, kcal: r.kcal, code: r.code});
@@ -198,38 +200,96 @@ function submitOrder() {
     '<div class="vreason">' + esc(r.reason) + '</div>' +
     (r.breaches.length ? '<div class="badges">' + r.breaches.map(function(b) { return '<span class="bdg" style="background:' + b.c + '">⚠ ' + b.t + '</span>'; }).join('') + '</div>' : '') +
     '<div style="margin-top:8px;font-size:12px;color:var(--muted)">' + itemsHtml + '</div>');
+  // 探活闭环：本次摄入回应仍处 open 状态的探活建议
+  const hasCaf = r.items.some(function(i) { return CAFE_KW.some(function(k) { return i.name.indexOf(k) !== -1; }); });
+  PROBES.filter(function(p) { return p.status === 'open'; }).forEach(function(pr) {
+    let closed = null;
+    if (pr.domain === 'caffeine' && hasCaf) closed = 'adopted';
+    else if (pr.domain === 'metabolic' && pr.key === 'snack_103') closed = 'adopted';
+    if (closed) {
+      pr.status = closed;
+      agentSay('🔗 <b>探活闭环</b>：' + esc(pr.text) + '<br>→ 已被本次摄入回应，判定 <b class="mono" style="color:' + COLOR[r.code] + '">' + r.code + ' ' + NAME[r.code] + '</b>');
+    }
+  });
   runProbes();
   LAST = {code: r.code, reason: r.reason, items: r.items, kcal: r.kcal, sodium: r.sodium, qty: r.qty, breaches: r.breaches, scene: '模拟时间 ' + fmt(SIM_MIN)};
   $id('share2').textContent = '📸 把刚才这单（' + r.code + '）生成晒卡';
   return r;
 }
 
+const PROBES = [];
+function fireProbe(key, code, min, text, items, domain) {
+  let pr = PROBES.find(function(p) { return p.key === key; });
+  if (pr) return pr;                          // 每个探活键一次，重放不刷屏
+  pr = {key: key, code: code, min: min, text: text, items: items || null,
+        status: 'open', domain: domain || 'general'};
+  PROBES.push(pr);
+  let html = '<span class="bdg" style="background:' + COLORP[code] + '">' + NAMEP[code] + '</span> ' + esc(text) +
+    '<div class="dim2" style="font-size:10px;margin-top:3px">' + fmt(min) + ' · probe 探活方向 · 状态码不受影响</div>';
+  if (items && code === '103') {
+    html += '<div class="acts"><button class="abtn" data-adopt="' + key + '">✅ 采纳：立即摄入这份建议</button></div>';
+  }
+  const b = agentSay(html);
+  if (items && code === '103') {
+    b.querySelector('[data-adopt="' + key + '"]').addEventListener('click', function() {
+      if (pr.status !== 'open') return;
+      pr.status = 'adopted';
+      CART = items.map(function(i) { return Object.assign({}, i, {qty: 1}); });
+      const r = submitOrder();
+      agentSay('🔗 <b>探活闭环完成</b>：' + esc(text) + '<br>→ 已采纳摄入，本次判定 <b class="mono" style="color:' + COLOR[r.code] + '">' + r.code + ' ' + NAME[r.code] + '</b>');
+    });
+  }
+  return pr;
+}
+function closeProbe(key, how) {
+  const pr = PROBES.find(function(p) { return p.key === key && p.status === 'open'; });
+  if (pr) pr.status = how;
+  return pr;
+}
 function runProbes() {
   const t = SIM_MIN;
   const caf = ORDERS.filter(function(o) { return (o.items || []).some(function(i) { return CAFE_KW.some(function(k) { return i.name.indexOf(k) !== -1; }); }); });
   const cafBefore = caf.filter(function(o) { return o.min <= t; });
   const intake = ORDERS.filter(function(o) { return o.min <= t; }).reduce(function(a, o) { return a + (o.kcal || 0); }, 0);
-  const out = [];
-  if (t >= 570 && t <= 660 && !cafBefore.length) out.push([Math.max(t, 570), '103', '晨间咖啡窗探活：今日尚无咖啡因摄入——建议一杯小杯鲜萃咖啡（15 kcal），保持上午清醒']);
-  if (t > 660 && !caf.some(function(o) { return o.min >= 570 && o.min <= 660; }).length) out.push([660, '599', '晨间咖啡窗关闭：09:30–11:00 的补给建议未被采纳，上午清醒度预算透支']);
-  if (t >= 810 && t <= 930 && !cafBefore.length) out.push([Math.max(t, 810), '103', '午后咖啡窗探活：困倦谷将至——建议麦咖啡™冰美式中杯（13 kcal）']);
-  if (t > 930 && !caf.some(function(o) { return o.min >= 810 && o.min <= 930; }).length) out.push([930, '599', '午后咖啡窗关闭：仍未摄入咖啡因，下午 CPU 降频已记录在案']);
+  const hasCafIn = function(a, b2) { return caf.some(function(o) { return o.min >= a && o.min <= b2; }); };
+  const coffee = ITEMS.filter(function(it) { return it.matched && it.kcal != null && CAFE_KW.some(function(k) { return it.name.indexOf(k) !== -1; }); }).sort(function(a, b) { return a.kcal - b.kcal; })[0];
+
+  // 晨间咖啡窗 09:30–11:00
+  if (t >= 570 && t <= 660 && !cafBefore.length)
+    fireProbe('morning_103', '103', Math.max(t, 570), '晨间咖啡窗探活：今日尚无咖啡因摄入——建议一杯小杯鲜萃咖啡（15 kcal），保持上午清醒', coffee ? [coffee] : null, 'caffeine');
+  if (t > 660 && !hasCafIn(570, 660)) {
+    closeProbe('morning_103', 'timed_out');
+    fireProbe('morning_599', '599', 660, '晨间咖啡窗关闭：09:30–11:00 的补给建议未被采纳——采纳了那杯 15 kcal 的咖啡就不会有这条 599', null);
+  }
+
+  // 午后咖啡窗 13:30–15:30
+  if (t >= 810 && t <= 930 && !cafBefore.length)
+    fireProbe('afternoon_103', '103', Math.max(t, 810), '午后咖啡窗探活：困倦谷将至——建议麦咖啡™冰美式中杯（13 kcal）', coffee ? [coffee] : null, 'caffeine');
+  if (t > 930 && !hasCafIn(810, 930)) {
+    closeProbe('afternoon_103', 'timed_out');
+    fireProbe('afternoon_599', '599', 930, '午后咖啡窗关闭：仍未摄入咖啡因，下午 CPU 降频已记录在案', null);
+  }
+
+  // 午后补给窗 14:30–16:00（试玩间预设减脂目标 1800 kcal）
   if (t >= 870 && t <= 960) {
     const gap = SNACK_TARGET - intake;
-    if (gap < 0) out.push([Math.max(t, 870), '412', '今日已超减脂预算 ' + (-gap) + ' kcal，下午茶建议被目标否决——412 在保护你']);
+    if (gap < 0)
+      fireProbe('snack_412', '412', Math.max(t, 870), '今日已超减脂预算 ' + (-gap) + ' kcal，下午茶建议被目标否决——412 在保护你', null, 'metabolic');
     else if (gap >= 250) {
-      const snack = ITEMS.filter(function(i) { return i.matched && i.kcal && i.kcal <= gap && i.protein >= 8; }).sort(function(a, b) { return (b.protein || 0) - (a.protein || 0); })[0];
-      out.push([Math.max(t, 870), '103', '减脂补给窗：缺口 ' + gap + ' kcal——建议 ' + (snack ? snack.name + '（' + snack.kcal + ' kcal / 蛋白 ' + snack.protein + 'g）' : '轻量蛋白加餐')]);
-    } else out.push([Math.max(t, 870), '204', '今日摄入与预算吻合（缺口仅 ' + gap + ' kcal），主动静默']);
+      const snack = ITEMS.filter(function(i) { return i.matched && i.kcal && i.kcal <= gap && i.protein >= 8; })
+        .sort(function(a, b) { return (b.protein || 0) - (a.protein || 0); })[0];
+      fireProbe('snack_103', '103', Math.max(t, 870), '减脂补给窗：缺口 ' + gap + ' kcal——建议 ' +
+        (snack ? snack.name + '（' + snack.kcal + ' kcal / 蛋白 ' + snack.protein + 'g）' : '轻量蛋白加餐'),
+        snack ? [Object.assign({}, snack, {qty: 1})] : null, 'metabolic');
+    } else
+      fireProbe('snack_204', '204', Math.max(t, 870), '今日摄入与预算吻合（缺口仅 ' + gap + ' kcal），主动静默', null, 'metabolic');
   }
-  if (out.filter(function(x) { return x[1] === '599'; }).length >= 2) out.push([970, '522', '连续窗口失联：探活建议始终未获反馈，告警级别已升级']);
-  out.sort(function(a, b) { return a[0] - b[0]; });
-  out.forEach(function(pair) {
-    agentSay('<span class="bdg" style="background:' + COLORP[pair[1]] + '">' + NAMEP[pair[1]] + '</span> ' + esc(pair[2]) +
-      '<div class="dim2" style="font-size:10px;margin-top:3px">' + fmt(pair[0]) + ' · probe 探活方向 · 状态码不受影响</div>');
-  });
-}
 
+  // 522：两个咖啡窗都超时 → 失联升级
+  const lost599 = PROBES.filter(function(p) { return p.key === 'morning_599' || p.key === 'afternoon_599'; });
+  if (lost599.length >= 2)
+    fireProbe('lost_522', '522', Math.max(t, 970), '连续窗口失联：晨间与午后的探活建议均未获反馈，告警级别已升级', null, 'general');
+}
 function judge(cart, atMin) {
   const items = cart.map(function(x) { return {name: x.name, matched: x.matched, kcal: x.kcal != null ? x.kcal * x.qty : null, sod: x.sod != null ? x.sod * x.qty : null, qty: x.qty}; });
   const matched = items.filter(function(i) { return i.matched; });
@@ -243,7 +303,8 @@ function judge(cart, atMin) {
   var code, reason;
   if (hour >= 22 || hour < 5) { code = '408'; reason = '你在 ' + fmt(atMin) + ' 发起摄入——身体服务已不在供餐时段（22:00–05:00 判 408）'; }
   else if (dupToday >= 1) { code = '429'; reason = '今日第 ' + dupToday + ' 次之后的摄入请求，触发限流'; }
-  else if (items.length && items.every(function(i) { return isDrink(i.name); })) { code = '418'; reason = '整单均为饮料，命中茶壶协议'; }
+  else if (items.length && items.every(function(i) { return isDrink(i.name); }) && !items.every(function(i) { return CAFE_KW.some(function(k) { return i.name.indexOf(k) !== -1; }); })) { code = '418'; reason = '整单均为非咖啡因饮料——茶壶只服务咖啡，功能性摄入请判 200'; }
+  else if (items.length && items.every(function(i) { return CAFE_KW.some(function(k) { return i.name.indexOf(k) !== -1; }); })) { /* 纯咖啡因单：功能性摄入，走正常判定 */ }
   else if (qty >= 6) { code = '502'; reason = '单笔聚合 ' + qty + ' 件商品——多人网关请求'; }
   else if (LAST_SIG && sig === LAST_SIG) { code = '304'; reason = '与上一单完全一致，缓存直接命中'; }
   else if (items.length && !matched.length) { code = '404'; reason = '全部商品不在官方营养账本——数据缺口如实呈现'; }
@@ -370,6 +431,7 @@ $id('quick').addEventListener('click', function(e) {
 function sendChat() {
   const text = $id('chatIn').value.trim();
   if (!text) return;
+  INTERACTED = true;
   if (/DIY/.test(text)) { meSay('🧪 DIY 工坊已打开'); diyOpen(text.replace(/DIY|🧪|工坊/g, '').trim()); return; }
   if (/心愿/.test(text)) { renderWishBoard(); return; }
   meSay(text);
@@ -492,11 +554,11 @@ $id('share2').addEventListener('click', function() {
 function setClock(m) {
   SIM_MIN = +m;
   $id('clockT').textContent = fmt(SIM_MIN);
-  runProbes();
+  if (INTERACTED) runProbes();
 }
 drawMenu('');
-setClock(720);
 agentSay('👋 欢迎来到麦门监控台试玩间。我是你身体服务的值班运维 Agent。<br><br>直接告诉我你想吃什么——比如「<b>20 块吃什么</b>」「<b>减脂能吃啥</b>」「<b>来杯咖啡</b>」「<b>新品有什么</b>」——我会组单、判定状态码、按模拟时间探活。拖动上方时间轴可以让探活重放。');
+setClock(720);
 </script>
 </body>
 </html>
