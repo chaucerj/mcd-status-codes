@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>麦门监控台 · 你的身体服务</title>
+<style>
+  :root {
+    --bg:#0b0c0e; --panel:#111217; --panel2:#181b1f; --border:#24272e;
+    --text:#d8d9da; --muted:#8e9095; --dim:#6c7076;
+    --blue:#3274D9; --green:#37872D; --orange:#E98300;
+    --red:#E24D42; --purple:#705DA0; --yellow:#EAB839; --cyan:#6ED0E0;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);
+    font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;padding:20px;max-width:1240px;margin:0 auto}
+  .mono{font-family:"SF Mono","JetBrains Mono",Consolas,monospace;
+    font-variant-numeric:tabular-nums}
+
+  .topbar{display:flex;align-items:center;gap:14px;padding-bottom:12px;
+    border-bottom:1px solid var(--border);margin-bottom:16px;flex-wrap:wrap}
+  .topbar img{width:28px;height:28px;border-radius:3px}
+  .topbar h1{font-size:17px;font-weight:600;letter-spacing:.2px}
+  .topbar h1 .accent{color:var(--blue)}
+  .crumb{font-size:12px;color:var(--dim)}
+  .badge{margin-left:auto;padding:3px 11px;border-radius:2px;font-size:11px;
+    border:1px solid var(--border);color:var(--muted);background:var(--panel)}
+  .badge.on{background:var(--yellow);border-color:var(--yellow);color:#111;font-weight:700}
+
+  .meta{font-size:11px;color:var(--dim);margin-bottom:16px;letter-spacing:.3px;line-height:1.7}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-bottom:10px}
+  .grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin-bottom:10px}
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:3px;padding:13px 15px}
+  .panel-h{display:flex;align-items:center;gap:7px;margin-bottom:9px}
+  .panel-h h3{font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.7px;text-transform:uppercase}
+  .dot{width:7px;height:7px;border-radius:50%;flex:none}
+
+  .stat{font-size:30px;font-weight:700;line-height:1.15;letter-spacing:-.5px;
+    font-variant-numeric:tabular-nums}
+  .stat small{font-size:13px;color:var(--muted);font-weight:500}
+  .stat-note{font-size:11px;color:var(--dim);margin-top:5px;line-height:1.5}
+
+  .bar{height:5px;background:var(--panel2);border-radius:3px;overflow:hidden;margin-top:9px}
+  .bar>div{height:100%;border-radius:3px}
+
+  .row{display:flex;align-items:center;gap:9px;padding:4px 0;font-size:12px}
+  .row .lb{width:132px;flex:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    padding:2px 7px;border-radius:2px;font-size:10px;font-weight:700;text-align:center}
+  .row .barwrap{flex:1;height:13px;background:var(--panel2);border-radius:2px;overflow:hidden}
+  .row .barwrap>div{height:100%;min-width:2px}
+  .row .ct{width:26px;text-align:right;flex:none;color:var(--muted)}
+
+  .uptime{display:flex;gap:2px;flex-wrap:wrap;margin-top:8px}
+  .ud{width:9px;height:16px;border-radius:1px}
+
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th{text-align:left;color:var(--dim);font-size:10px;font-weight:600;letter-spacing:.6px;
+    text-transform:uppercase;padding:7px 8px;border-bottom:1px solid var(--border);white-space:nowrap}
+  td{padding:8px;border-bottom:1px solid var(--border);vertical-align:top}
+  tbody tr:hover{background:var(--panel2)}
+  .reason{color:var(--muted);font-size:11px;margin-top:3px;line-height:1.5}
+  .code{display:inline-block;padding:2px 8px;border-radius:2px;font-size:10px;font-weight:700;white-space:nowrap}
+
+  .alert{display:flex;gap:8px;padding:8px 11px;background:var(--panel2);
+    border-left:2px solid var(--orange);border-radius:0 2px 2px 0;margin-bottom:6px;
+    font-size:12px;line-height:1.55}
+
+  details summary{cursor:pointer;list-style:none;color:var(--muted);font-size:11px}
+  details summary::-webkit-details-marker{display:none}
+  .item{font-size:11px;padding:2px 0;color:var(--muted)}
+  .item.miss{color:var(--red)}
+  .item.miss::after{content:" 无法计量";font-weight:600}
+
+  .egg-wrap{text-align:center;padding:44px 24px}
+  .egg-code{font-size:64px;font-weight:800;letter-spacing:-2px;color:var(--red);line-height:1}
+  .egg-title{font-size:17px;font-weight:600;margin:14px 0 18px}
+  .egg-box{max-width:560px;margin:0 auto;text-align:left;background:var(--panel2);
+    border:1px solid var(--border);border-radius:3px;padding:16px 18px;font-size:13px;line-height:1.85}
+  .egg-box p{margin-bottom:9px}
+  .egg-box p:last-child{margin-bottom:0}
+  .egg-cta{margin-top:18px;padding:13px 16px;background:rgba(50,116,217,.1);
+    border:1px solid var(--blue);border-radius:3px;font-size:13px;line-height:1.7}
+
+  .locked{text-align:center;padding:28px;color:var(--dim);font-size:13px}
+  footer{margin-top:22px;padding-top:14px;border-top:1px solid var(--border);
+    color:var(--dim);font-size:11px;text-align:center;line-height:1.8}
+
+  /* ── 图表 ────────────────────────────────────────────────── */
+  .chart-wrap{width:100%;overflow:visible}
+  .chart-wrap svg{display:block;width:100%;height:auto;overflow:visible}
+  .axis-line{stroke:var(--border);stroke-width:1}
+  .axis-text{fill:var(--dim);font-size:9px;font-family:"SF Mono",Consolas,monospace}
+  .grid-line{stroke:var(--border);stroke-width:1;stroke-dasharray:2 3;opacity:.55}
+  .bar{transition:opacity .15s ease}
+  .bar:hover{opacity:.75}
+  .legend{display:flex;flex-wrap:wrap;gap:5px 14px;margin-top:10px;
+    padding-top:9px;border-top:1px solid var(--border)}
+  .legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
+  .legend-item .sw{width:8px;height:8px;border-radius:2px;flex:none}
+  .legend-item .lv{font-family:"SF Mono",monospace;color:var(--text);font-weight:600}
+  .legend-item .ln{color:var(--dim)}
+
+  /* 仪表盘：容器必须与 SVG 显示尺寸一致（112×112），否则 inset:0 居中的
+     环心文字锚在 96 容器的 (48,48)，而圆环实际中心在 (56,56)，读数会偏左上 */
+  .gauge-wrap{display:flex;align-items:center;gap:16px}
+  .gauge{position:relative;width:112px;height:112px;flex:none}
+  .gauge svg{display:block;transform:rotate(-90deg)}
+  .gauge .gv{position:absolute;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:1px}
+  .gauge .gv b{font-size:25px;font-weight:700;line-height:1;letter-spacing:-.5px;
+    font-family:"SF Mono",Consolas,monospace}
+  .gauge .gv i{font-size:9px;font-style:normal;color:var(--dim);letter-spacing:.4px}
+
+  /* 热量标尺 */
+  .scale{position:relative;height:60px;margin-top:6px}
+  .scale-track{position:absolute;top:24px;left:0;right:0;height:7px;
+    background:var(--panel2);border-radius:4px;overflow:hidden;display:flex}
+  .scale-seg{height:100%}
+  .scale-thr{position:absolute;top:19px;width:1px;height:17px;
+    background:var(--dim);opacity:.7}
+  .scale-mark{position:absolute;top:12px;width:2px;height:31px;background:var(--text);
+    border-radius:1px;transform:translateX(-50%);box-shadow:0 0 0 2px var(--panel)}
+  .scale-mark.p50{height:21px;top:17px;background:var(--cyan)}
+  .scale-mark.p99{background:var(--purple)}
+  .scale-ticks{position:absolute;top:37px;left:0;right:0;display:flex;
+    justify-content:space-between;font-size:9px;color:var(--dim);
+    font-family:"SF Mono",monospace}
+
+  /* 时间轴刻度 */
+  .tl-label{font-size:10px;color:var(--dim);font-family:"SF Mono",monospace}
+
+  /* 分段切换控件 */
+  .seg{display:inline-flex;gap:2px;padding:2px;background:var(--panel2);
+    border:1px solid var(--border);border-radius:3px}
+  .seg-btn{appearance:none;border:0;background:transparent;color:var(--muted);
+    font-size:11px;font-family:inherit;padding:3px 11px;border-radius:2px;
+    cursor:pointer;transition:all .15s ease;line-height:1.5}
+  .seg-btn:hover{color:var(--text)}
+  .seg-btn.on{background:var(--blue);color:#fff;font-weight:600}
+  .seg-btn:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
+
+  /* 两级页面导航 */
+  .tabs{display:inline-flex;gap:2px;padding:2px;background:var(--panel2);
+    border:1px solid var(--border);border-radius:3px;margin-bottom:14px}
+  .pos-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+  .pos-hint{font-size:11px;color:var(--dim)}
+  .tab-btn{appearance:none;border:0;background:transparent;color:var(--muted);
+    font-size:12px;font-family:inherit;padding:5px 16px;border-radius:2px;
+    cursor:pointer;transition:all .15s ease;line-height:1.5;display:flex;
+    align-items:center;gap:6px}
+  .tab-btn:hover{color:var(--text)}
+  .tab-btn.on{background:var(--blue);color:#fff;font-weight:600}
+  .tab-btn:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
+  .tab-btn .n{font-family:"SF Mono",monospace;font-size:10px;opacity:.75}
+
+  /* 商品图鉴 */
+  .gal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(236px,1fr));
+    gap:12px;margin-top:14px}
+  .gal-card{background:var(--panel);border:1px solid var(--border);border-radius:4px;
+    padding:12px;display:flex;flex-direction:column;gap:10px}
+  .gal-card.nomatch{border-style:dashed}
+  .gal-head{display:flex;gap:10px;align-items:center;min-width:0}
+  .thumbbox{position:relative;border-radius:4px;overflow:hidden;flex:none;
+    background:var(--panel2)}
+  .thumbbox img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .fallback-tile{position:absolute;inset:0;display:flex;align-items:center;
+    justify-content:center;font-weight:700;letter-spacing:1px}
+  .gal-name{font-size:13px;font-weight:600;line-height:1.35;word-break:break-all}
+  .gal-meta{font-size:11px;color:var(--dim);margin-top:3px;line-height:1.6}
+  .kbar{height:5px;background:var(--panel2);border-radius:3px;overflow:hidden;flex:1}
+  .kbar>div{height:100%;border-radius:3px}
+  .krow{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted)}
+  .krow .kv{font-family:"SF Mono",monospace;color:var(--text);font-weight:600}
+  .gal-foot{display:flex;justify-content:space-between;align-items:center;
+    font-size:11px;margin-top:auto;padding-top:9px;border-top:1px solid var(--border)}
+  .state-chip{display:inline-block;padding:2px 8px;border-radius:2px;
+    font-size:10px;font-weight:700;font-family:"SF Mono",monospace;white-space:nowrap}
+  .item-row{display:flex;align-items:center;gap:8px;padding:3px 0}
+  .item-row .nm{flex:1;min-width:0;font-size:11px;white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis}
+
+  /* 运维战情室（重生之我在麦门世界运维） */
+  .reborn{display:flex;align-items:center;gap:14px;padding:16px 18px;
+    background:linear-gradient(120deg,rgba(50,116,217,.12),rgba(255,184,57,.06));
+    border:1px solid var(--border);border-radius:4px;margin-bottom:12px}
+  .reborn .lv-big{font-size:26px;font-weight:800;letter-spacing:-.5px;color:var(--yellow)}
+  .reborn .lv-sub{font-size:12px;color:var(--muted);line-height:1.6}
+  .lvbar{height:6px;background:var(--panel2);border-radius:3px;overflow:hidden;margin-top:7px}
+  .lvbar>div{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--blue),var(--yellow))}
+  .pm-card{border:1px solid var(--border);border-left:3px solid var(--red);
+    border-radius:3px;padding:12px 14px;margin-bottom:10px;background:var(--panel2)}
+  .pm-card.sev2{border-left-color:var(--orange)}
+  .pm-card.sev3{border-left-color:var(--yellow)}
+  .pm-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px}
+  .pm-id{font-family:"SF Mono",monospace;font-weight:700;color:var(--text)}
+  .sev-chip{padding:1px 8px;border-radius:2px;font-size:10px;font-weight:800;
+    font-family:"SF Mono",monospace;color:#fff}
+  .pm-new{background:var(--red);color:#fff;padding:1px 7px;border-radius:2px;
+    font-size:10px;font-weight:800}
+  .pm-body{font-size:12px;color:var(--muted);line-height:1.7;margin-top:7px}
+  .pm-body b{color:var(--text);font-weight:600}
+  .taste-row{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:12px}
+  .taste-row .lb{width:88px;flex:none;color:var(--muted)}
+  .taste-row .barwrap{flex:1;height:14px;background:var(--panel2);
+    border-radius:2px;overflow:hidden}
+  .taste-row .barwrap>div{height:100%;border-radius:2px;
+    background:linear-gradient(90deg,var(--purple),var(--cyan))}
+  .taste-row .ct{width:52px;text-align:right;font-family:"SF Mono",monospace;
+    color:var(--text);font-weight:600}
+  .evo-item{display:flex;gap:9px;padding:6px 0;font-size:12px;line-height:1.6;
+    border-bottom:1px dashed var(--border)}
+  .evo-item:last-child{border-bottom:0}
+  .evo-n{font-family:"SF Mono",monospace;font-weight:700;color:var(--cyan);
+    flex:none;width:34px}
+  .probe-item{display:flex;gap:8px;align-items:flex-start;padding:8px 10px;
+    background:var(--panel2);border-radius:3px;margin-bottom:6px;font-size:12px;
+    line-height:1.6}
+  .probe-item .pn{font-family:"SF Mono",monospace;font-weight:700;font-size:10px;
+    padding:1px 7px;border-radius:2px;color:#fff;flex:none;margin-top:1px}
+  .probe-item .pd{flex:1;min-width:0}
+  .probe-item .pw{color:var(--dim);font-size:10px;margin-top:2px}
+  .st-chip{padding:1px 7px;border-radius:2px;font-size:10px;font-weight:700;
+    font-family:"SF Mono",monospace;flex:none}
+  .meta-row{display:flex;justify-content:space-between;font-size:12px;
+    padding:5px 0;border-bottom:1px dashed var(--border)}
+  .meta-row .k{color:var(--muted)}
+  .meta-row .v{font-family:"SF Mono",monospace;font-weight:600;color:var(--text)}
+  .gapbar{height:10px;background:var(--panel2);border-radius:3px;overflow:hidden;
+    margin-top:8px}
+  .gapbar>div{height:100%;border-radius:3px}
+
+  .panel-h.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .panel-h.row > div{display:flex;align-items:center;gap:7px;min-width:0}
+
+  /* 分页 */
+  .pager{display:flex;align-items:center;gap:8px;justify-content:flex-end;
+    padding-top:11px;margin-top:11px;border-top:1px solid var(--border)}
+  .pager-info{margin-right:auto;font-size:11px;color:var(--dim)}
+  .pg-btn{appearance:none;min-width:26px;height:26px;padding:0 7px;
+    border:1px solid var(--border);background:var(--panel2);color:var(--muted);
+    border-radius:3px;font-size:12px;cursor:pointer;font-family:"SF Mono",monospace;
+    transition:all .15s ease;line-height:1}
+  .pg-btn:hover:not(:disabled){color:var(--text);border-color:var(--dim)}
+  .pg-btn:disabled{opacity:.35;cursor:not-allowed}
+  .pg-btn.on{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:700}
+  .pg-btn:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
+  .pg-gap{color:var(--dim);padding:0 2px;font-size:12px}
+
+  /* 状态码筛选 chips */
+  .chips{display:flex;flex-wrap:wrap;gap:5px}
+  .chip-btn{appearance:none;display:inline-flex;align-items:center;gap:5px;
+    padding:3px 9px;border:1px solid var(--border);background:var(--panel2);
+    color:var(--muted);border-radius:11px;font-size:11px;cursor:pointer;
+    font-family:inherit;transition:all .15s ease;line-height:1.6}
+  .chip-btn:hover{color:var(--text)}
+  .chip-btn.on{background:var(--panel);border-color:var(--dim);color:var(--text)}
+  .chip-btn .sw{width:7px;height:7px;border-radius:50%;flex:none}
+  .chip-btn .n{font-family:"SF Mono",monospace;font-size:10px;color:var(--dim)}
+  .chip-btn:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
+
+  /* SLA 分级 */
+  .sla{display:flex;flex-direction:column;gap:1px}
+  .sla-row{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:11.5px}
+  .sla-dot{width:7px;height:7px;border-radius:50%;flex:none}
+  .sla-lb{flex:1;font-weight:500}
+  .sla-v{font-family:"SF Mono",monospace;font-size:10px;color:var(--dim)}
+  .sla-s{font-family:"SF Mono",monospace;font-size:10px;width:38px;text-align:right}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const DATA = {"rulesVersion": "4.0", "dataset": "demo", "generatedAt": "2026-10-22 19:28:21", "orders": [{"orderId": "DEMO-0016", "datetime": "2026-10-05 12:08:55", "date": "2026-10-05", "hour": 12, "store": "演示餐厅16", "orderType": "1", "rawStatus": "订单已完成", "amount": "24.0", "items": [{"name": "板烧鸡腿堡", "img": "", "qty": 1, "matched": true, "kcal": 391, "sodium": 1041, "protein": 23}, {"name": "小杯玉米杯", "img": "", "qty": 1, "matched": true, "kcal": 53, "sodium": 1, "protein": 2}], "kcal": 444, "sodium": 1042, "protein": 25, "matchCoverage": "2/2", "breaches": [], "httpStatus": "206", "codeLabel": "206 Partial Content", "codeTitle": "摄入无法完整计量", "codeMeaning": "你的身体账本里查不全这次摄入，返回的是残缺甚至空的响应", "reason": "2/2 项能在你的营养账本中定位，响应残缺（2/2 可计量）"}, {"orderId": "DEMO-0015", "datetime": "2026-10-02 15:00:41", "date": "2026-10-02", "hour": 15, "store": "演示餐厅15", "orderType": "1", "rawStatus": "订单已完成", "amount": "47.0", "items": [{"name": "圆筒冰淇淋", "img": "", "qty": 1, "matched": true, "kcal": 93, "sodium": 36, "protein": 2}, {"name": "麦门限定星空堡套餐", "img": "", "qty": 1, "matched": false, "kcal": null, "sodium": null, "protein": null}], "kcal": 93, "sodium": 36, "protein": 2, "matchCoverage": "1/2", "breaches": [], "httpStatus": "206", "codeLabel": "206 Partial Content", "codeTitle": "摄入无法完整计量", "codeMeaning": "你的身体账本里查不全这次摄入，返回的是残缺甚至空的响应", "reason": "1/2 项能在你的营养账本中定位，响应残缺（1/2 可计量）"}, {"orderId": "DEMO-0014", "datetime": "2026-09-28 14:20:07", "date": "2026-09-28", "hour": 14, "store": "演示餐厅14", "orderType": "1", "rawStatus": "订单已完成", "amount": "15.0", "items": [{"name": "圆筒冰淇淋", "img": "", "qty": 6, "matched": true, "kcal": 558, "sodium": 216, "protein": 12}], "kcal": 558, "sodium": 216, "protein": 12, "matchCoverage": "1/1", "breaches": [], "httpStatus": "502", "codeLabel": "502 Bad Gateway", "codeTitle": "聚合网关", "codeMeaning": "这一次请求聚合了多个子请求，单次摄入量过大", "reason": "本次请求聚合了 6 件商品，单次摄入量过大"}, {"orderId": "DEMO-0013", "datetime": "2026-09-25 12:33:21", "date": "2026-09-25", "hour": 12, "store": "演示餐厅13", "orderType": "1", "rawStatus": "订单已完成", "amount": "66.0", "items": [{"name": "麦麦脆汁鸡全肋", "img": "", "qty": 1, "matched": false, "kcal": null, "sodium": null, "protein": null}, {"name": "咸蛋黄鸡腿蛋月堡", "img": "", "qty": 2, "matched": false, "kcal": null, "sodium": null, "protein": null}], "kcal": null, "sodium": null, "protein": null, "matchCoverage": "0/2", "breaches": [], "httpStatus": "201", "codeLabel": "201 Created", "codeTitle": "新资源入库", "codeMeaning": "你吃到了历史上从未出现过的单品，身体新建了一条记录", "reason": "你吃到了历史上从未出现过的单品（麦麦脆汁鸡全肋、咸蛋黄鸡腿蛋月堡），身体新建了一条记录"}, {"orderId": "DEMO-0012", "datetime": "2026-09-18 12:15:33", "date": "2026-09-18", "hour": 12, "store": "演示餐厅12", "orderType": "1", "rawStatus": "订单已完成", "amount": "39.0", "items": [{"name": "双层吉士堡", "img": "", "qty": 1, "matched": false, "kcal": null, "sodium": null, "protein": null}, {"name": "中薯条", "img": "", "qty": 1, "matched": true, "kcal": 289, "sodium": 165, "protein": 4}], "kcal": 289, "sodium": 165, "protein": 4, "matchCoverage": "1/2", "breaches": [], "httpStatus": "201", "codeLabel": "201 Created", "codeTitle": "新资源入库", "codeMeaning": "你吃到了历史上从未出现过的单品，身体新建了一条记录", "reason": "你吃到了历史上从未出现过的单品（双层吉士堡），身体新建了一条记录"}, {"orderId": "DEMO-0011", "datetime": "2026-09-12 19:22:54", "date": "2026-09-12", "hour": 19, "store": "演示餐厅11", "orderType": "1", "rawStatus": "订单已完成", "amount": "56.0", "items": [{"name": "麦辣鸡翅-2块", "img": "", "qty": 2, "matched": true, "kcal": 448, "sodium": 1074, "protein": 26}, {"name": "大薯条", "img": "", "qty": 2, "matched": true, "kcal": 758, "sodium": 432, "protein": 12}, {"name": "朱古力新地", "img": "", "qty": 1, "matched": true, "kcal": 282, "sodium": 126, "protein": 5}], "kcal": 1488, "sodium": 1632, "protein": 43, "matchCoverage": "3/3", "breaches": ["calorie_over", "sodium_over"], "httpStatus": "201", "codeLabel": "201 Created", "codeTitle": "新资源入库", "codeMeaning": "你吃到了历史上从未出现过的单品，身体新建了一条记录", "reason": "你吃到了历史上从未出现过的单品（麦辣鸡翅-2块、朱古力新地），身体新建了一条记录"}, {"orderId": "DEMO-0010", "datetime": "2026-09-06 12:40:08", "date": "2026-09-06", "hour": 12, "store": "演示餐厅10", "orderType": "1", "rawStatus": "订单已完成", "amount": "129.0", "items": [{"name": "巨无霸", "img": "", "qty": 2, "matched": true, "kcal": 1026, "sodium": 1922, "protein": 54}, {"name": "麦辣鸡腿堡", "img": "", "qty": 2, "matched": false, "kcal": null, "sodium": null, "protein": null}, {"name": "大薯条", "img": "", "qty": 2, "matched": true, "kcal": 758, "sodium": 432, "protein": 12}, {"name": "麦乐鸡5块", "img": "", "qty": 2, "matched": true, "kcal": 426, "sodium": 844, "protein": 24}], "kcal": 2210, "sodium": 3198, "protein": 90, "matchCoverage": "3/4", "breaches": ["calorie_overload", "sodium_over"], "httpStatus": "502", "codeLabel": "502 Bad Gateway", "codeTitle": "聚合网关", "codeMeaning": "这一次请求聚合了多个子请求，单次摄入量过大", "reason": "本次请求聚合了 8 件商品，单次摄入量过大"}, {"orderId": "DEMO-0009", "datetime": "2026-09-01 12:00:00", "date": "2026-09-01", "hour": 12, "store": "演示餐厅09", "orderType": "1", "rawStatus": "订单已完成", "amount": "12.5", "items": [{"name": "可乐大杯", "img": "", "qty": 1, "matched": true, "kcal": 224, "sodium": 0, "protein": 0}, {"name": "芬达中杯", "img": "", "qty": 1, "matched": false, "kcal": null, "sodium": null, "protein": null}], "kcal": 224, "sodium": 0, "protein": 0, "matchCoverage": "1/2", "breaches": [], "httpStatus": "418", "codeLabel": "418 I'm a teapot", "codeTitle": "我是茶壶", "codeMeaning": "你只点了饮料，请求打到了茶壶而不是餐桌", "reason": "整单只有饮品，你的身体这次只出茶壶不出餐"}, {"orderId": "DEMO-0008", "datetime": "2026-08-26 21:05:31", "date": "2026-08-26", "hour": 21, "store": "演示餐厅08", "orderType": "2", "rawStatus": "订单已取消", "amount": "45.0", "items": [{"name": "麦香鱼", "img": "", "qty": 2, "matched": true, "kcal": 650, "sodium": 1112, "protein": 32}, {"name": "小薯条", "img": "", "qty": 2, "matched": true, "kcal": 420, "sodium": 240, "protein": 6}], "kcal": 1070, "sodium": 1352, "protein": 38, "matchCoverage": "2/2", "breaches": ["calorie_over", "sodium_over"], "httpStatus": "504", "codeLabel": "504 Gateway Timeout", "codeTitle": "上游中止", "codeMeaning": "这次摄入最终没有发生，链路在上游超时中止", "reason": "订单状态为「订单已取消」，这次摄入最终没有发生，链路在上游超时中止"}, {"orderId": "DEMO-0007", "datetime": "2026-08-20 12:22:12", "date": "2026-08-20", "hour": 12, "store": "演示餐厅07", "orderType": "2", "rawStatus": "订单已完成", "amount": "88.0", "items": [{"name": "麦门限定星空堡套餐", "img": "", "qty": 1, "matched": false, "kcal": null, "sodium": null, "protein": null}, {"name": "泷盐星星圆筒", "img": "", "qty": 2, "matched": false, "kcal": null, "sodium": null, "protein": null}, {"name": "BFF四宫格小食盘", "img": "", "qty": 1, "matched": false, "kcal": null, "sodium": null, "protein": null}], "kcal": null, "sodium": null, "protein": null, "matchCoverage": "0/3", "breaches": [], "httpStatus": "301", "codeLabel": "301 Moved Permanently", "codeTitle": "取餐渠道永久改道", "codeMeaning": "你的取餐路径换了节点，并已永久指向新渠道", "reason": "取餐路径由「1」永久改道至「2」"}, {"orderId": "DEMO-0006", "datetime": "2026-08-15 18:31:02", "date": "2026-08-15", "hour": 18, "store": "演示餐厅06", "orderType": "1", "rawStatus": "订单已完成", "amount": "18.0", "items": [{"name": "圆筒冰淇淋", "img": "", "qty": 2, "matched": true, "kcal": 186, "sodium": 72, "protein": 4}], "kcal": 186, "sodium": 72, "protein": 4, "matchCoverage": "1/1", "breaches": [], "httpStatus": "304", "codeLabel": "304 Not Modified", "codeTitle": "缓存命中", "codeMeaning": "这次摄入与上一单完全一致，身体直接复用了上次的响应", "reason": "与上一单逐项相同，你的身体直接复用了上次的摄入响应"}, {"orderId": "DEMO-0005", "datetime": "2026-08-14 18:30:45", "date": "2026-08-14", "hour": 18, "store": "演示餐厅05", "orderType": "1", "rawStatus": "订单已完成", "amount": "18.0", "items": [{"name": "圆筒冰淇淋", "img": "", "qty": 2, "matched": true, "kcal": 186, "sodium": 72, "protein": 4}], "kcal": 186, "sodium": 72, "protein": 4, "matchCoverage": "1/1", "breaches": [], "httpStatus": "201", "codeLabel": "201 Created", "codeTitle": "新资源入库", "codeMeaning": "你吃到了历史上从未出现过的单品，身体新建了一条记录", "reason": "你吃到了历史上从未出现过的单品（圆筒冰淇淋），身体新建了一条记录"}, {"orderId": "DEMO-0004", "datetime": "2026-08-09 23:47:19", "date": "2026-08-09", "hour": 23, "store": "演示餐厅04", "orderType": "1", "rawStatus": "订单已完成", "amount": "33.5", "items": [{"name": "麦辣鸡腿堡", "img": "", "qty": 1, "matched": false, "kcal": null, "sodium": null, "protein": null}, {"name": "大薯条", "img": "", "qty": 1, "matched": true, "kcal": 379, "sodium": 216, "protein": 6}, {"name": "麦乐鸡5块", "img": "", "qty": 1, "matched": true, "kcal": 213, "sodium": 422, "protein": 12}], "kcal": 592, "sodium": 638, "protein": 18, "matchCoverage": "2/3", "breaches": [], "httpStatus": "408", "codeLabel": "408 Request Timeout", "codeTitle": "请求超时", "codeMeaning": "你在深夜发起摄入请求，但身体已不在服务时段", "reason": "23:47 发起摄入请求，但你的身体已不在服务时段"}, {"orderId": "DEMO-0003", "datetime": "2026-08-05 09:15:02", "date": "2026-08-05", "hour": 9, "store": "演示餐厅03", "orderType": "1", "rawStatus": "订单已完成", "amount": "21.0", "items": [{"name": "猪柳蛋麦满分", "img": "", "qty": 1, "matched": true, "kcal": 387, "sodium": 846, "protein": 23}, {"name": "鲜煮咖啡中杯", "img": "", "qty": 1, "matched": false, "kcal": null, "sodium": null, "protein": null}], "kcal": 387, "sodium": 846, "protein": 23, "matchCoverage": "1/2", "breaches": [], "httpStatus": "429", "codeLabel": "429 Too Many Requests", "codeTitle": "摄入请求过频", "codeMeaning": "你在同一天发起了多次摄入，身体对你限流", "reason": "当日第 2 单，你向身体发起了多次摄入请求，已被自身限流"}, {"orderId": "DEMO-0002", "datetime": "2026-08-05 09:12:40", "date": "2026-08-05", "hour": 9, "store": "演示餐厅02", "orderType": "1", "rawStatus": "订单已完成", "amount": "21.0", "items": [{"name": "猪柳蛋麦满分", "img": "", "qty": 1, "matched": true, "kcal": 387, "sodium": 846, "protein": 23}, {"name": "鲜煮咖啡中杯", "img": "", "qty": 1, "matched": false, "kcal": null, "sodium": null, "protein": null}], "kcal": 387, "sodium": 846, "protein": 23, "matchCoverage": "1/2", "breaches": [], "httpStatus": "201", "codeLabel": "201 Created", "codeTitle": "新资源入库", "codeMeaning": "你吃到了历史上从未出现过的单品，身体新建了一条记录", "reason": "你吃到了历史上从未出现过的单品（猪柳蛋麦满分、鲜煮咖啡中杯），身体新建了一条记录"}, {"orderId": "DEMO-0001", "datetime": "2026-08-02 12:10:00", "date": "2026-08-02", "hour": 12, "store": "演示餐厅01", "orderType": "1", "rawStatus": "订单已完成", "amount": "26.0", "items": [{"name": "板烧鸡腿堡", "img": "", "qty": 1, "matched": true, "kcal": 391, "sodium": 1041, "protein": 23}, {"name": "小杯玉米杯", "img": "", "qty": 1, "matched": true, "kcal": 53, "sodium": 1, "protein": 2}], "kcal": 444, "sodium": 1042, "protein": 25, "matchCoverage": "2/2", "breaches": [], "httpStatus": "201", "codeLabel": "201 Created", "codeTitle": "新资源入库", "codeMeaning": "你吃到了历史上从未出现过的单品，身体新建了一条记录", "reason": "你吃到了历史上从未出现过的单品（板烧鸡腿堡、小杯玉米杯），身体新建了一条记录"}, {"orderId": "DEMO-0000", "datetime": "2026-08-01 12:03:11", "date": "2026-08-01", "hour": 12, "store": "演示餐厅00", "orderType": "1", "rawStatus": "订单已完成", "amount": "41.0", "items": [{"name": "巨无霸", "img": "", "qty": 1, "matched": true, "kcal": 513, "sodium": 961, "protein": 27}, {"name": "中薯条", "img": "", "qty": 1, "matched": true, "kcal": 289, "sodium": 165, "protein": 4}, {"name": "可乐中杯", "img": "", "qty": 1, "matched": true, "kcal": 147, "sodium": 0, "protein": 0}], "kcal": 949, "sodium": 1126, "protein": 31, "matchCoverage": "3/3", "breaches": ["calorie_over"], "httpStatus": "201", "codeLabel": "201 Created", "codeTitle": "新资源入库", "codeMeaning": "你吃到了历史上从未出现过的单品，身体新建了一条记录", "reason": "你吃到了历史上从未出现过的单品（巨无霸、中薯条），身体新建了一条记录"}], "summary": {"collectionStatus": "200", "collectionLabel": "200 OK", "collectionTitle": "摄入已入账", "spanDays": 66, "orderedDays": 16, "uptime": 24.2, "totalOrders": 17, "distribution": {"201": 7, "429": 1, "408": 1, "304": 1, "301": 1, "504": 1, "418": 1, "502": 2, "206": 2}, "kcalP50": 444, "kcalP99": 2210, "totalKcal": 9507, "flowUnit": "9.3 KB", "ledgerCoverageRate": 67.6, "itemLedgerGapRate": 32.4, "missedItems": [["麦辣鸡腿堡", 3], ["鲜煮咖啡中杯", 2], ["麦门限定星空堡套餐", 2], ["泷盐星星圆筒", 2], ["咸蛋黄鸡腿蛋月堡", 2], ["BFF四宫格小食盘", 1], ["芬达中杯", 1], ["双层吉士堡", 1]], "missedDays": 50, "errorBudgetUsed": 6, "alerts": ["⚠️ 1 次 429 限流：单日多单摄入行为被记录", "⚠️ 1 次 408：深夜时段仍在发起摄入请求", "📡 营养账本缺口：37 件商品中 12 件无法在你的身体账本中计量（独立指标，不计错误预算）"], "days": [{"date": "2026-08-01", "ordered": true}, {"date": "2026-08-02", "ordered": true}, {"date": "2026-08-03", "ordered": false}, {"date": "2026-08-04", "ordered": false}, {"date": "2026-08-05", "ordered": true}, {"date": "2026-08-06", "ordered": false}, {"date": "2026-08-07", "ordered": false}, {"date": "2026-08-08", "ordered": false}, {"date": "2026-08-09", "ordered": true}, {"date": "2026-08-10", "ordered": false}, {"date": "2026-08-11", "ordered": false}, {"date": "2026-08-12", "ordered": false}, {"date": "2026-08-13", "ordered": false}, {"date": "2026-08-14", "ordered": true}, {"date": "2026-08-15", "ordered": true}, {"date": "2026-08-16", "ordered": false}, {"date": "2026-08-17", "ordered": false}, {"date": "2026-08-18", "ordered": false}, {"date": "2026-08-19", "ordered": false}, {"date": "2026-08-20", "ordered": true}, {"date": "2026-08-21", "ordered": false}, {"date": "2026-08-22", "ordered": false}, {"date": "2026-08-23", "ordered": false}, {"date": "2026-08-24", "ordered": false}, {"date": "2026-08-25", "ordered": false}, {"date": "2026-08-26", "ordered": true}, {"date": "2026-08-27", "ordered": false}, {"date": "2026-08-28", "ordered": false}, {"date": "2026-08-29", "ordered": false}, {"date": "2026-08-30", "ordered": false}, {"date": "2026-08-31", "ordered": false}, {"date": "2026-09-01", "ordered": true}, {"date": "2026-09-02", "ordered": false}, {"date": "2026-09-03", "ordered": false}, {"date": "2026-09-04", "ordered": false}, {"date": "2026-09-05", "ordered": false}, {"date": "2026-09-06", "ordered": true}, {"date": "2026-09-07", "ordered": false}, {"date": "2026-09-08", "ordered": false}, {"date": "2026-09-09", "ordered": false}, {"date": "2026-09-10", "ordered": false}, {"date": "2026-09-11", "ordered": false}, {"date": "2026-09-12", "ordered": true}, {"date": "2026-09-13", "ordered": false}, {"date": "2026-09-14", "ordered": false}, {"date": "2026-09-15", "ordered": false}, {"date": "2026-09-16", "ordered": false}, {"date": "2026-09-17", "ordered": false}, {"date": "2026-09-18", "ordered": true}, {"date": "2026-09-19", "ordered": false}, {"date": "2026-09-20", "ordered": false}, {"date": "2026-09-21", "ordered": false}, {"date": "2026-09-22", "ordered": false}, {"date": "2026-09-23", "ordered": false}, {"date": "2026-09-24", "ordered": false}, {"date": "2026-09-25", "ordered": true}, {"date": "2026-09-26", "ordered": false}, {"date": "2026-09-27", "ordered": false}, {"date": "2026-09-28", "ordered": true}, {"date": "2026-09-29", "ordered": false}, {"date": "2026-09-30", "ordered": false}, {"date": "2026-10-01", "ordered": false}, {"date": "2026-10-02", "ordered": true}, {"date": "2026-10-03", "ordered": false}, {"date": "2026-10-04", "ordered": false}, {"date": "2026-10-05", "ordered": true}]}};
+const OPS = {"generatedAt": "2026-10-22 19:28:21", "loopCount": 28, "level": {"score": 39.9, "level": "实习 on-call", "desc": "重生第一课：身体服务也是服务", "next": 40}, "postmortems": [{"id": "INC-20260928-1420", "time": "2026-09-28 14:20:07", "sev": "P3", "code": "502", "kind": "code", "metric": null, "label": "502 Bad Gateway", "store": "演示餐厅14", "cause": "多人聚合网关：单笔承载过多上游", "advice": "拆分为多单分别结算，便于按人分摊", "impact": "558 kcal / 216 mg 钠 · ¥15.0"}, {"id": "INC-20260912-1922-calorie_over", "time": "2026-09-12 19:22:54", "sev": "P2", "code": null, "kind": "metric", "metric": "calorie_over", "label": "热量超配额", "store": "演示餐厅11", "cause": "指标告警：单餐热量 > 800 kcal 配额（实测 1488 kcal / 钠 1632 mg）", "advice": "下一餐减量回补；酱料与饮料是最好压缩的两项", "impact": "1488 kcal / 1632 mg 钠 · ¥56.0"}, {"id": "INC-20260912-1922-sodium_over", "time": "2026-09-12 19:22:54", "sev": "P2", "code": null, "kind": "metric", "metric": "sodium_over", "label": "钠超标", "store": "演示餐厅11", "cause": "指标告警：单餐钠 > 1200 mg 配额（实测 1488 kcal / 钠 1632 mg）", "advice": "酱料减配或换小份；查看商品图鉴里钠密度更低的替代品", "impact": "1488 kcal / 1632 mg 钠 · ¥56.0"}, {"id": "INC-20260906-1240", "time": "2026-09-06 12:40:08", "sev": "P3", "code": "502", "kind": "code", "metric": null, "label": "502 Bad Gateway", "store": "演示餐厅10", "cause": "多人聚合网关：单笔承载过多上游", "advice": "拆分为多单分别结算，便于按人分摊", "impact": "2210 kcal / 3198 mg 钠 · ¥129.0"}, {"id": "INC-20260906-1240-calorie_overload", "time": "2026-09-06 12:40:08", "sev": "P1", "code": null, "kind": "metric", "metric": "calorie_overload", "label": "热量过载", "store": "演示餐厅10", "cause": "指标告警：单餐热量 > 1500 kcal 过载线（实测 2210 kcal / 钠 3198 mg）", "advice": "主餐拆半、饮料换 0 卡；对照商品图鉴重建一份配额内组合", "impact": "2210 kcal / 3198 mg 钠 · ¥129.0"}, {"id": "INC-20260906-1240-sodium_over", "time": "2026-09-06 12:40:08", "sev": "P2", "code": null, "kind": "metric", "metric": "sodium_over", "label": "钠超标", "store": "演示餐厅10", "cause": "指标告警：单餐钠 > 1200 mg 配额（实测 2210 kcal / 钠 3198 mg）", "advice": "酱料减配或换小份；查看商品图鉴里钠密度更低的替代品", "impact": "2210 kcal / 3198 mg 钠 · ¥129.0"}, {"id": "INC-20260901-1200", "time": "2026-09-01 12:00:00", "sev": "P3", "code": "418", "kind": "code", "metric": null, "label": "418 I'm a teapot", "store": "演示餐厅09", "cause": "纯饮料请求命中茶壶协议", "advice": "补水即可，无需经麦门", "impact": "224 kcal / 0 mg 钠 · ¥12.5"}, {"id": "INC-20260826-2105", "time": "2026-08-26 21:05:31", "sev": "P1", "code": "504", "kind": "code", "metric": null, "label": "504 Gateway Timeout", "store": "演示餐厅08", "cause": "上游请求中止：订单在完成前被取消", "advice": "下单前核对门店营业状态与取餐时段；预约单提前确认场次", "impact": "1070 kcal / 1352 mg 钠 · ¥45.0"}, {"id": "INC-20260826-2105-calorie_over", "time": "2026-08-26 21:05:31", "sev": "P2", "code": null, "kind": "metric", "metric": "calorie_over", "label": "热量超配额", "store": "演示餐厅08", "cause": "指标告警：单餐热量 > 800 kcal 配额（实测 1070 kcal / 钠 1352 mg）", "advice": "下一餐减量回补；酱料与饮料是最好压缩的两项", "impact": "1070 kcal / 1352 mg 钠 · ¥45.0"}, {"id": "INC-20260826-2105-sodium_over", "time": "2026-08-26 21:05:31", "sev": "P2", "code": null, "kind": "metric", "metric": "sodium_over", "label": "钠超标", "store": "演示餐厅08", "cause": "指标告警：单餐钠 > 1200 mg 配额（实测 1070 kcal / 钠 1352 mg）", "advice": "酱料减配或换小份；查看商品图鉴里钠密度更低的替代品", "impact": "1070 kcal / 1352 mg 钠 · ¥45.0"}, {"id": "INC-20260815-1831", "time": "2026-08-15 18:31:02", "sev": "P3", "code": "304", "kind": "code", "metric": null, "label": "304 Not Modified", "store": "演示餐厅06", "cause": "缓存命中：与上一单完全一致", "advice": "轮换 1 个单品打破缓存，避免味觉回路固化", "impact": "186 kcal / 72 mg 钠 · ¥18.0"}, {"id": "INC-20260809-2347", "time": "2026-08-09 23:47:19", "sev": "P2", "code": "408", "kind": "code", "metric": null, "label": "408 Request Timeout", "store": "演示餐厅04", "cause": "深夜窗口收到摄入请求", "advice": "22:00 后改轻量补给；把大餐挪进白天窗口", "impact": "592 kcal / 638 mg 钠 · ¥33.5"}, {"id": "INC-20260805-0915", "time": "2026-08-05 09:15:02", "sev": "P2", "code": "429", "kind": "code", "metric": null, "label": "429 Too Many Requests", "store": "演示餐厅03", "cause": "短时重复写入：同日多次下单触发限流", "advice": "合并需求一次下单；错开与上一单的间隔", "impact": "387 kcal / 846 mg 钠 · ¥21.0"}, {"id": "INC-20260801-1203-calorie_over", "time": "2026-08-01 12:03:11", "sev": "P2", "code": null, "kind": "metric", "metric": "calorie_over", "label": "热量超配额", "store": "演示餐厅00", "cause": "指标告警：单餐热量 > 800 kcal 配额（实测 949 kcal / 钠 1126 mg）", "advice": "下一餐减量回补；酱料与饮料是最好压缩的两项", "impact": "949 kcal / 1126 mg 钠 · ¥41.0"}], "newIncidents": ["INC-20260928-1420", "INC-20260912-1922-calorie_over", "INC-20260912-1922-sodium_over", "INC-20260906-1240", "INC-20260906-1240-calorie_overload", "INC-20260906-1240-sodium_over", "INC-20260901-1200", "INC-20260826-2105", "INC-20260826-2105-calorie_over", "INC-20260826-2105-sodium_over", "INC-20260815-1831", "INC-20260809-2347", "INC-20260805-0915", "INC-20260801-1203-calorie_over"], "tasteProfile": [{"label": "禽类偏好", "orders": 6, "rate": 35}, {"label": "甜品胃", "orders": 6, "rate": 35}, {"label": "冰饮党", "orders": 6, "rate": 35}, {"label": "薯条原教旨", "orders": 6, "rate": 35}, {"label": "嗜辣系", "orders": 3, "rate": 18}, {"label": "牛肉偏好", "orders": 3, "rate": 18}, {"label": "猪肉系", "orders": 2, "rate": 12}, {"label": "咖啡因依赖", "orders": 2, "rate": 12}, {"label": "鳕鱼系", "orders": 1, "rate": 6}], "newTastes": ["冰饮党", "牛肉偏好", "咖啡因依赖", "鳕鱼系"], "habits": {"nightRate": 6, "avgBudget": 41.2, "topCombos": [{"items": ["圆筒冰淇淋"], "count": 3}, {"items": ["板烧鸡腿堡", "小杯玉米杯"], "count": 2}, {"items": ["猪柳蛋麦满分", "鲜煮咖啡中杯"], "count": 2}]}, "metabolic": {"profileSet": true, "bmr": 1630, "tdee": 2241, "goal": "cut", "target": 1841, "windows": {"breakfast": 552, "lunch": 736, "dinner": 460, "snack": 92}}, "probes": [{"id": "PRB-202610221928-morning_coffee", "sig": "2026-10-22:morning_coffee", "window": "morning_coffee", "domain": "caffeine", "at": "2026-10-22 19:28:09", "code": "599", "label": "599 Timeout", "color": "#E24D42", "detail": "晨间咖啡窗关闭前始终未采纳——上午清醒度预算已透支，午后窗口请优先补给", "status": "timed_out", "closedAt": "2026-10-22 19:28:21"}, {"id": "PRB-202610221928-afternoon_coffee", "sig": "2026-10-22:afternoon_coffee", "window": "afternoon_coffee", "domain": "caffeine", "at": "2026-10-22 19:28:09", "code": "599", "label": "599 Timeout", "color": "#E24D42", "detail": "午后咖啡窗关闭仍未摄入咖啡因——下午的 CPU 降频已记录在案", "status": "timed_out", "closedAt": "2026-10-22 19:28:21"}, {"id": "PRB-202610221928-afternoon_snack", "sig": "2026-10-22:afternoon_snack", "window": "afternoon_snack", "domain": "metabolic", "at": "2026-10-22 19:28:09", "code": "103", "label": "103 Hints", "color": "#6ED0E0", "detail": "减脂场景午后补给窗：缺口 1841 kcal：建议 蒜了吧黄油风味薄皮脆汁鸡-带骨里脊（126 kcal / 蛋白 19.0g），维持下午体力", "status": "timed_out", "closedAt": "2026-10-22 19:28:21"}, {"id": "PRB-202610221928-lost", "sig": "2026-10-22:lost", "window": "lost", "domain": "meta", "at": "2026-10-22 19:28:21", "code": "522", "label": "522 Lost", "color": "#96222A", "detail": "连续窗口失联：建议反馈回路中断，下次播报将置顶提醒", "status": "open"}], "probesOpen": [{"id": "PRB-202610221928-lost", "sig": "2026-10-22:lost", "window": "lost", "domain": "meta", "at": "2026-10-22 19:28:21", "code": "522", "label": "522 Lost", "color": "#96222A", "detail": "连续窗口失联：建议反馈回路中断，下次播报将置顶提醒", "status": "open"}], "insights": ["「圆筒冰淇淋…」组合出现 3 次，可设为快捷组合，减少每次决策成本", "代谢档案生效：BMR 1630 / TDEE 2241 / cut 场景目标 1841 kcal，探活按此口径判定", "已有 3 条探活建议窗口超时（599）：采纳率是运维闭环的核心指标"], "prefsLoaded": {"goals": {"calorie": null, "sodium": null, "budget": null}, "tastes": [], "notes": [], "profile": {"weight": 70, "height": 172, "age": 30, "sex": "male", "activity": "light", "goal": "cut", "_doc": "体重kg/身高cm/年龄/性别/活动系数(sedentary|light|moderate|high)/场景(cut|bulk|keep|worker)——本地敏感数据，不入仓库"}}, "evolutionLog": [{"at": "2026-10-20 23:18:00", "loop": 21, "event": "第 21 次进化：14 份事故复盘 · 3 条探活 · 2 条洞察 · 职级「实习 on-call」"}, {"at": "2026-10-21 09:09:54", "loop": 22, "event": "第 22 次进化：14 份事故复盘 · 4 条探活 · 2 条洞察 · 职级「实习 on-call」"}, {"at": "2026-10-21 09:10:00", "loop": 23, "event": "第 23 次进化：2 份事故复盘 · 4 条探活 · 3 条洞察 · 职级「实习 on-call」"}, {"at": "2026-10-21 09:12:49", "loop": 24, "event": "第 24 次进化：14 份事故复盘 · 4 条探活 · 2 条洞察 · 职级「实习 on-call」"}, {"at": "2026-10-21 09:14:50", "loop": 25, "event": "第 25 次进化：14 份事故复盘 · 4 条探活 · 2 条洞察 · 职级「实习 on-call」"}, {"at": "2026-10-21 09:14:55", "loop": 26, "event": "第 26 次进化：2 份事故复盘 · 4 条探活 · 3 条洞察 · 职级「实习 on-call」"}, {"at": "2026-10-22 19:28:09", "loop": 27, "event": "第 27 次进化：2 份事故复盘 · 7 条探活 · 4 条洞察 · 职级「实习 on-call」"}, {"at": "2026-10-22 19:28:21", "loop": 28, "event": "第 28 次进化：14 份事故复盘 · 4 条探活 · 3 条洞察 · 职级「实习 on-call」"}], "goals": {"calorie": null, "sodium": null, "budget": null}};
+const TOPPROTEIN = [{"name": "芝士双层安格斯厚牛堡", "protein": 58.0, "kcal": 1003}, {"name": "培根双层安格斯厚牛堡", "protein": 55.0, "kcal": 987}, {"name": "果然多肉", "protein": 36.0, "kcal": 478}];
+let POS = (() => {
+  try { const v = localStorage.getItem('mcd.pos'); if (v) return v; } catch (e) {}
+  return (OPS.metabolic && OPS.metabolic.goal && OPS.metabolic.goal !== 'keep')
+    ? OPS.metabolic.goal : 'keep';
+})();
+
+function posBody() {
+    const today = (DATA.orders || []).filter(o => o.date === new Date().toISOString().slice(0, 10));
+    const intake = today.reduce((a, o) => a + (o.kcal || 0), 0);
+    const protein = today.reduce((a, o) => a + (o.protein || 0), 0);
+    const mt = OPS.metabolic || {};
+    const breachesAll = (DATA.orders || []).flatMap(o => o.breaches || []);
+    const cnt = k => breachesAll.filter(b => b === k).length;
+    const cafToday = today.filter(o => o.items.some(i => ['咖啡', '拿铁', '美式', '摩卡'].some(k => i.name.includes(k)))).length;
+    const t599 = (OPS.probes || []).filter(p => p.code === '599').length;
+    const t418 = (DATA.orders || []).filter(o => o.httpStatus === '418').length;
+    const row = (k, v) => `<div class="meta-row"><span class="k">${k}</span><span class="v">${v}</span></div>`;
+
+    if (POS === 'cut') {
+      const gap = mt.profileSet ? mt.target - intake : null;
+      return `<div class="meta-row"><span class="k">今日已摄入 / 目标</span><span class="v">${intake} / ${mt.profileSet ? mt.target : '—'} kcal</span></div>
+        <div class="gapbar"><div style="width:${mt.profileSet ? Math.min(100, Math.round(intake / mt.target * 100)) : 0}%;background:var(--blue)"></div></div>
+        ${row('本期热量超配额', cnt('calorie_over') + ' 次')}
+        ${row('本期热量过载（P1）', cnt('calorie_overload') + ' 次')}
+        ${row('本期钠超标', cnt('sodium_over') + ' 次')}
+        <div class="stat-note" style="margin-top:8px">针对性策略：午后补给窗按 TDEE 缺口下发 103 下午茶建议；超预算自动 412 拦截；告警侧重热量与钠。</div>`;
+    }
+    if (POS === 'worker') {
+      return `<div class="meta-row"><span class="k">今日咖啡因摄入</span><span class="v">${cafToday} 单</span></div>
+        ${row('咖啡窗超时（599）', t599 + ' 次')}
+        ${row('纯饮料单（418）', t418 + ' 次')}
+        <div class="stat-note" style="margin-top:8px">针对性策略：晨间 09:30–11:00 / 午后 13:30–15:30 两个咖啡窗，该喝没喝判 599；纯饮料单判 418 茶壶协议。</div>`;
+    }
+    if (POS === 'bulk') {
+      const w = (OPS.prefsLoaded || {}).profile && OPS.prefsLoaded.profile.weight;
+      const proteinTarget = w ? Math.round(w * 1.6) : null;
+      return `<div class="meta-row"><span class="k">今日蛋白质</span><span class="v">${protein} g${proteinTarget ? ' / 目标 ' + proteinTarget + ' g（1.6g/kg）' : ''}</span></div>
+        ${row('热量盈余空间', mt.profileSet ? (mt.target - intake) + ' kcal' : '—')}
+        <div class="panel-h" style="margin-top:11px"><span class="dot" style="background:var(--green)"></span><h3>高蛋白补给 Top3（营养表）</h3></div>
+        ${TOPPROTEIN.map(x => row(`${x.name}（${x.kcal} kcal）`, `${x.protein} g 蛋白`)).join('')}
+        <div class="stat-note" style="margin-top:8px">针对性策略：午后补给窗按盈余缺口下发 103 加餐建议，蛋白目标按 1.6g/kg 估算。</div>`;
+    }
+    return `<div class="meta-row"><span class="k">Uptime</span><span class="v">${(DATA.summary || {}).uptime ?? '—'}%</span></div>
+      ${row('累计摄入流量', (DATA.summary || {}).flowUnit || '—')}
+      <div class="stat-note" style="margin-top:8px">均衡视角：切到「减脂 / 增肌 / 打工人」定位，面板与探活策略会针对性调整（本机记忆，配合对 Agent 说「切换到减脂定位」可同步探活档案）。</div>`;
+}
+
+const FORCE_1024 = false;
+const CODES = {"200": {"color": "#37872D", "short": "200 OK", "title": "摄入已入账"}, "201": {"color": "#37872D", "short": "201 Created", "title": "新资源入库"}, "206": {"color": "#6ED0E0", "short": "206 Partial", "title": "摄入无法完整计量"}, "301": {"color": "#705DA0", "short": "301 Moved", "title": "取餐渠道永久改道"}, "304": {"color": "#6ED0E0", "short": "304 Not Modified", "title": "缓存命中"}, "404": {"color": "#E24D42", "short": "404 Not Found", "title": "订单不存在"}, "408": {"color": "#E98300", "short": "408 Timeout", "title": "请求超时"}, "418": {"color": "#705DA0", "short": "418 teapot", "title": "我是茶壶"}, "429": {"color": "#E98300", "short": "429 Too Many", "title": "摄入请求过频"}, "502": {"color": "#705DA0", "short": "502 Bad Gateway", "title": "聚合网关"}, "503": {"color": "#E24D42", "short": "503 Unavailable", "title": "身体服务宕机"}, "504": {"color": "#96222A", "short": "504 Timeout", "title": "上游中止"}, "103": {"color": "#6ED0E0", "short": "103 Hints", "title": "补给建议下发"}, "204": {"color": "#37872D", "short": "204 Quiet", "title": "主动静默"}, "412": {"color": "#E98300", "short": "412 Denied", "title": "建议被目标否决"}, "425": {"color": "#E98300", "short": "425 Too Early", "title": "过早打扰判定"}, "599": {"color": "#E24D42", "short": "599 Timeout", "title": "建议窗口超时"}, "522": {"color": "#96222A", "short": "522 Lost", "title": "连续窗口失联"}};
+const KCAL_OK = 800;
+const KCAL_OVERLOAD = 1500;
+
+/* 语义全部来自 codes.py，面板不自行定义含义 */
+const COLOR = {}, SHORT = {}, TITLE = {};
+for (const [k, v] of Object.entries(CODES)) {
+  COLOR[k] = v.color; SHORT[k] = v.short; TITLE[k] = v.title;
+}
+
+const s = DATA.summary;
+const now = new Date();
+const on1024 = FORCE_1024 || (now.getMonth() === 9 && now.getDate() >= 20 && now.getDate() <= 26);
+const logo = "iVBORw0KGgoAAAANSUhEUgAAAFgAAABNCAYAAAAijqMcAAAlRElEQVR4nM18CZhtVXXmv/c+59yxxvfqPd7E8AAbfYIQVDCiIBCgiQPD5wC0ODQtRuy2jZ22v066E201JunYarRNa75obBpEExE7Mk/SKqAoqICMD3nzq7nq1h3OtHd//9rn1KtHh1c3VmFn8RX1qurec/dee+1/rfWvtbfCrygRNFzVIc0dYGuIdB0jdgqnbcPH3vYm8/tnvjZHLQCUAyJTw1xnDPc/lODvbtr3lZvvwbt2KQCuBl0dgk3bgGtBGcA4wGVAjhXKUBVo9wBXxRBqGDYzuPRi3P32i5unbxkDstTBhW3oBjA+o/CdG7Hrf17n3v/4HtxgDRDbCFBVWKsBFQNhF9oBKgUMKkgQ9zUMTvNXEtEPmgCaMNiH4zbj7A9fEd522ZnroVu7gLAJmAzo9YAAQBAhz6uYiyOMT8d495+1Lvv547hmIdWArgG6CyiLRqSQtV2fwz+UHCmru0Y/i3e9BTe/7/Lg3E0DGaIEkIfX/XebAHmkEIyOYsfMCL589Z4fffFvOq+cAWARQgfr0MvagJkFqOuUxlVFjF7fevrVpAroXoQBJDj/FPz5Rz684XeP3bgXC3uA5mgVaU9DaSBNuzCBg9YaVjkEQYg0yzDdPQb/9QtP3PjVm/DbU7TaWsgXQ2XAoG5gzrZ/5aHJxBRw7DrgYx9Y59706gVEvQ41BmcVbMXBJENABYDuAL0UmQVs1WA2rmPHeBeXfzg7c9d+3BUjRKZrsJgXQ1EJEKKGBN3+xvErz8CsQYApvO9NuP4/vmPdBesbc0AvBnEhyzMEoX+6TQGtxdwBWo8R0+AokWVH43PXZ7s+/tVnt0zG3JE1mW+IED1OaAVy7BDwx3+41l3wqkmYaQCdMdlVbnAPFqoxwiRA3stQc4CWMXEnRYDJsZCm+NbDr8Un/uyeM5/Zj7sSFcHqBCoCXA8IXQMp2itUcJXQYxDqHDbXyLEVLnhKlFOzI0jUDE7bgituuw5fSmcBVw+ggg1w0zvRCICceKoKpQ4ASIG4FaDSaAB6DpMGWNseATCDT1yLhz96DY7PdBU244xjOBtCKw3rPBor5eCKf9dqNXShEHQ7qMlOH0VS5T9CBG4/Dq8D3/4Y3LZXaUzOWTSNTMcv+Bygx4C5jsKgcVA1wO4E9EYDO5cD1RoSF6Pas/j5FHDR+6B+2duMHPsQBhmSbAMQ7fXz6kNoW/+wZFzWHKELobSFC34J2BCNAf5W4aQNuOiLnz/mS5gdFjhrmArs/E40GqOylZLmZtz5yCZ88rrmY9+5dwMSswGVoUxm6GwTo3kERDNAOIz3XrLxpZefi6+ozPkFEHHFF8VCcc8X0u12gZ6TXWBRhaWJxhaI9stafvyPxty2VzQwvTvC2gGg6kJ5VN4B9BHDeGz7i/GNe6q9z38LE48+cyT01i2AzcXJasSoEjoGNLasOwwf/EBlaqy6CxoZ4NYBZu8qeGCRhuBYBYPywYJXJpIdPlbV+P5/G3P5fXDu22uduxXO3QjnboLr3Qg3/e017rLX4jPr6AN1DcNV4AOvx7d2XgsX3whn7xhw7paa694Bl94+5NwdTbf7G5vcyZtxYRA0i2XXB31pHQiOLwrHJhhawE4FqCrgP1yKu+IfrXPuNjh3x4hzN4bO3Qz5at+p3V1fPMydehgu4Wv5tXUM+PTvBbvHb4qc+55/nb3Ff3d3Drp9dwy6978Zf1uFRhCtoYeDotNeudRQCRoydpkF4Sn0zvffXTFws/uuce0b4CdyW8O56+HcLaGbv6fq/vU/x9/xdTBNIBgD9KhY1gfPwd/P3bjRubv8Yrjvj7rW/y4W564Bd9un1rs1/ECjxGIPUihHIUoOoJRBQMjEmIwLJhCsO+ckfGD6B6Hr8Zm3VVwu3zd6ZX237m7/76E7dtCvBzBMUwFUE0MGuPlT61xXxgHnbodLbyvHGLgHvwF38uG4UN5GR/eP0OLzQoSCQ+7agv1UtnGjMKnGKcfiyisujc5FN0e9sZZ/QtZtM1pDBwGuv6eCL92Ei2MMwDBGzicQDHTRwiD+6la8/ivXj+9zEWA5ypkYTYJjFXDzLZz9illceTHuEQAn5sKKgyzRwVorX84pGHp9dGCCzcQzrDca//7K4NMjzRQVwUcHnWmgu0fMezwx+JNPpf/mmfkQebOGiM+uJYCroJsP4yMfH79sqrsWKUM4V4GqAHmvBvQyHH/YWvzb94XfHORaEtpkO69QwSaIkClAy+wyuDRFAxZXvXP4L49pTgFRgDSbBLLA4311EDu7FfzxZ1tn9Lj3Ki0EaGOYIdh8F6g7tDCKz16TbXjwyRHRIRiK6SbiBFANwE7H+NCVY685aWP2Rsf3MYdhcK/+3yE7rqxqI+8soJoD77pY33368RXkO5lk1IA8QdJTwFqgFcT43Jdb9/10e+MvMq5mHENhHiqeQxh0kKOJZ6ZwzRe+Pvn9cPRo9Fox4h5gBg0wE8CkLbz+N5v4F2/SX6u4BBFj/JUq2LquOAYnezBHgBbOeDk+csYrUpgpIIkzhHx3K0B9AIjTCDfd3tv17Lj6LrWSW6A+0ESXe8oBRlOL8xhPgT+5Wv2piwdlhyYLC6g0DPIM0EMBRkdy/MHbcUO9cUCrdHUlXDCy0MogZzijGYzP4mVH4K1XvE2fHszlktvAdAHbQLQpR9Yz2Nleg2u/hVdN2RiVWpVbAbEGmjVmjV3k2I99qOCL38RpDz0coDrMjLIONBaQBww9Ygz2erj8gvCtwxHnGq+CgpHCuLWwLpYJ1Qzw5kuG/vOIpEJARFDtDXEfiQbanRRfv7r3YatzP3GlMdPpINaRWEi+kEIhQysDvn5798OdiQTTU4BZyxjVSLzcC0LM7gEuOgfYtGkTDlIyzVkW3vovxNA6ktT6zW/DJ7cMUlsMugc8rOUVZAw2dI7rrrX37+kApjqMuDeBiFFAoDDXrhC+gUYKVFJMpgFuuu3pR7l2kRrC9DhgNqRgTqHzLl52xCB+6xx8wQP/ChXczBWCYFIciK3GOP1Y8weXnDAH3Uoxz+CzByR6DgiZUQDX3RLN3jsfXhPTGfYyILEQM7YdAAuyZKIjJhno4qM3r/vOyLpAkoAOEmQj66HaXQxHLaAT4qu/s8uFC0NiZs5VEMqbOdyNCHUKpwGn2zh2DU5/zzk4Mkw4lhxxpQWdAk5NI8gCxOEw/vrOmVM7poY8nkbkgEQiUAdDjoEW39YSljoM4cvXZ9v2uAGoZC9qo4DkO1oBahjV7jz+6IKh9w5gGkptkOFo1BFpJY7PKNIDnqtYVsEZHGKngDBD1AUuvzz6L0gGZPHk7ZlCJKjPiQe493tT/0sSdXowGfWh5Zbbdnxq976aOMdqAOhsAQEnkhJbNI7b2sRZp7Y/igUNXYtBf4UgA9Skx4wqEMYaV71r7Bs1HRbkiEFE5fFlXPeKwl13zWJmuoQa65Mfvr/8Du2jAo4dOeZi4O4ftiRa4OYUB6Adcr3AD8TYui7edmHzK87NS1TFnZ7YKqiq3HWgcv4uXl7BKf/kjFjcqUdG777gbIs8kZiIhlKkavyWYcdUDd9/0L7fv7HRVxyzaxp3PvCzSCZCVEGvDYMIzgWiyOFhjbdenP6nistgdBF18Et34Gi+OXBkzeKSc9RY4BRiPkNV5CWSByiDjnL41g34bMz1JqwoWnbg02L+G7S8EEGZ0Ogc8w742o34fVRCbzuoiBoUwd0BjWaCyy8K3lEJ2sIUynYBoYbho0XA6En1g8FazAqVpIp3Xpz9D5PEcOEMMhdB59wyCpYwUQHueUBhFjXPOdjcK2MZyVUdN97Z/ps2IcMAkS00E1WR8x/defzm8cArDs/fYYkwS56p0ADyAO98y9Aja9S45OOJBP/c6nVZNGbcz05luPcBfCCXPSfYJKhVRsKSCiIAwUF0HKTooYJ7foJPjE+nHmlzJbYkfIUsFHD84bN43avxu/Tb8iidIufnFqa5NOp5/jg48laybUP4pgvPsQEmgaBqoSoxiQdwL9AxZSHwzZsXPtrj9rMM3juLCe6hpOsquPO+3jsnOlWQGWLcadMcLtB+gBmwuRng0jc0Pl0VxoFSQWBCOIRYG2W45OLsJQLvjAprQMo9nTaFxVNhhAceBSbcMIyp+5hPEdkcjPCO1BVVyzS8zMwZ6QSY667BnQ/QhuqyIn5R6kA6IK8bssDb37jmz2VUfG+NEVeFfhMOPWQ+eVjGgtNE4svzXtX60DAXhxbCMWqLnIBI6jGqYXK6gbt+av+wF8bI8wqM5OyH1K0IsWtvB/jJo3XEHXp/bl+DNO/KPB2NLq3grFOz4TWKYZeHJZcyBerijSfgr9aPzgNRQ4gX2kMvY6znPOSYAPfch68skG4UkojAzK1OJkWoZ5EcqcT78nxrAUP8jHDjffh8ZhtAaKGIUYlGmjONC8TBn7FN45gRXBjQih3fHMO4ql+nJbn085M9eR0bA+DCs/Gazpz2JsJxJkBsqAEZLR74oQHjBC6aY2iH/sSYrriC2+7uXdPj+AhloYIyCbj1uhxZ2sYRa9o46yx8UT7AJlAugdZdvPO38C/TFndQofyObAS4aA70iDPzLdx3P651dE4uhqEDJR8shI4l+sl3qzKkYhANr3SXQWEB9z6C989wYkHqVyPvAkGM2JKwUthoZnDhufiIwEiPO2be+w/uttD2oWAM4vAxvOflJ43A5RGyrOEdEuP7OrVhYOMufvLD9t3CBQrukEQsPO8yYm1OeMPPHo5vGhjh9vOpcBRpKBOgR00YoKKBs87Gv6oogzDwUcDoGPCa04BmeAzmOPnqWuFpa00g5erkdUxOAbtncCua3B05IoaTVADtQsCB3xXoavzvqr7wIjNr4ZnxGqaoYVE6/5AjbKRgOUkGkWc4/9yR41k6Y1LTGPT2Z8lxcBFKBYeGD9ZkGwTUK4sfMoHzL8PvzUzPoDHioM2kZD9Wh6i2qOkUuhLi6sdHXpdkQxhgvtGkVY6ixvx2GdEy6BD3P1O7+idPVmQSYZAg6WRiZaPaoJ2MSDh22SkhXlqNLkxNhNgAV52CB9NIQedPYU1hdTmptV4V0byBqyzgM7duuMbUADPPydbRTZOihMVP9+l9RrykrdCyMSWWnOXel9Ex3vr9xi7+QPjJ1JDs3prl3yuy+CcdNYOTttgrg8CgOwW4oQW4cBaVJVEqEVXSzhT8F4N3pqEa5OxP3rbpGCZIDA6FdCF3k+fecypg71SKyUnyEZK4FtibFf56GQte1HKKJ5/oeofugEBrcTxpkqBRc0JXMAY742z1HqQKTO7OPGvtiUoyDQ8tedpBnjMGZ0WFsXsNTzwx/r2OVHVoLvag/epReDlJ8egvJu4QzoRDowOlEnJP/nufAJx5dv13XEY6FcgXiqLdEqDUHBjHSuTJEcIFBGqDk4/ClSduHZJYMCdYmpARWPEuTkbjocdz9MSLUyUFjnK5+uLztISBDMrv/3HvBnFq3EsugHNWAnZins4r3Gd4/QXZeRXbxZEjOPv4E4iJsq+9wmwCTahgpBBlmO1V8Nhj+Rf87ua28yb1HPZzmeF18cOH3NcX+FYbwdrY6432JYNjIGBwzvnmZXXEDJuBfFB2k5NFLWdZEtaMbRB4RakUbz4bnxzEhFReDdkxawXrA0MgoelU8IOf4QcSWYSKxlUoOBMGbDlxkqX4nfDgw/h2V3uYoOI4BqnptbuAqcgCHnd0D0fVcPpZJ+OqUE17BXPcgab+ERRRDhf3sWdSTC/QyEgMsZBW7NnCkPsJI7m397Rx466ZADZrSAgmC2i4wxgpKaQ2x7GHt/Di9fFb8qTQYb6YthQKXkwZvVnnSVt81HmvHhl2vQmvhKoEmZJRFQk4XDiA+x/B14j3oZGCCgIGswI2fc0AfDaDkWf34a/H55gBcrtY2VGSMxAvTQ9ZL8FAoHHeKfjQxefrCwilMhTJ7EJJAqSkZIHYMfSLJzOEsIiQi3IFZBcVbPtI5flsfvzDTwTInIURepUWxvyYiYkRoiiKgXNfZz8oumeOYCsHgaQWvcqMaJlWnNyxm4HDxxKBRY+NuaSiAfE5IVtGyi7AL3bgLwghWUJLIwPlwwwqbXmxixOezoDHniafwESerJu37oCeP7IMQVFXo7joPLzhlS8OhPQmbemVpoW+KCoDSA3w0CPu76nCDDnLBr7DIfCEjNddfyaQKIN7f2xuyFnqpj0w3pXF9OMPIg2zAJx3Bk4V9Mjahb3mz7VgA+VCrrco+LUvH/2yCdhswdEEyF3ux0/j9ePFrt0T2DevZDEtHQyzGOpeFqyP0avc5/JO2EA89HD2WGk5wtQIPdUE4yLy28oGOPUEoGo1HJsTCkdjfaLrSSalJUX++S/ym8XZiMPhghEltEAxF9/JJJZbf404zHH/j3EdQsaQVLBCxk6VIlNx1qCaDWDb0cDG9QU+s5x/UKosCgtgVCAIXNfAydsOv1DSyhzoZBYuNL7wyTeQQkqBHTtTZBiQrSrbMyA2eZjqr2hlEQrlJXkBntme/kgsXxaIe69QfscnB53WNMJBwLaqCMQhlpGB8ttXBhgJS/rLvbhOnlNEO6L/JY6hoJYPLfxQB+zYjWvF7Vg/z1xSbp9qpzF3bFOI+81H6ivZClaVKS1NlYVg6SJ34+hULbp2CO/9zYeG+McgB+omgo4TYQqR0aN35OF/++S6r41U5r2fCoeF/+3R6hk3upI7eH4hdqckyEVHFXz33tbldnCNQJJhrxojFz2DWjVG1AHqzEm5Uwdm/d9MJnhLoYHRy6amhwcfWSeZpcBsQc6I7yQf/dxugENKimo6jHalje/u3OJZxDQTitQr2MCw6qOnYOYCXHGu/cs6UiyoEYmOStGyTUVLzE6Al/yz4NLFBRCwsf55hDxLrCXQA3v2dB9NRT9CofnXFwP3edKhhYZQfgwrFN3EYXKaRJLPtJYVsSjuKGFYhA/gt7375tNVaVuQwTnEKbBzx7QnS4hCjCLIedDxhSUZb/HiF9E2MiD1FZ7Fx+hysAwR0hCvOw3v9flj8SHMzekhxe/wHz4cefqpzv1ZiYHEpSVywJ0so2CuGkfggPkceHZn6kmvPlJtKckJPhVBPx2AAR57snc3E6XVED6FmP7Y4+27JTkRltYtKWFprxhncczhh2EdG5W4K5cqWElQHME6hwpynHZy9hqvRZ9aMej3plKkkAaY72rs2pvfynnR4zvJN5fOfXkLdDLYYimUltR1+w46U71Yfzv0A6hbBecSj6lGw5oanngK/6fPrqZDi0R2/A/Y/jR+mNHoLGEthyoo1ZgWRux3QMXGeNlx+HiVuCpRmRfNOE1YCGcxBIsXbRQEkyCdrxMFFHEXfyZnv2cfwLZTZn5emT7OZDMIVSaEeV+TUHAkW6lgBWzfqR4m0d+Xjyyin9QmLK8JYZDaEDt34WdOkqYViiMKpzKT3XvwSE4FK+0/i1JEiVIOp/31FnDKb+BtYvJLU2Ul2Y43/6O34NINZDNUIoorQzPx6sVDM1fDU09nyMQ/lgBeBPJlROFTumXF28eBVrind+b35/32JXHI5If5nyQcCrMLOaamcYPg4kpFOBGvvH37cW2H8X8YehqACYd0khmkRHzNTDLDiS8Nt3Lfm6WpMn+wDBAV8LKX4rfrqEkf7yKfIA+U4ps4uszW8eR27JSwQrwlWYwiCZNqLpemn0xJ+RBPRspwB/jlDvvjWLor+1CAYLXxJJSEdhnGp9uY59quBgTLqvkqyPRsgMlZsk5KhipNMfQBxixmkHzt0UdoDEYHG442ktfw1cDWI/FKttx7KCheJp/Dh/jJWBthYhzbF7Uj3T+kNLy59x8HexFHV+ygiSlsTwkZ/VhgEbjI2sjC55id8y0yK+h6PiCuILCCCAkqmJpjkpmK/xfYpW+1zOYi75xiYGTY4OitI+9e6uR1K1CoSS+9xpkvxzEumZVdX2UpRUjTtcBAW2pv4QJQa+zE/Xs3XCdeSfhNn0L6OLPofejDRxmGQEwktUUY9xDGEbZP45a9zHX7scCIFf4QumugWVEwCR76xdgvM7bI+/hxZeIq0rIasK8LwIPbByfSWu5j7pywOgBLUoSVjnoVWZPdYh2c9dKZq3JpkfTCDmdZqVrDYXSYmTE7GMvQrWhHZ5WEbJp0pQPj0zNPY5XEFv0KJEi4XtNTbOnvMw5ekvKSXJuYWtguTqifMK+vkZXtExYzM/Fu+jOx1sLPSIlJ/pcJZARKYdMGbFvqg4TSYmJw9GHunLUEkDLIIq8hMR5Lx8RYlhw0FjrA3onerSsdviudovznPFSw4XLG90osO32GvVTwEq/+7K7ug1LvFMNYHQUXLRTYsSt+SH6zuKasD5YrQAvUCLXGi44JKpGUusthOdqOwbbNOJsnfIgLhZMssMY7QB+bOszOGrT7SjX7nIZl6TGXHJ/G8cQTyZOxjxQPLYL96YFyvKljxz48JPPvj/FfRkoLCBEjxY6deEhHQXHGhBlWUUEtcgSVszDpsPWIKpoHFT2VD7lOPAJv0C71VKdkWF6pcqCKCYFScJnDflaIVmH4qiAGNHGHCVEUSeo5O1PbUxlevv+WDYlSYxOnSB9TxfgcrhZ/zLLWisWzujkrLCrD7r14RPFAR8iEo8geiyijqNXLWMZGgC1jOH9xnEwxCRG/sRXH8SwT8VfTNUuvVS5OSI4dai1Fwb37WBLqvwF5OaF+pE8785zzM0/FDyRxH+2hpCdLGkTzUEuGuRb/UEY0qyU+hJyewe1t8Q16iQ+wcAL6xpespCszxouOxmsOJnugcPxRnuyRpjchln3KKpstZ9+VD6X2j2O/LROPFYha1EERVgWRQNJ8q7I/qpcHYZ5fBMaWIMHEbActtk0qBp4rlwPP8BDQscAU61AJq9PUXFXGK+NwPDlVGEWS4/gX6/MOJnsUsGEd+/j9Akl2UmYP4jClZCAvbrVYqFsNJ/IcrMsygdO5mXR/zBL7MmJLfreoZM63CHWku9TqjqyESwSYnQFkaOJEK6JgkvDShlS2CmUWWzYNnFA+QzNJu+iEhY/2oi4cj0QF/qALOQLpFkcTcWShWS3NgFufPOwzkV7ZIUFK5gzqjFnJ88pWZxYT4ufj2VdtQcQfSlzU886AXYNqDab2Ex5ZWs/BetxKxbGawjJYPgs2MnWDUTzTqgjpjzQAqnNy+jeKWCKbhMpYJKij3QFevYatUIM+CaKRNptYwwWQkz3FBxSIcBDXyyxmod2Z6qdqvPwMlCdOinhNIMj4ClYv6aNxpTw9yl7vXpscxGzCNNu6vmtuh5S84BiKElia9bB3T7xT+jRsJmEiv1gpkWBAqp4GjcEmNm7k2nSkRCVJ6fp1OFZ6QIqvMsrxcy8OAfL9YYDJ6YXrFxmllYhSUtVgqUp+JO7ntD5gYrKPg9YlBhN2A1VAV3GOYxWGVxZlJSUuipz8DKHKSVcWi6x0EWGRj2bqGyg0huoYbWYeqvn6LVtwggQLi2nuUg0WQRlXzEaYme2H7e1DtFrkdH3HOeNtn83tn17+E8qCqcwyAqansZPxPJ/h62ArFc8Q+tZV34U0N83ztP7fi1DPENYYqazkaQzb68BlCbZuxltFwbSiI44w61kJOsgt+wq1L6UXFtzpAB06y9XgW63vTsg4A/GlrAIrGF3BrIRbh5bFUlfm0Mu6ngcuDqfwsM3KxRfzisqRZG47d+BnidxlkS/mGlbKOtmikr2+chy1Ga+g8WpCw+Yt/qiAJNTOeKbO8+BLC22YmaEjpKxCFKH8YpaoLxAhQ69gfHr56yKoYF/JqElnz+wc9pTjWo04ojwGsLiXQoXWnJnggXynHDQ5G2knKunhonZJHWtgy3qcIPwiH7RurOQ0fdmi7PheHKiEIAZTM3L2siBgVyjaJwQStRaVcEpiNcYnsTyZJCUnSQFhqhq9LhY02ylXSQ7wGb4dQUcG3U40z2xTKkKFUyuV7FNnOjv+4HD4JpwoOM0fB5pF/WMp9B10Ekc+Em3hMHzpZMViyUITz8sjUMV0VMCTn8tfxiBVbuJejm7PYm4O+8oUeTWcXJr5CrcpQj7b7WJ8X/dpwiRRrduhU6PfWHqW7wBHvm6sNiYQcd5LzJ/Wx7uwwSCyqpUmA5PUeELW43xSR8STjQMJtudrYcIEAUsXKxRTODSgLRbRY5NeVsOAmsR8vpknWw4tuRK6Mg9aqKkmfjqP6w18PLoaRU9m4qzudKTjnGeUB/FMhrucrqOaATwwKnFalvpQrNjxsrg5cIT0StegKxXX8GeCU2RcETmilfujq2UJnf1QMbBv7+RTLCAHqwARlvwy/ztol1jpzNk/NfNkv8/R7JfLfZZZ/AarInIGzjtLokBeNMkERq72WFa2HhmgZjT02vXVI1n14EMC/o/jC4vSednKVEDM7Dz2HqAuVyZOwEHO+xQKZrzt8W7/RHt5BRc0IZ+S0LUXBBcNYhXSjANs2SJ0su8XmJtPDvirQ0glMjCqDT0yajf5wcWe5JEicYqUWVF5+M/Sa7JBkAXoCFmfVeNDinBLDNCV32KWE/AF/06qZtG3aLQWErnUaPHRqxFGMGcQC9YCtbzLhwrevXdBelyWk4oBhtlFtW5MHX3gXJNUO/1RqJKVIyEvQUQVnTZmtXRGr4KN6NKPGt/c7D/Ne+hgoI/3+6Is7xNqzRcRppzZlCrYysU+pz9DquUK863+bjxRNsXaNbhcj60LmsLISW2fOOG7ZAzZeznPzZOLRu6F2LMHj+aJXZW2Ay9MOQ/wHzIJOryc5dVlRGrnAixo8V47/4DiOVi5BOxzKh5XpvPSysujT8uHg3lsMTSI9TqqxrIdWNCj45HueG7XEmcFg/1p9Pk5jEuddPUYQYiSyw2heJMgsG9i/tt9v1uF/qSQLFaRJK2GsA+E38t2e6YKirRoXpDsh5ZaDTh8c+1EXWdDcNHDJsG1cNYaCTtZjLdq9q0xkjAMCnm9wap4EfCaoaLFvvyFt+WJyeUxviRhGO14f2xgmNKtllhhNvxnEXPI/doc4/vR6vX6CAQzHhwPRvWrjpLrpOTqAt3hXuO5Xou6isSamMIaEqJ6Avtqxz1et3OrkmdAIsI2uuigW56f4AfySALxtGzbCtieRIVGQFj15AsPe5sQxoYI3Sx2JhtQ1Sky02JGcKDVawXCeGaehhvwcGVKHyf3/Ix3Gk/X6stbWC+PsN61jtHlZW/SllkqruBpxRsX8TCtZHZ2/pvcHasQpS0rJZlC4c6ScS4tZhbHtviahYXOgoxp8c8r32JFX89ixMCPlj4bpp99dYYpjK3DVil6+sPMxYNLDGNf8HMUvH+iSLB+DQpW5Rlr7izJo60/C0IR3R5Y6Znp1u4XfNGLkFhpnvVd/uU8S3fYWKC1WWTa/+FA3puS53da8z7Y/jXoF6xs+wZ7frgQx4vDkpBM/scYAmi37UwZ2ZQngFb8+TLp4pmeWfJRrDa5nK1dRozLUQ01tD9gd+APvhX0APvChjdJmeX2oFVLRPsQtgpEsAUmSTtB8bXUycrJhwyp9FcsttBiVaS8s81H3HT2Cq2F7oRbch/E84liKSnnzQAkMw4slpdioPTSWZkyL13NfnqbVihxm566YLKo0aW3Khaca0lfMbrhkSrWZ/6x3Z3PJ0uL6nIcV9ZZYd9k+4kOU/M+HlCLSMguwd9SfPsRCZ/iFyQ7Uk8op0vJ2xdQJicYmPvrFEul+ZZRH5oduKXEIQyiKg8dlquwWhZ8YKdw6/g7CGbmsKtfPnz92Frf2bN0UMy4y4mURJrvlSAZ43+Qk5gvsMzOFr0PS05wS3VJ2O+iA7QYp2E11l+ZctBcViLlBlk8kMMsVyn2RfSCSn+M2ti6tdBZNuyvIWVXjOam7EK5ANrWpO4vp+Cp7PqLoLIcmYRHeMGlTQMOav4Ek8RHvB0qgpFLJXM5F5fzSh3+mLQzXkvroUtjIFt5ZSPRMSqO6TKTjAwqpjJ4CJC3e/VxObPSaKpHixsLyxhnKX4VACSHznJgfn55emA1pRfwWpke4oqDv00sRW5S2CBDHuUwvQ38FVQ8AJ3WeCbf3z+hLXp9Xv/96xBdnjHwN0z7XwoEFJ0nZWw/wTtaFmWVcuVDCO/VCHKHigUq0mDCi4lY3XcwPK8czsltKImxyEw3YQM2nO97XY3OntWSoGRaJKfPbFGtpSUUmV3RrzY3F/uCZ3FU4IWWB7djYSrPmhJyykl/9oUpWGOliuxY4o+Abgpsn8L9PJFf7j7v8P5pSMBSUVlwPFC+YQDoYzff1ePQZZsw2SqGdavS2nNouepzgwNRQez7q0J4DwOVlwgxX8GCPy4ZtDHH9ine9iQ3YvegeIB9FWoCqyGe9NVLFCznlumR/RF+KUvn/koA//tfz8AyVk4kRi/q5HRucicXQ6YYcTYmt1whi4uUnnQXD8AsPUT1/1+Csu/XspuyyP95wE4Ox0i3OweewhT9wn4xXniIqOhpX8wsLFg5nrtkqFZWPfYu1ssWu72Eu+AC/LoS+uUlEBaNCiYtWQTzSvLRspfCN2YrBvyrUiroT2JmZsr6Czq1kr44OfLIRmdjEcWhXC3Lq7kMb92jDxSDIIL901AuRe9JDwPqTVFiklaRVtdj3laQBBa8oVvZHuabx2J/7zBsrvL6QALfC2/BKE6ty2WDlgdk2HHJW/54MQ8xlxd5ziFDLBEwO9DlsLovzq1Y2CKS8X7h4g57h/Wo86R2iMpT1W3+mMYhvuabFtvTE/F/AS+hESQ6I+cKAAAAAElFTkSuQmCC";
+const esc = t => String(t).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]);
+
+function topbar(cls, text) {
+  return `<div class="topbar">
+    <img src="data:image/png;base64,${logo}" alt="Golden Arches">
+    <h1>麦门监控台 <span class="accent">// 身体服务监控台</span></h1>
+    <span class="crumb">datasource: order-list · rules v${DATA.rulesVersion}</span>
+    <span class="badge${cls}">${text}</span>
+  </div>
+  <div class="meta mono">数据采集 ${DATA.generatedAt} · 样本口径：麦当劳 MCP order-list 近期订单 · 全部指标确定性可复算 · 语义唯一来源 scripts/codes.py</div>`;
+}
+
+/* ── 两级页面导航：监控台 / 商品图鉴（hash 路由） ────────────────── */
+function pagenav(active) {
+  const itemCount = (DATA.orders || []).reduce((a, o) => a + (o.items || []).length, 0);
+  const tabs = [
+    ['overview', '监控台', ''],
+    ['gallery', '商品图鉴', itemCount],
+    ['ops', '运维战情室', OPS.loopCount || ''],
+  ];
+  return `<nav class="tabs" role="tablist" aria-label="页面层级">
+    ${tabs.map(([v, t, n]) => `<button class="tab-btn${active === v ? ' on' : ''}"
+      role="tab" aria-selected="${active === v}" data-pagebtn="${v}" type="button">${t}${n !== '' ? `<span class="n">${n}</span>` : ''}</button>`).join('')}
+  </nav>`;
+}
+
+/** 商品缩略图：官方图优先，加载失败或无图时回退到品名首字磁贴（色调由品名确定性生成） */
+function thumbHtml(i, size) {
+  const hue = [...i.name].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
+  return `<span class="thumbbox" style="width:${size}px;height:${size}px">
+    <span class="fallback-tile" style="background:hsl(${hue} 32% 24%);color:hsl(${hue} 58% 66%);
+      font-size:${Math.round(size * 0.42)}px">${esc(i.name.slice(0, 1))}</span>
+    ${i.img ? `<img src="${i.img}" alt="${esc(i.name)}" loading="lazy" onerror="this.remove()">` : ''}
+  </span>`;
+}
+
+/** 单件热量迷你条：以 800 kcal 配额为满量程，超档变色（指标告警口径） */
+function kbarMini(kcal) {
+  if (kcal == null) return '';
+  const w = Math.min(100, kcal / KCAL_OK * 100).toFixed(1);
+  const col = kcal <= KCAL_OK ? 'var(--green)' : (kcal <= KCAL_OVERLOAD ? 'var(--orange)' : 'var(--red)');
+  return `<span class="kbar" title="单件 ${kcal} kcal" style="max-width:64px"><div style="width:${w}%;background:${col}"></div></span>`;
+}
+
+/* ── 二级页：商品图鉴 —— 按商品聚合的图形化营养账本 ────────────────
+   口径与监控台一致：kcal/件 以 800 分档着色；404 商品用虚线卡与首字磁贴，
+   承认「官方账本查无此品」本身就是数据的一部分。 */
+function renderGallery() {
+  const agg = {};
+  (DATA.orders || []).forEach(o => (o.items || []).forEach(i => {
+    if (!agg[i.name]) agg[i.name] = { name: i.name, img: i.img || '', matched: i.matched,
+      qty: 0, n: 0, kcal: 0, sodium: 0, first: o.date, last: o.date };
+    const a = agg[i.name];
+    a.qty += i.qty; a.n += 1;
+    if (i.matched) { a.kcal += (i.kcal || 0); a.sodium += (i.sodium || 0); }
+    if (o.date < a.first) a.first = o.date;
+    if (o.date > a.last) a.last = o.date;
+  }));
+  const list = Object.values(agg).sort((a, b) => b.qty - a.qty || b.n - a.n);
+  const okCount = list.filter(x => x.matched).length;
+  const totalQty = list.reduce((a, x) => a + x.qty, 0);
+
+  const cards = list.map(x => {
+    const per = x.matched && x.qty ? Math.round(x.kcal / x.qty) : null;
+    const col = x.matched ? 'var(--green)' : 'var(--red)';
+    return `<div class="gal-card${x.matched ? '' : ' nomatch'}">
+      <div class="gal-head">
+        ${thumbHtml(x, 56)}
+        <div style="min-width:0">
+          <div class="gal-name">${esc(x.name)}</div>
+          <div class="gal-meta">×${x.qty} 件次 · 出现 ${x.n} 单<br>首次 ${x.first.slice(5)} · 最近 ${x.last.slice(5)}</div>
+        </div>
+      </div>
+      ${x.matched ? `
+        <div class="krow">
+          <span class="kv">${per}</span><span>kcal/件</span>
+          ${kbarMini(per)}
+          <span style="margin-left:auto">钠合计 <span class="kv">${x.sodium}</span> mg</span>
+        </div>
+        <div class="krow"><span>累计 <span class="kv">${x.kcal}</span> kcal</span></div>`
+      : `<div class="stat-note" style="margin:0">官方营养账本（160 项标准单品）查无此品，无法计量</div>`}
+      <div class="gal-foot">
+        <span class="state-chip" style="background:${col};color:#fff">${x.matched ? '可计量' : '账本未收录'}</span>
+        <span style="color:var(--dim)">${x.matched ? '营养账本已收录' : '营养账本缺口'}</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('app').innerHTML =
+    topbar('', '商品图鉴') +
+    pagenav('gallery') +
+    `<div class="panel">
+      <div class="panel-h row" style="margin-bottom:4px">
+        <div><span class="dot" style="background:var(--cyan)"></span><h3>营养账本 · 商品视角</h3></div>
+        <span class="stat-note" style="margin:0">${list.length} 种商品 · ${totalQty} 件次 · ${okCount} 种可计量 · ${list.length - okCount} 种 404</span>
+      </div>
+      <div class="stat-note">同一商品跨单聚合。热量条以单件 kcal 计量、800 kcal 为满量程：≤800 绿（配额内）、800–1500 琥珀（热量超配额告警）、&gt;1500 红（过载事故）。</div>
+      <div class="gal-grid">${cards}</div>
+    </div>
+    <footer>
+      语义唯一视角：你是主体，你的身体是服务端 —— 全部状态码只描述你的身体对这次摄入的响应<br>
+      麦门监控台 · 基于麦当劳中国官方 MCP 构建 · 独立开发，非官方产品 · 输出仅供参考，不构成营养或医疗建议
+    </footer>`;
+}
+
+/* ── SVG 图表工厂：手绘，零依赖，配色取自 codes.py ─────────────── */
+
+/** Uptime 环形仪表：刻度环 + 渐变弧，形状本身即结论 */
+function gauge(pct, color) {
+  const R = 42, sw = 9, C = 2 * Math.PI * R;
+  const on = C * Math.min(100, Math.max(0, pct)) / 100;
+  const gid = 'g' + Math.abs(Math.round(pct * 1000));
+  // 刻度环：每 10% 一格，25% 处加长
+  let ticks = '';
+  for (let i = 0; i < 20; i++) {
+    const a = (i / 20) * 2 * Math.PI - Math.PI / 2;
+    const long = i % 5 === 0;
+    const r1 = 52, r2 = long ? 56 : 54.5;
+    ticks += `<line x1="${(48 + Math.cos(a) * r1).toFixed(2)}" y1="${(48 + Math.sin(a) * r1).toFixed(2)}"
+      x2="${(48 + Math.cos(a) * r2).toFixed(2)}" y2="${(48 + Math.sin(a) * r2).toFixed(2)}"
+      stroke="${i / 20 * 100 <= pct ? color : 'var(--panel2)'}" stroke-width="1"
+      opacity="${i / 20 * 100 <= pct ? .85 : .5}"/>`;
+  }
+  return `<div class="gauge">
+    <svg viewBox="0 0 96 96" width="112" height="112" role="img"
+         aria-label="身体服务 Uptime ${pct}%">
+      <defs>
+        <linearGradient id="${gid}" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="${color}"/>
+          <stop offset="100%" stop-color="${color}" stop-opacity=".55"/>
+        </linearGradient>
+      </defs>
+      <g>${ticks}</g>
+      <circle cx="48" cy="48" r="${R}" fill="none" stroke="var(--panel2)" stroke-width="${sw}"/>
+      <circle cx="48" cy="48" r="${R}" fill="none" stroke="url(#${gid})" stroke-width="${sw}"
+        stroke-linecap="round" stroke-dasharray="${on} ${C - on}"/>
+    </svg>
+    <div class="gv"><b style="color:${color}">${pct}<i style="font-size:12px">%</i></b><i>UPTIME</i></div>
+  </div>`;
+}
+
+/* ── 聚合层：按「天 / 周」切换统计维度 ─────────────────────────
+   切换维度时，Uptime 分母、缺口清单、错误预算全部按新维度重算，
+   避免出现「图变了但数字没变」的自相矛盾。
+   周口径：ISO 周（周一为一周之始），末尾不足一周按实际天数计入分母。 */
+
+/** ISO 周键，如 2026-W41 */
+function isoWeek(d) {
+  const t = new Date(d + 'T00:00:00');
+  const day = (t.getDay() + 6) % 7;              // 周一=0
+  t.setDate(t.getDate() - day + 3);              // 移到本周周四（ISO 规则）
+  const year = t.getFullYear();
+  const jan4 = new Date(year, 0, 4);
+  const week = 1 + Math.round(((t - jan4) / 86400000 - 3 + ((jan4.getDay() + 6) % 7)) / 7);
+  return { key: year + '-W' + String(week).padStart(2, '0'), start: null };
+}
+
+/** 周维度下每个桶的起始日期（用于 x 轴刻度标签） */
+function weekStart(d) {
+  const t = new Date(d + 'T00:00:00');
+  const day = (t.getDay() + 6) % 7;
+  t.setDate(t.getDate() - day);
+  return t.toISOString().slice(0, 10);
+}
+
+const SEV = {'504':5,'503':4,'429':3,'408':3,'502':2,'418':2,'206':1,'304':1,'301':1,'201':0,'200':0};
+
+/** 构造按当前维度聚合后的桶数组 */
+function buildBuckets(dim) {
+  const days = s.days || [];
+  const orders = DATA.orders || [];
+  const byDay = {};
+  orders.forEach(o => { (byDay[o.date] = byDay[o.date] || []).push(o); });
+
+  if (dim === 'day') {
+    return days.map(d => {
+      const list = byDay[d.date] || [];
+      return {
+        key: d.date, label: d.date.slice(5),
+        span: 1, ordered: list.length ? 1 : 0,
+        count: list.length, orders: list,
+        worst: list.length ? list.reduce((a, b) => SEV[b.httpStatus] > SEV[a.httpStatus] ? b : a) : null,
+        multi: list.length > 1,
+      };
+    });
+  }
+
+  // 周维度
+  const groups = [];
+  const index = {};
+  days.forEach(d => {
+    const w = isoWeek(d.date);
+    if (!index[w.key]) {
+      index[w.key] = { key: w.key, label: weekStart(d.date).slice(5), start: weekStart(d.date),
+        span: 0, ordered: 0, count: 0, orders: [], worst: null, multi: false };
+      groups.push(index[w.key]);
+    }
+    const g = index[w.key];
+    const list = byDay[d.date] || [];
+    g.span += 1;
+    if (list.length) g.ordered += 1;
+    g.count += list.length;
+    list.forEach(o => {
+      g.orders.push(o);
+      if (!g.worst || SEV[o.httpStatus] > SEV[g.worst.httpStatus]) g.worst = o;
+    });
+    g.multi = g.multi || list.length > 1;
+  });
+  return groups;
+}
+
+/** 按维度重算核心指标，保证与图表口径一致
+    Uptime 分母 = 该维度的总桶数（天→ 天数，周 → 周数）
+    Uptime 分子 = 有摄入的桶数        */
+function metrics(dim) {
+  const b = buildBuckets(dim);
+  const span = b.length;                              // 桶数：周维度即周数
+  const active = b.filter(x => x.count > 0).length;   // 有摄入的桶数
+  const dist = {};
+  const all = dim === 'day'
+    ? (DATA.orders || [])
+    : b.flatMap(x => x.orders);
+  all.forEach(o => { dist[o.httpStatus] = (dist[o.httpStatus] || 0) + 1; });
+  const err = Object.entries(dist).reduce((a, [c, n]) =>
+    (c.startsWith('4') || c.startsWith('5')) && c !== '206' ? a + n : a, 0);
+  return { buckets: b, span, active,
+    ordered: active,
+    uptime: span ? Math.round(active / span * 1000) / 10 : 0,
+    dist, total: all.length, err };
+}
+
+/** 摄入请求时间轴：横轴按当前维度分桶，柱高 = 摄入次数，色 = 最严重状态码 */
+function timeline(dim, m) {
+  const b = m.buckets;
+  if (!b.length) return '<div class="stat-note">无数据</div>';
+  const n = b.length;
+  const maxN = Math.max(1, ...b.map(x => x.count));
+  const unit = dim === 'day' ? '天' : '周';
+  const idle = n - m.active;
+  // 用真实像素宽度作为 viewBox，避免 preserveAspectRatio="none" 拉伸文字
+  const W = Math.max(600, Math.min(1100, n * (dim === 'day' ? 9 : 46)));
+  const px = W / n;                       // 每格像素宽
+  const H = 132, padB = 22, padT = 10;
+  const plotH = H - padB - padT;
+
+  const refLines2 = [0.5, 1].map(f => {
+    const y = H - padB - plotH * f;
+    return `<line class="grid-line" x1="0" y1="${y}" x2="${W}" y2="${y}"
+      style="stroke-dasharray:2 4;opacity:.4"/>`;
+  }).join('');
+
+  let bars2 = '';
+  b.forEach((g, i) => {
+    const x = i * px;
+    if (!g.count) {
+      bars2 += `<rect x="${x + px * 0.2}" y="${H - padB - 2}" width="${px * 0.6}"
+        height="2" fill="var(--panel2)"/>
+        <rect x="${x + px * 0.2}" y="${H - padB - 5}" width="${px * 0.6}"
+          height="1.5" fill="var(--panel2)" opacity=".55">
+          <title>${g.label} · 503 Service Unavailable · 该${unit}零摄入</title></rect>`;
+      return;
+    }
+    const h = (g.count / maxN) * plotH * 0.72 + 12;
+    const col = COLOR[g.worst.httpStatus];
+    bars2 += `<rect class="bar" x="${x + px * 0.16}" y="${H - padB - h}"
+      width="${px * 0.68}" height="${h}" rx="1.5" fill="${col}"
+      opacity=".92"><title>${g.label} · ${SHORT[g.worst.httpStatus]} · ${g.count} 单 · ${TITLE[g.worst.httpStatus]}</title></rect>`;
+    if (g.multi) {
+      bars2 += `<circle cx="${x + px * 0.5}" cy="${H - padB - h - 5}" r="2.4" fill="${col}">
+        <title>${g.label} · 该${unit}出现单日多单（429 限流）</title></circle>`;
+    }
+  });
+
+  const ticks2 = [];
+  const step2 = Math.max(1, Math.ceil(n / (dim === 'day' ? 4 : 7)));
+  b.forEach((g, i) => {
+    if (dim === 'day') {
+      const mth = g.key.slice(5, 7);
+      if (i === 0 || mth !== b[i-1].key.slice(5,7)) {
+        ticks2.push(`<line class="grid-line" x1="${i * px}" y1="${padT}" x2="${i * px}" y2="${H - padB}" style="opacity:.5"/>`);
+        ticks2.push(`<text class="axis-text" x="${i * px + 3}" y="${H - 6}">${mth} 月</text>`);
+      }
+    } else {
+      if (i % step2 !== 0) return;
+      const cx = i * px + px / 2;
+      ticks2.push(`<line class="grid-line" x1="${i * px}" y1="${padT}" x2="${i * px}" y2="${H - padB}" style="opacity:.35"/>`);
+      ticks2.push(`<text class="axis-text" x="${cx}" y="${H - 6}" text-anchor="middle">${g.label}</text>`);
+    }
+  });
+
+  return `<div class="chart-wrap">
+    <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px" role="img"
+         preserveAspectRatio="xMidYMid meet"
+         aria-label="摄入请求时间轴，按${unit}聚合，${m.span} ${unit}中 ${m.active} ${unit}有响应">
+      ${refLines2}
+      <line class="axis-line" x1="0" y1="${H - padB}" x2="${W}" y2="${H - padB}"/>
+      ${ticks2.join('')}
+      ${bars2}
+    </svg>
+  </div>
+  <div class="legend">
+    <span class="legend-item"><span class="sw" style="background:var(--panel2)"></span>
+      <span class="ln">503 零摄入${unit}（${idle} ${unit}）</span></span>
+    <span class="legend-item"><span class="sw" style="background:var(--green)"></span>
+      <span class="ln">柱高 = 摄入次数</span></span>
+    <span class="legend-item"><span class="sw" style="background:var(--orange)"></span>
+      <span class="ln">圆点 = 单日多单</span></span>
+  </div>`;
+}
+
+/** 状态码分布：横向堆叠条 + 图例，比一堆并列条更快读出占比 */
+function distBar(m) {
+  const dist = Object.entries(m.dist).sort((a, b) => b[1] - a[1]);
+  const total = dist.reduce((a, b) => a + b[1], 0) || 1;
+  let x = 0;
+  const GAP = dist.length > 1 ? 0.6 : 0;   // 段间留缝，窄段不缝
+  const segs = dist.map(([c, n]) => {
+    const w = n / total * 100;
+    const pct = Math.round(n / total * 100);
+    // 数值只走图例行与 tooltip：viewBox 非等比拉伸下段内文字必然变形
+    const g = w > GAP * 3 ? GAP / 2 : 0;
+    const seg = `<g><rect x="${(x + g).toFixed(2)}" y="0" width="${(w - g * 2).toFixed(2)}"
+      height="100%" fill="${COLOR[c]}" rx="2"><title>${SHORT[c]} · ${n} 次 · ${pct}%</title></rect></g>`;
+    x += w;
+    return seg;
+  }).join('');
+
+  const legend = dist.map(([c, n]) => `
+    <span class="legend-item">
+      <span class="sw" style="background:${COLOR[c]}"></span>
+      <span class="lv">${SHORT[c]}</span>
+      <span class="ln">${n} · ${Math.round(n/total*100)}%</span>
+    </span>`).join('');
+
+  return `<div class="chart-wrap">
+    <svg viewBox="0 0 100 8" preserveAspectRatio="none" style="height:9px"
+         role="img" aria-label="状态码分布占比">${segs}</svg>
+  </div>
+  <div class="legend">${legend}</div>`;
+}
+
+/** 维度切换控件：分段按钮，遵循 radiogroup 语义 */
+function dimToggle(cur) {
+  const opts = [['day', '按天'], ['week', '按周']];
+  return `<div class="seg" role="radiogroup" aria-label="统计维度">
+    ${opts.map(([v, t]) => `<button class="seg-btn${cur === v ? ' on' : ''}"
+      role="radio" aria-checked="${cur === v}" data-dim="${v}"
+      type="button">${t}</button>`).join('')}
+  </div>`;
+}
+
+/** 热量标尺：分段量程 + 阈值刻度线 + P50/P99 指针 */
+function kcalScale() {
+  const MAX = 1500, p50 = s.kcalP50, p99 = s.kcalP99;
+  const pos = v => Math.min(100, (v || 0) / MAX * 100);
+  return `<div class="scale">
+    <div class="scale-track">
+      <div class="scale-seg" style="width:${pos(KCAL_OK)}%;background:linear-gradient(90deg,rgba(55,135,45,.65),rgba(55,135,45,.35))"></div>
+      <div class="scale-seg" style="width:${pos(KCAL_OVERLOAD)-pos(KCAL_OK)}%;background:linear-gradient(90deg,rgba(224,131,0,.6),rgba(224,131,0,.32))"></div>
+      <div class="scale-seg" style="width:${100-pos(KCAL_OVERLOAD)}%;background:linear-gradient(90deg,rgba(226,77,66,.5),rgba(226,77,66,.26))"></div>
+    </div>
+    <div class="scale-thr" style="left:${pos(KCAL_OK)}%" title="403 阈值 ${KCAL_OK} kcal"></div>
+    <div class="scale-thr" style="left:${pos(KCAL_OVERLOAD)}%" title="500 阈值 ${KCAL_OVERLOAD} kcal"></div>
+    ${p50 != null ? `<div class="scale-mark p50" style="left:${pos(p50)}%" title="P50 中位单餐 ${p50} kcal"></div>` : ''}
+    ${p99 != null ? `<div class="scale-mark p99" style="left:${pos(p99)}%" title="P99 ${p99} kcal"></div>` : ''}
+    <div class="scale-ticks">
+      <span>0</span><span>${KCAL_OK}</span><span>${KCAL_OVERLOAD}</span>
+    </div>
+  </div>
+  <div class="legend">
+    <span class="legend-item"><span class="sw" style="background:rgba(55,135,45,.65)"></span><span class="ln">配额 ≤ ${KCAL_OK} kcal</span></span>
+    <span class="legend-item"><span class="sw" style="background:rgba(224,131,0,.6)"></span><span class="ln">超配额 → 告警 P2</span></span>
+    <span class="legend-item"><span class="sw" style="background:rgba(226,77,66,.5)"></span><span class="ln">> ${KCAL_OVERLOAD} → 事故 P1</span></span>
+    ${p50 != null ? `<span class="legend-item"><span class="sw" style="background:var(--cyan);width:2px;border-radius:0"></span><span class="lv">P50 ${p50}</span><span class="ln">kcal 中位单餐</span></span>` : ''}
+    ${p99 != null ? `<span class="legend-item"><span class="sw" style="background:var(--purple);width:2px;border-radius:0"></span><span class="lv">P99 ${p99}</span><span class="ln">kcal</span></span>` : ''}
+  </div>`;
+}
+
+/* ── 三级页：运维战情室 —— 重生之我在麦门世界运维 ─────────────────
+   你重生成了自己身体服务的 on-call 工程师：事故复盘 / 运维对象画像 /
+   自进化日志。全部数值由 evolve.py 确定性计算，本页只做叙事编排。 */
+function renderOps() {
+  const lv = OPS.level || {score: 0, level: '实习 on-call', desc: '先运行 scripts/evolve.py', next: null};
+  const pms = OPS.postmortems || [];
+  const fresh = new Set(OPS.newIncidents || []);
+  const nextTh = lv.next;
+  const prog = nextTh ? Math.min(100, Math.round(lv.score / nextTh * 100)) : 100;
+
+  const allProbes = OPS.probes || [];
+  const ST = {open: ['待处理', 'var(--yellow)'], adopted: ['已采纳', 'var(--green)'],
+              timed_out: ['窗口超时', 'var(--red)'], ignored: ['已忽略', 'var(--dim)']};
+  const probesHistory = allProbes.length ? allProbes.slice(-8).reverse().map(pr => `
+    <div class="evo-item">
+      <span class="pn mono" style="background:${COLOR[pr.code]};padding:1px 6px;
+        border-radius:2px;font-size:10px;color:#fff">${SHORT[pr.code]}</span>
+      <span style="flex:1;min-width:0">${esc(pr.detail)}</span>
+      <span class="st-chip" style="background:${ST[pr.status]?.[1] || 'var(--dim)'};
+        color:#fff">${ST[pr.status]?.[0] || pr.status}</span>
+    </div>`).join('') : '<div class="stat-note">尚无探活记录</div>';
+
+  const hourCount = {};
+  (DATA.orders || []).forEach(o => { hourCount[o.hour] = (hourCount[o.hour] || 0) + 1; });
+  const hMax = Math.max(1, ...Object.values(hourCount));
+  const hourDist = Object.keys(hourCount).length
+    ? Object.entries(hourCount).sort((x, y) => x[0] - y[0]).map(([h, c]) => `
+        <div class="taste-row">
+          <span class="lb mono">${h}:00</span>
+          <div class="barwrap"><div style="width:${c / hMax * 100}%;background:var(--blue);opacity:.7"></div></div>
+          <span class="ct">${c}单</span>
+        </div>`).join('')
+    : '<div class="stat-note">无数据</div>';
+  const missTop = (s.missedItems || []).slice(0, 5);
+  const missedTop = missTop.length ? (() => {
+    const mx = Math.max(...missTop.map(x => x[1]));
+    return missTop.map(([nm, q]) => `
+      <div class="taste-row">
+        <span class="lb" style="width:132px;color:var(--red)">${esc(nm)}</span>
+        <div class="barwrap"><div style="width:${q / mx * 100}%;background:var(--red);opacity:.55"></div></div>
+        <span class="ct">×${q}</span>
+      </div>`).join('');
+  })() : '<div class="stat-note">无缺口商品</div>';
+
+  const probeAll = OPS.probes || [];
+  const closed = probeAll.filter(p => p.status === "adopted").length;
+  const decided = probeAll.filter(p => p.status === "adopted" || p.status === "timed_out").length;
+  const adoptRate = decided ? Math.round(closed / decided * 100) + "%" : "—";
+  const intervalDays = s.orderedDays ? (s.spanDays / s.orderedDays).toFixed(1) : "—";
+
+  const WINDOWS = [
+    {name: "晨间咖啡窗", h: 9, m: 30},
+    {name: "午后咖啡窗", h: 13, m: 30},
+    {name: "午后补给窗", h: 14, m: 30},
+  ];
+  const nowT = new Date();
+  let nextWin = null;
+  for (const w of WINDOWS) {
+    const t = new Date(nowT); t.setHours(w.h, w.m, 0, 0);
+    if (t > nowT) {
+      const mins = Math.round((t - nowT) / 60000);
+      nextWin = {name: w.name, start: `${String(w.h).padStart(2, "0")}:${String(w.m).padStart(2, "0")}`,
+        countdown: `${Math.floor(mins / 60)} 小时 ${mins % 60} 分钟后`};
+      break;
+    }
+  }
+  if (!nextWin) {
+    nextWin = {name: WINDOWS[0].name + "（明日）", start: "09:30", countdown: "今日窗口已全部关闭"};
+  }
+
+  const mt = OPS.metabolic || {};
+  const metaHtml = !mt.profileSet
+    ? `<div class="stat-note">${esc(mt.hint || '')}</div>`
+    : (() => {
+        const today = (DATA.orders || []).filter(o => o.date === new Date().toISOString().slice(0, 10));
+        const intake = today.reduce((a, o) => a + (o.kcal || 0), 0);
+        const gap = mt.target - intake;
+        const pct = Math.min(100, Math.round(intake / mt.target * 100));
+        const gapCol = gap < 0 ? 'var(--red)' : gap < 250 ? 'var(--green)' : 'var(--cyan)';
+        return `
+          <div class="meta-row"><span class="k">BMR（Mifflin-St Jeor）</span><span class="v">${mt.bmr} kcal</span></div>
+          <div class="meta-row"><span class="k">TDEE 总消耗</span><span class="v">${mt.tdee} kcal</span></div>
+          <div class="meta-row"><span class="k">场景目标（${mt.goal}）</span><span class="v">${mt.target} kcal</span></div>
+          <div class="meta-row"><span class="k">今日已摄入</span><span class="v">${intake} kcal</span></div>
+          <div class="gapbar"><div style="width:${pct}%;background:${pct > 100 ? 'var(--red)' : 'var(--blue)'}"></div></div>
+          <div class="stat-note" style="margin-top:7px">预算执行 ${pct}% · 剩余缺口
+            <span class="mono" style="color:${gapCol}">${gap}</span> kcal
+            ${gap >= 250 ? '—— 午后补给窗将据此下发 103 建议' : gap < 0 ? '—— 已超支，探活将下发 412' : '—— 204 主动静默区间'}</div>
+          <div class="panel-h" style="margin-top:14px"><span class="dot" style="background:var(--blue)"></span><h3>分餐预算</h3></div>
+          ${[['早餐 30%', mt.windows.breakfast], ['午餐 40%', mt.windows.lunch],
+              ['晚餐 25%', mt.windows.dinner], ['补给窗 5%', mt.windows.snack]]
+            .map(([k, v]) => `<div class="meta-row"><span class="k">${k}</span><span class="v">${v} kcal</span></div>`).join('')}
+          <div class="panel-h" style="margin-top:14px"><span class="dot" style="background:var(--cyan)"></span><h3>探活窗口</h3></div>
+          ${[['晨间咖啡窗', '09:30–11:00', '该喝没喝 → 599'],
+              ['午后咖啡窗', '13:30–15:30', '该喝没喝 → 599'],
+              ['午后补给窗', '14:30–16:00', '缺口驱动 → 103/204/412']]
+            .map(([k, t, s]) => `<div class="meta-row"><span class="k">${k} ${t}</span><span class="v" style="color:var(--muted);font-weight:400">${s}</span></div>`).join('')}`;
+      })();
+
+  const pmHtml = pms.length ? pms.map(pm => `
+    <div class="pm-card sev${pm.sev.slice(1)}">
+      <div class="pm-head">
+        <span class="pm-id">${pm.id}</span>
+        <span class="sev-chip" style="background:${pm.sev === 'P1' ? 'var(--red)' : pm.sev === 'P2' ? 'var(--orange)' : 'var(--yellow)'}">${pm.sev}</span>
+        ${pm.kind === 'metric'
+          ? `<span class="code mono" style="background:var(--panel2);color:var(--orange);border:1px solid var(--orange)">⚠ 指标告警</span>`
+          : `<span class="code mono" style="background:${COLOR[pm.code]};color:#fff">${SHORT[pm.code]}</span>`}
+        ${fresh.has(pm.id) ? '<span class="pm-new">NEW</span>' : ''}
+        <span style="color:var(--dim)">${pm.time} · ${esc(pm.store)}</span>
+      </div>
+      <div class="pm-body">
+        <b>根因</b> ${esc(pm.cause)}<br>
+        <b>影响面</b> ${esc(pm.impact)}<br>
+        <b>改进建议</b> ${esc(pm.advice)}
+      </div>
+    </div>`).join('')
+    : '<div class="stat-note">本期无事故。值班手机一次都没响，这很不像运维。</div>';
+
+  const tastes = (OPS.tasteProfile || []).map(t => `
+    <div class="taste-row">
+      <span class="lb">${esc(t.label)}</span>
+      <div class="barwrap"><div style="width:${t.rate}%"></div></div>
+      <span class="ct">${t.rate}%</span>
+    </div>`).join('') || '<div class="stat-note">样本不足，画像待沉淀</div>';
+
+  const hab = OPS.habits || {};
+  const combos = (hab.topCombos || []).map(c => `
+    <span class="state-chip" style="background:var(--panel2);color:var(--text);
+      font-weight:400">${esc(c.items.slice(0, 2).join(' + '))} ×${c.count}</span>`).join('');
+
+  const insights = (OPS.insights || []).map((t, i) => `
+    <div class="alert" style="border-left-color:var(--cyan)">${esc(t)}</div>`).join('')
+    || '<div class="stat-note">暂无洞察</div>';
+
+  const evo = (OPS.evolutionLog || []).slice().reverse().map(e => `
+    <div class="evo-item"><span class="evo-n">#${e.loop}</span>
+      <span>${esc(e.event)}<span style="color:var(--dim)"> · ${e.at}</span></span>
+    </div>`).join('');
+
+  const goals = OPS.goals || {};
+  const goalOn = Object.values(goals).some(v => v != null);
+  const tasteOn = (OPS.prefsLoaded || {}).tastes || [];
+
+  document.getElementById('app').innerHTML =
+    topbar('', 'on-call 值班中') +
+    pagenav('ops') +
+    `<div class="reborn">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;color:var(--dim);letter-spacing:1px">重生之我在麦门世界运维</div>
+        <div class="lv-big">${esc(lv.level)} <span class="mono" style="font-size:14px;color:var(--muted)">综合 ${lv.score}</span></div>
+        <div class="lv-sub">${esc(lv.desc)}</div>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div class="lv-sub">晋升通道：下一级需综合 ≥ ${nextTh ?? '—'}</div>
+        <div class="lvbar"><div style="width:${prog}%"></div></div>
+        <div class="lv-sub" style="margin-top:6px">已交接班 ${OPS.loopCount || 1} 次 · 每次运行 evolve.py 都是一次进化</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="panel">
+        <div class="panel-h"><span class="dot" style="background:var(--cyan)"></span><h3>待处理探活 · Agent 主动提醒</h3></div>
+        ${(OPS.probesOpen || []).length ? (OPS.probesOpen || []).map(pr => `
+          <div class="probe-item">
+            <span class="pn" style="background:${COLOR[pr.code]}">${SHORT[pr.code]}</span>
+            <div class="pd">${esc(pr.detail)}
+              <div class="pw">${pr.at} · 窗口：${esc(pr.window)} · 回复「采纳 / 忽略」即闭环</div>
+            </div>
+          </div>`).join('') : '<div class="stat-note">探活队列已清空——所有建议均已闭环或静默</div>'}
+        <div class="panel-h" style="margin-top:13px"><span class="dot" style="background:var(--purple)"></span><h3>探活历史</h3></div>
+        <div style="margin-top:8px">${probesHistory}</div>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><span class="dot" style="background:var(--green)"></span><h3>代谢模型 · TDEE 探活口径</h3></div>
+        ${metaHtml}
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="panel">
+        <div class="panel-h"><span class="dot" style="background:var(--red)"></span><h3>事故复盘 · 值班日志</h3></div>
+        ${pmHtml}
+      </div>
+      <div class="panel">
+        <div class="panel-h"><span class="dot" style="background:var(--purple)"></span><h3>运维对象画像 · 口味摸排</h3></div>
+        ${tastes}
+        <div class="panel-h" style="margin-top:14px"><span class="dot" style="background:var(--cyan)"></span><h3>行为习惯</h3></div>
+        <div class="legend" style="border:0;padding:0;margin-top:8px">
+          <span class="legend-item"><span class="ln">夜宵率</span><span class="lv">${hab.nightRate ?? '—'}%</span></span>
+          <span class="legend-item"><span class="ln">单均预算</span><span class="lv">¥${hab.avgBudget ?? '—'}</span></span>
+        </div>
+        <div class="stat-note" style="margin-top:9px">高频组合：${combos || '待沉淀'}</div>
+        <div class="panel-h" style="margin-top:14px"><span class="dot" style="background:var(--blue)"></span><h3>点单时段分布</h3></div>
+        <div style="margin-top:8px">${hourDist}</div>
+        <div class="panel-h" style="margin-top:14px"><span class="dot" style="background:var(--red)"></span><h3>404 黑名单 Top5</h3></div>
+        <div style="margin-top:8px">${missedTop}</div>
+        <div class="panel-h" style="margin-top:14px"><span class="dot" style="background:var(--green)"></span><h3>闭环质量</h3></div>
+        <div style="margin-top:8px">
+          <div class="meta-row"><span class="k">探活建议采纳率</span><span class="v">${adoptRate}</span></div>
+          <div class="meta-row"><span class="k">平均响应间隔</span><span class="v">${intervalDays} 天/单</span></div>
+          <div class="meta-row"><span class="k">最长缓存连击（304）</span><span class="v">${s.distribution["304"] || 0} 次</span></div>
+          <div class="stat-note" style="margin-top:7px">采纳率 = 被你实际下单采纳的探活占比——这是 Agent 闭环的核心健康度</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="panel">
+        <div class="panel-h"><span class="dot" style="background:var(--cyan)"></span><h3>运维洞察 · 优化建议</h3></div>
+        ${insights}
+        <div class="panel-h" style="margin-top:14px"><span class="dot" style="background:var(--yellow)"></span><h3>下一次探活窗口</h3></div>
+        <div style="margin-top:8px">
+          <div class="meta-row"><span class="k">窗口</span><span class="v">${nextWin.name}</span></div>
+          <div class="meta-row"><span class="k">开启时间</span><span class="v">${nextWin.start}</span></div>
+          <div class="meta-row"><span class="k">倒计时</span><span class="v" style="color:var(--cyan)">${nextWin.countdown}</span></div>
+        </div>
+        <div class="stat-note" style="margin-top:9px">告警推送口径：新 4xx/5xx 事故即时告警；103/412/599/522 进入待处理队列随下次会话播报。全部由 evolve.py 确定性规则触发，可复算；偏好可在 prefs.json 声明（目标 / 忌口）</div>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><span class="dot" style="background:var(--green)"></span><h3>自进化日志 · 交接班记录</h3></div>
+        ${evo || '<div class="stat-note">首次值班，记录即将开始</div>'}
+        <div class="stat-note" style="margin-top:9px">
+          已加载用户声明偏好：${tasteOn.length ? esc(tasteOn.join('、')) : '无'} ·
+          目标设定：${goalOn ? '生效中' : '未设定'}
+        </div>
+      </div>
+    </div>
+    <footer>
+      重生设定纯属玩梗，监控数据全部真实 —— 每一条事故都来自你在麦当劳的真实订单<br>
+      麦门监控台 · 基于麦当劳中国官方 MCP 构建 · 独立开发，非官方产品 · 输出仅供参考，不构成营养或医疗建议
+    </footer>`;
+}
+
+/* ── 集合层 404：订单为空 → 资源不存在，触发彩蛋 ─────────────────── */
+function render404() {
+  const egg = s.easterEgg || {};
+  document.getElementById('app').innerHTML =
+    topbar(' on', 'collection 404 · 资源不存在') +
+    `<div class="panel"><div class="egg-wrap">
+      <div class="egg-code">404</div>
+      <div class="egg-title">Not Found · 你的身体服务上还没有任何订单资源</div>
+      <div class="egg-box">
+        ${(egg.lines||[]).map(l => `<p>${l}</p>`).join('')}
+      </div>
+      <div class="egg-cta">${esc(egg.cta || '')}</div>
+    </div></div>`;
+}
+
+/* ── 正常监控台 ─────────────────────────────────────────────────
+   上半屏信息层级（按「监控大屏」而非「数据报表」组织）：
+     第一眼  Uptime 环形仪表 —— 本项目最有梗的指标，弧长形状本身即结论
+     第二眼  摄入请求时间轴—— 89 天跨度里 9 根柱子，稀疏与空窗一眼可见
+     第三眼  状态码构成 / 热量标尺 —— 占比与分位的辅助判读
+   图表全部手绘 SVG，保持零第三方依赖；配色取自 codes.py，与语义同源。
+   ──────────────────────────────────────────────────────────── */
+function render(dim, logFilter, logPage) {
+  dim = dim || 'day';
+  LOG_FILTER = logFilter || LOG_FILTER || 'all';
+  LOG_PAGE = logPage || 1;
+  const cov = s.ledgerCoverageRate || 0;
+  const m = metrics(dim);
+  const worst = Object.entries(m.dist).sort((a,b)=>(SEV[b[0]]||0)-(SEV[a[0]]||0))[0];
+  const worstCode = worst ? worst[0] : null;
+  const unit = dim === 'day' ? '天' : '周';
+  const idle = m.span - m.ordered;
+
+  // 主视觉：Uptime 仪表 +摄入请求时间轴
+  const hero = `
+    <div class="panel">
+      <div class="panel-h"><span class="dot" style="background:var(--blue)"></span>
+        <h3>身体服务可用性</h3></div>
+      <div class="gauge-wrap">
+        ${gauge(m.uptime, 'var(--blue)')}
+        <div style="min-width:0">
+          <div class="stat-note" style="margin-top:0;font-size:12px">
+            近 ${m.span} ${unit}中仅 <strong style="color:var(--text)">${m.ordered}</strong> ${unit}有响应<br>
+            你的身体服务可用性，可能还没有你负责的那个服务高
+          </div>
+          <div class="legend" style="border:0;padding:0;margin-top:9px">
+            <span class="legend-item"><span class="sw" style="background:var(--panel2)"></span>
+              <span class="ln">${idle} ${unit} 503 宕机</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-h row">
+        <div><span class="dot" style="background:var(--green)"></span>
+          <h3>摄入请求时间轴</h3></div>
+        ${dimToggle(dim)}
+      </div>
+      ${timeline(dim, m)}
+    </div>`;
+
+  // 次级：状态码分布 + 热量标尺 + 摄入流量
+  const second = `
+    <div class="panel">
+      <div class="panel-h"><span class="dot" style="background:var(--purple)"></span>
+        <h3>状态码构成</h3></div>
+      ${distBar(m)}
+      <div class="stat-note" style="margin-top:11px">
+        共 ${m.total} 单${worstCode ? ` · 最严重为 <span style="color:${COLOR[worstCode]}">${SHORT[worstCode]}</span> (${TITLE[worstCode]})` : ''}
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-h"><span class="dot" style="background:var(--purple)"></span>
+        <h3>单餐热量分位</h3></div>
+      ${kcalScale()}
+    </div>
+
+    <div class="panel">
+      <div class="panel-h"><span class="dot" style="background:var(--yellow)"></span>
+        <h3>累计摄入流量</h3></div>
+      <div class="stat mono" style="color:var(--yellow);font-size:34px">${s.flowUnit}</div>
+      <div class="stat-note" style="margin-top:7px">
+        共 ${(s.totalKcal||0).toLocaleString()} kcal · 按 1 kcal = 1 Byte、1024 进制换算<br>
+        平均 ${s.orderedDays ? Math.round(s.totalKcal/s.orderedDays) : 0} kcal/响应日
+      </div>
+    </div>`;
+
+  const gapList = (s.missedItems && s.missedItems.length) ? (() => {
+    const mx = Math.max(...s.missedItems.map(x => x[1]));
+    return s.missedItems.map(([n,q]) => `
+      <div class="row">
+        <span class="lb" style="background:var(--panel2);color:var(--muted);font-weight:400">${esc(n)}</span>
+        <div class="barwrap"><div style="width:${q/mx*100}%;background:var(--red);opacity:.6"></div></div>
+        <span class="ct mono">×${q}</span>
+      </div>`).join('');
+  })() : '';
+
+  // ── 请求日志：分页 + 状态码筛选，避免单屏堆叠十余行 ──
+  const PER_PAGE = 5;
+  const filtered = LOG_FILTER === 'all'
+    ? (DATA.orders || [])
+    : (DATA.orders || []).filter(o => o.httpStatus === LOG_FILTER);
+  const pages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+  const page = Math.min(LOG_PAGE, pages);
+  const slice = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+
+  // 状态码筛选 chips
+  const codeCount = {};
+  (DATA.orders || []).forEach(o => { codeCount[o.httpStatus] = (codeCount[o.httpStatus] || 0) + 1; });
+  const chipList = [['all', '全部', 'var(--dim)', (DATA.orders || []).length]]
+    .concat(Object.entries(codeCount).sort((a, b) => b[1] - a[1])
+      .map(([c, n]) => [c, SHORT[c], COLOR[c], n]));
+  const chips = `<div class="chips">${chipList.map(([v, t, col, n]) => `
+    <button class="chip-btn${LOG_FILTER === v ? ' on' : ''}" data-filter="${v}"
+      type="button" aria-pressed="${LOG_FILTER === v}">
+      ${v === 'all' ? '' : `<span class="sw" style="background:${col}"></span>`}
+      ${esc(t)}<span class="n">${n}</span>
+    </button>`).join('')}</div>`;
+
+  const log = slice.map((o, idx) => `
+    <tr>
+      <td class="mono" style="white-space:nowrap">${o.datetime.replace(' ','<br>')}
+        <div style="color:var(--dim);font-size:10px;margin-top:3px">${esc(o.store)}</div></td>
+      <td><span class="code mono" style="background:${COLOR[o.httpStatus]};color:#fff">${SHORT[o.httpStatus]}</span>
+        <div class="reason" style="color:${COLOR[o.httpStatus]}">${esc(o.codeTitle)}</div>
+        <div class="reason">${esc(o.reason)}</div></td>
+      <td><details${idx === 0 ? ' open' : ''}><summary>${o.items.length} 件商品（${o.matchCoverage} 可计量）▾</summary>
+        <div style="margin-top:5px">${o.items.map(i => `
+          <div class="item-row">
+            ${thumbHtml(i, 28)}
+            <span class="nm" style="color:${i.matched ? 'var(--text)' : 'var(--red)'}">${i.qty}× ${esc(i.name)}</span>
+            ${i.matched
+              ? `<span class="mono" style="font-size:10px;color:var(--muted)">${i.kcal} kcal</span>${kbarMini(i.kcal)}`
+              : `<span class="state-chip" style="background:var(--red);color:#fff">404</span>`}
+          </div>`).join('')}</div>
+      </details></td>
+      <td class="mono" style="text-align:right;white-space:nowrap">${o.kcal ?? '—'}
+        <div style="color:var(--dim);font-size:10px">${o.sodium!=null?o.sodium+' mg':''}</div>
+        ${(o.breaches||[]).map(b => `
+          <div style="margin-top:3px"><span class="st-chip" style="background:${b === 'calorie_overload' ? 'var(--red)' : 'var(--orange)'};color:#fff">⚠ ${b === 'sodium_over' ? '钠超标' : b === 'calorie_overload' ? '热量过载' : '热量超配额'}</span></div>`).join('')}</td>
+    </tr>`).join('');
+
+  // 分页器：首/末 + 当前页邻域，页码用省略号收敛
+  const pgBtn = (label, target, opt = {}) => {
+    const dis = opt.disabled ? 'disabled' : '';
+    const on = opt.on ? ' class="pg-btn on"' : ' class="pg-btn"';
+    return `<button${on} data-page="${target}" ${dis} type="button"
+      ${opt.label ? `aria-label="${opt.label}"` : ''}>${label}</button>`;
+  };
+  const nums = [];
+  const push = n => nums.push(pgBtn(String(n), n, { on: n === page }));
+  if (pages <= 7) {
+    for (let i = 1; i <= pages; i++) push(i);
+  } else {
+    push(1);
+    if (page > 3) nums.push('<span class="pg-gap">…</span>');
+    for (let i = Math.max(2, page - 1); i <= Math.min(pages - 1, page + 1); i++) push(i);
+    if (page < pages - 2) nums.push('<span class="pg-gap">…</span>');
+    push(pages);
+  }
+  const pager = `
+    <div class="pager">
+      <span class="pager-info">第 ${(page - 1) * PER_PAGE + 1}–${Math.min(page * PER_PAGE, filtered.length)} 条，
+        共 ${filtered.length} 单${pages > 1 ? ` · ${pages} 页` : ''}</span>
+      ${pgBtn('‹', page - 1, { disabled: page === 1, label: '上一页' })}
+      ${nums.join('')}
+      ${pgBtn('›', page + 1, { disabled: page === pages, label: '下一页' })}
+    </div>`;
+
+  const zone = on1024 ? `
+    <div style="text-align:center;padding:20px">
+      <div class="stat mono" style="font-size:42px;color:var(--yellow)">${s.flowUnit}</div>
+      <div class="stat-note" style="margin-top:9px">
+        按 1 kcal = 1 Byte、1024 进制换算，你的身体服务本期共传输 ${(s.totalKcal||0).toLocaleString()} kcal。<br>
+        没有丢包，全是 TCP（贪吃 Protocol）。
+      </div>
+    </div>`
+    : `<div class="locked">🔒 1024 限定区将于 10 月 20 日解锁 —— 届时摄入总量将换算为流量单位（1 kcal = 1 Byte）</div>`;
+
+  document.getElementById('app').innerHTML =
+    topbar(on1024 ? ' on' : '', on1024 ? '1024 模式：已激活' : '1024 模式：10/20–10/26 自动激活') +
+    pagenav('overview') +
+    `<div class="grid4">${hero}</div>
+    <div class="grid">${second}</div>
+    <div class="panel" style="margin-bottom:10px">
+      <div class="panel-h row">
+        <div><span class="dot" style="background:var(--yellow)"></span><h3>定位视图 · 针对性优化</h3></div>
+        <div class="seg" role="radiogroup" aria-label="场景定位">
+          ${[['keep', '均衡'], ['cut', '减脂'], ['bulk', '增肌'], ['worker', '打工人']]
+            .map(([v, t]) => `<button class="seg-btn${POS === v ? ' on' : ''}"
+              role="radio" aria-checked="${POS === v}" data-pos="${v}"
+              type="button">${t}</button>`).join('')}
+        </div>
+      </div>
+      <div id="posBody">${posBody()}</div>
+    </div>
+    <div class="grid4" style="margin-bottom:10px">
+      <div class="panel">
+        <div class="panel-h"><span class="dot" style="background:var(--yellow)"></span><h3>监控告警</h3></div>
+        ${(s.alerts||[]).map(a => `<div class="alert">${esc(a)}</div>`).join('') || '<div class="stat-note">无告警</div>'}
+        <div class="panel-h" style="margin-top:13px">
+          <span class="dot" style="background:var(--orange)"></span><h3>错误预算消耗</h3></div>
+        <div style="display:flex;align-items:baseline;gap:7px;margin-bottom:7px">
+          <span class="mono" style="font-size:22px;font-weight:700;color:var(--orange)">${s.errorBudgetUsed}</span>
+          <span class="stat-note" style="margin:0">次 4xx/5xx · 共 ${s.totalOrders} 单</span>
+        </div>
+        <div class="bar" style="height:6px"><div style="width:${s.totalOrders ? Math.round(s.errorBudgetUsed/s.totalOrders*100) : 0}%;background:var(--orange)"></div></div>
+        <div class="stat-note" style="margin-top:7px">
+          206 残缺响应属信息类，不计入错误预算
+        </div>
+        <div class="panel-h" style="margin-top:14px">
+          <span class="dot" style="background:var(--cyan)"></span><h3>SLA 分级</h3></div>
+        <div class="sla">
+          ${[
+            {min: 99, label: '金牌 SLA', c: 'var(--green)'},
+            {min: 95, label: '银牌', c: 'var(--cyan)'},
+            {min: 90, label: '铜牌', c: 'var(--yellow)'},
+            {min: 0, label: 'Best Effort', c: 'var(--dim)'},
+          ].map(x => {
+            const on = m.uptime >= x.min;
+            return `<div class="sla-row">
+              <span class="sla-dot" style="background:${on ? x.c : 'var(--panel2)'}"></span>
+              <span class="sla-lb" style="color:${on ? 'var(--text)' : 'var(--dim)'}">${x.label}</span>
+              <span class="sla-v">≥${x.min}%</span>
+              <span class="sla-s" style="color:${on ? x.c : 'var(--dim)'}">${on ? '达标' : '未达标'}</span>
+            </div>`;
+          }).join('')}
+        </div>
+        <div class="stat-note" style="margin-top:8px">
+          当前 Uptime ${m.uptime}% · 依据本维度口径判定
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><span class="dot" style="background:var(--red)"></span><h3>营养账本缺口</h3></div>
+        <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:9px">
+          <span class="mono" style="font-size:20px;font-weight:700;color:${cov>=60?'var(--green)':(cov>=40?'var(--yellow)':'var(--red)')}">${cov}<small style="font-size:11px;color:var(--muted)">% 可计量</small></span>
+          <span class="stat-note" style="margin:0">副指标 · 不计入错误预算</span>
+        </div>
+        ${gapList || '<div class="stat-note">全部商品均可计量</div>'}
+        <div class="stat-note" style="margin-top:9px">官方营养账本仅收录 160 项标准单品所致
+          <button class="tab-btn" data-pagebtn="gallery" type="button"
+            style="margin-top:8px;padding:3px 10px;border:1px solid var(--border)">在商品图鉴中查看 →</button>
+        </div>
+      </div>
+    </div>
+    <div class="panel" id="logPanel" style="margin-bottom:10px">
+      <div class="panel-h row" style="margin-bottom:11px">
+        <div><span class="dot" style="background:var(--purple)"></span>
+          <h3>请求日志 · 每单一次响应</h3></div>
+        ${chips}
+      </div>
+      <table>
+        <thead><tr>
+          <th style="width:132px">时间 / 门店</th><th style="width:216px">状态码 / 诊断</th>
+          <th>响应体（商品明细）</th><th style="width:78px;text-align:right">热量 / 钠</th>
+        </tr></thead>
+        <tbody>${log}</tbody>
+      </table>
+      ${filtered.length ? pager : '<div class="stat-note" style="padding-top:12px;text-align:center">该筛选下暂无订单</div>'}
+    </div>
+    <div class="panel">
+      <div class="panel-h"><span class="dot" style="background:var(--yellow)"></span><h3>1024 程序员节限定区</h3></div>
+      ${zone}
+    </div>
+    <footer>
+      语义唯一视角：你是主体，你的身体是服务端 —— 全部状态码只描述你的身体对这次摄入的响应<br>
+      麦门监控台 · 基于麦当劳中国官方 MCP 构建 · 独立开发，非官方产品 · 输出仅供参考，不构成营养或医疗建议
+    </footer>`;
+}
+
+if (s.collectionStatus === '404') {
+  render404();
+} else {
+  // 五类交互状态：页面层级 / 统计维度 / 日志筛选 / 日志页码 / 场景定位
+  // 定位优先取本机记忆（localStorage），未设置时回落到 prefs.profile.goal
+
+
+  // 四类交互状态彼此独立：页面层级 / 统计维度 / 日志筛选 / 日志页码
+  // 全部支持 URL 深链：#gallery 图鉴页，#day / #week 监控台维度
+  const HASH = (location.hash || '').replace('#', '');
+  let PAGE = ['gallery', 'ops'].includes(HASH) ? HASH : 'overview';
+  let CURRENT = (HASH === 'week' || HASH === 'day') ? HASH : 'day';
+  let LOG_FILTER = 'all';
+  let LOG_PAGE = 1;
+
+  function draw() {
+    if (PAGE === 'gallery') renderGallery();
+    else if (PAGE === 'ops') renderOps();
+    else render(CURRENT, LOG_FILTER, LOG_PAGE);
+  }
+
+  function syncFromHash() {
+    const h = (location.hash || '').replace('#', '');
+    PAGE = ['gallery', 'ops'].includes(h) ? h : 'overview';
+    if (h === 'day' || h === 'week') CURRENT = h;
+    LOG_PAGE = 1;
+    draw();
+  }
+  window.addEventListener('hashchange', syncFromHash);
+
+  document.addEventListener('click', e => {
+    // 页面层级（监控台 / 商品图鉴）
+    const pageBtn = e.target.closest('[data-pagebtn]');
+    if (pageBtn) {
+      const pg = pageBtn.getAttribute('data-pagebtn');
+      if (pg !== PAGE) {
+        PAGE = pg;
+        history.replaceState(null, '', pg === 'gallery' ? '#gallery' : '#' + CURRENT);
+        draw();
+        window.scrollTo(0, 0);
+      }
+      return;
+    }
+    // 场景定位（本机记忆；探活档案同步由 Agent 写 prefs 完成）
+    const posBtn = e.target.closest('[data-pos]');
+    if (posBtn) {
+      const v = posBtn.getAttribute('data-pos');
+      if (v !== POS) {
+        POS = v;
+        localStorage.setItem('mcd.pos', v);
+        const body = document.getElementById('posBody');
+        if (body) body.innerHTML = posBody();
+      }
+      return;
+    }
+    // 统计维度
+    const dimBtn = e.target.closest('[data-dim]');
+    if (dimBtn) {
+      const d = dimBtn.getAttribute('data-dim');
+      if (d !== CURRENT) { CURRENT = d; history.replaceState(null, '', '#' + d); draw(); }
+      dimBtn.focus();
+      return;
+    }
+    // 日志筛选
+    const fBtn = e.target.closest('[data-filter]');
+    if (fBtn) {
+      const f = fBtn.getAttribute('data-filter');
+      if (f !== LOG_FILTER) { LOG_FILTER = f; LOG_PAGE = 1; draw(); }
+      fBtn.focus();
+      return;
+    }
+    // 日志翻页
+    const pBtn = e.target.closest('[data-page]');
+    if (pBtn && !pBtn.disabled) {
+      LOG_PAGE = parseInt(pBtn.getAttribute('data-page'), 10) || 1;
+      draw();
+      const cur = document.querySelector('.pg-btn.on');
+      if (cur) cur.focus();
+    }
+  });
+
+  // 键盘左右键翻页（焦点在日志面板内时）
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    const logPanel = e.target.closest?.('#logPanel');
+    if (!logPanel) return;
+    e.preventDefault();
+    const total = Object.keys(codeCountGlobal()).length;
+    if (total <= 1) return;
+    LOG_PAGE = Math.min(total, Math.max(1,
+      LOG_PAGE + (e.key === 'ArrowRight' ? 1 : -1)));
+    draw();
+    document.querySelector('.pg-btn.on')?.focus();
+  });
+
+  function codeCountGlobal() {
+    const list = LOG_FILTER === 'all'
+      ? (DATA.orders || [])
+      : (DATA.orders || []).filter(o => o.httpStatus === LOG_FILTER);
+    return { n: Math.max(1, Math.ceil(list.length / 5)) };
+  }
+
+  draw();
+}
+</script>
+</body>
+</html>
