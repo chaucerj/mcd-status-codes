@@ -294,6 +294,22 @@
   .panel:hover{border-color:var(--cyan);box-shadow:0 2px 14px rgba(0,0,0,.35)}
 }
 .panel,.gal-card{transition:border-color .18s ease,box-shadow .18s ease}
+/* 异常块统一规格：码牌/徽标固定 18px 胶囊、顶对齐，不再随文字行高被拉伸 */
+.evo-item{align-items:flex-start}
+.evo-item .pn,.evo-item .st-chip,.probe-item .pn{flex:none;align-self:flex-start;
+  display:inline-flex;align-items:center;height:18px;padding:0 7px;
+  border-radius:3px;font-size:10px;line-height:1;white-space:nowrap}
+/* 面板级折叠：每个顶层 panel 的组头可点击收起，grid-rows 折叠 */
+.panel-h.pclick{cursor:pointer}
+.panel-h.pclick:hover h3{color:var(--cyan)}
+.pnl-chev{margin-left:auto;color:var(--muted);flex:none;
+  transition:transform .3s cubic-bezier(.22,.7,.3,1)}
+.pnl-closed .pnl-chev{transform:rotate(-90deg)}
+.pnl-closed .panel-h{opacity:.72}
+.panel-body{display:grid;grid-template-rows:1fr;
+  transition:grid-template-rows .3s cubic-bezier(.22,.7,.3,1)}
+.pnl-closed .panel-body{grid-template-rows:0fr}
+.panel-inner{overflow:hidden;min-height:0}
 .gal-card{animation:secIn .4s cubic-bezier(.22,.7,.3,1) both;
   animation-delay:calc(var(--i,0)*28ms)}
 @media(prefers-reduced-motion:reduce){
@@ -412,7 +428,46 @@ function secOpen(id, num, title, meta, open, i) {
     <div class="sec-body" id="secbody-${id}"><div class="sec-inner">`;
 }
 function secClose() { return `</div></div></section>`; }
+/* 面板级折叠：draw() 之后对每个顶层 .panel 做一次装配 ——
+   组头变可点击（组内按钮除外），子元素包进 panel-inner 供 grid-rows 动画，
+   收起状态按「页面+标题」写入 localStorage，跨刷新记忆。 */
+function initPanels() {
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.querySelectorAll('.panel').forEach(p => {
+    if (p.dataset.pc) return;
+    const h = p.querySelector(':scope > .panel-h');
+    if (!h) return;
+    p.dataset.pc = '1';
+    const body = document.createElement('div');
+    body.className = 'panel-body';
+    const inner = document.createElement('div');
+    inner.className = 'panel-inner';
+    while (h.nextSibling) inner.appendChild(h.nextSibling);
+    body.appendChild(inner);
+    p.appendChild(body);
+    h.insertAdjacentHTML('beforeend',
+      '<svg class="pnl-chev" width="13" height="13" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 5l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+    h.classList.add('pclick');
+    const title = (h.querySelector('h3') || h).textContent.trim().slice(0, 40);
+    const pg = (location.hash || '').replace('#', '') || 'overview';
+    const key = 'mcd.pnl.' + pg + '|' + title;
+    let closed = false;
+    try { closed = localStorage.getItem(key) === '0'; } catch (e) {}
+    if (closed) p.classList.add('pnl-closed');
+    h.setAttribute('aria-expanded', String(!closed));
+    h.dataset.pnlkey = key;
+  });
+}
 document.addEventListener('click', e => {
+  const ph = e.target.closest('.panel-h.pclick');
+  if (ph && !e.target.closest('button, a, .seg, .chip-btn, [data-dim], [data-pagebtn]')) {
+    const p = ph.closest('.panel');
+    const closed = p.classList.toggle('pnl-closed');
+    ph.setAttribute('aria-expanded', String(!closed));
+    try { localStorage.setItem(ph.dataset.pnlkey, closed ? '0' : '1'); } catch (err) {}
+    return;
+  }
   const h = e.target.closest('.sec-h');
   if (!h) return;
   const s = h.closest('.sec');
@@ -1316,6 +1371,7 @@ if (s.collectionStatus === '404') {
     if (PAGE === 'gallery') renderGallery();
     else if (PAGE === 'ops') renderOps();
     else render(CURRENT, LOG_FILTER, LOG_PAGE);
+    initPanels();
   }
 
   function syncFromHash() {
