@@ -327,6 +327,8 @@ TEMPLATE = """<!DOCTYPE html>
   transition:grid-template-rows .3s cubic-bezier(.22,.7,.3,1)}
 .pnl-closed .panel-body{grid-template-rows:0fr}
 .panel-inner{overflow:hidden;min-height:0}
+/* 收起的面板不再被 grid 行拉伸成空框：仅保留组头高度 */
+.pnl-closed{align-self:start}
 .gal-card{animation:secIn .4s cubic-bezier(.22,.7,.3,1) both;
   animation-delay:calc(var(--i,0)*28ms)}
 @media(prefers-reduced-motion:reduce){
