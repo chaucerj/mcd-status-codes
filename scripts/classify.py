@@ -8,6 +8,7 @@
 全部规则为确定性函数，数值不进 LLM，结果可逐单复算。
 """
 import json
+import re
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -43,6 +44,68 @@ def load_nutrition_index(path: Path) -> dict:
     return {r["productName"]: r for r in rows}
 
 
+def load_image_index() -> dict:
+    """官方餐品图缓存（来源：MCP 菜单接口，collect 阶段落盘 trial_menu.json）。
+
+    键为归一化品名。订单本体不带图时，前端官方图/回退磁贴全靠这里补。"""
+    path = Path(__file__).resolve().parent.parent / "data" / "trial_menu.json"
+    if not path.exists():
+        return {}
+    rows = json.loads(path.read_text(encoding="utf-8"))
+    items = rows if isinstance(rows, list) else rows.get("items", [])
+    idx = {}
+    for r in items:
+        name = r.get("name") or r.get("productName")
+        img = r.get("img") or r.get("productImage")
+        if name and img:
+            idx[normalize(name)] = img
+    return idx
+
+
+_SIZE_QUAL = re.compile(r"(大|中|小)(杯|份)")
+
+
+def _core(name: str) -> str:
+    """规格弱化：去连字符、去 大/中/小+杯份、去单字规格前缀，便于跨规格对同一张图。"""
+    s = re.sub(r"[\-–—]", "", normalize(name))
+    s = _SIZE_QUAL.sub("", s)
+    return re.sub(r"^(大|中|小)", "", s)
+
+
+def match_image(item_name: str, image_index: dict) -> str:
+    """品名 → 官方图 URL。层级：归一化精确 → 规格弱化精确 → 最长公共前缀（≥4 字，
+    吃掉「麦辣鸡腿堡/麦辣鸡腿汉堡」这类同系变体）→ 双向包含（菜单侧 ≥3 字）
+    → 头尾缀匹配（菜单侧 2 字如「新地」「可乐」）。"""
+    if not image_index:
+        return ""
+    norm = normalize(item_name)
+    if norm in image_index:
+        return image_index[norm]
+    core_map = {_core(k): v for k, v in image_index.items()}
+    core = _core(norm)
+    if core in core_map:
+        return core_map[core]
+    best_img, best_len, best_key = "", 0, ""
+    for k, img in core_map.items():
+        n = 0
+        for a, b in zip(core, k):
+            if a != b:
+                break
+            n += 1
+        if n > best_len or (n == best_len and k and len(k) < len(best_key)):
+            best_img, best_len, best_key = img, n, k
+    if best_len >= 4:
+        return best_img
+    if len(norm) >= 3:
+        for name, img in image_index.items():
+            if len(name) >= 3 and (name in norm or norm in name):
+                return img
+    for name, img in image_index.items():
+        if len(name) == 2 and len(norm) >= 4 and (norm.startswith(name) or norm.endswith(name)):
+            return img
+    return ""
+
+
 def build_reason(status: str, ctx: dict) -> str:
     """生成诊断文案。
 
@@ -76,7 +139,7 @@ def build_reason(status: str, ctx: dict) -> str:
     return ""
 
 
-def classify_order(orders_raw: list, nutrition_index: dict) -> list:
+def classify_order(orders_raw: list, nutrition_index: dict, image_index: dict | None = None) -> list:
     """按时间正序逐单判定。返回 enriched 订单列表。"""
     result = []
     seen_names: set = set()          # 历史已出现过的归一化品名
@@ -92,7 +155,7 @@ def classify_order(orders_raw: list, nutrition_index: dict) -> list:
             qty = int(p.get("quantity", 1))
             items.append({
                 "name": p["productName"],
-                "img": p.get("productImage", ""),
+                "img": p.get("productImage", "") or match_image(p["productName"], image_index or {}),
                 "qty": qty,
                 "matched": row is not None,
                 "kcal": int(row["energyKcal"]) * qty if row else None,
@@ -279,7 +342,7 @@ def main():
 
     orders_raw = json.loads(orders_path.read_text(encoding="utf-8"))["data"]["list"]
     nutrition_index = load_nutrition_index(nutrition_path)
-    orders = classify_order(orders_raw, nutrition_index)
+    orders = classify_order(orders_raw, nutrition_index, load_image_index())
     summary = build_summary(orders)
 
     out = {"rulesVersion": RULES_VERSION,
