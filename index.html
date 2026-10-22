@@ -3,794 +3,595 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>麦门监控台 · 你的身体服务</title>
+<title>麦门状态码 · 试玩间（无需 Token）</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 84'><path d='M6 84 L6 32 Q6 6 28 6 Q46 6 50 50 Q54 6 72 6 Q94 6 94 32 L94 84' fill='none' stroke='%23FFC72C' stroke-width='13'/></svg>">
 <style>
-  :root {
-    --bg:#0b0c0e; --panel:#111217; --panel2:#181b1f; --border:#24272e;
-    --text:#d8d9da; --muted:#8e9095; --dim:#6c7076;
-    --blue:#3274D9; --green:#37872D; --orange:#E98300;
-    --red:#E24D42; --purple:#705DA0; --yellow:#EAB839; --cyan:#6ED0E0;
-  }
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{background:var(--bg);color:var(--text);
-    font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;padding:20px;max-width:1240px;margin:0 auto}
-  .mono{font-family:"SF Mono","JetBrains Mono",Consolas,monospace;
-    font-variant-numeric:tabular-nums}
-
-  .topbar{display:flex;align-items:center;gap:14px;padding-bottom:12px;
-    border-bottom:1px solid var(--border);margin-bottom:16px;flex-wrap:wrap}
-  .topbar img{width:28px;height:28px;border-radius:3px}
-  .topbar h1{font-size:17px;font-weight:600;letter-spacing:.2px}
-  .topbar h1 .accent{color:var(--blue)}
-  .crumb{font-size:12px;color:var(--dim)}
-  .badge{margin-left:auto;padding:3px 11px;border-radius:2px;font-size:11px;
-    border:1px solid var(--border);color:var(--muted);background:var(--panel)}
-  .badge.on{background:var(--yellow);border-color:var(--yellow);color:#111;font-weight:700}
-
-  .meta{font-size:11px;color:var(--dim);margin-bottom:16px;letter-spacing:.3px;line-height:1.7}
-
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-bottom:10px}
-  .grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin-bottom:10px}
-  .panel{background:var(--panel);border:1px solid var(--border);border-radius:3px;padding:13px 15px}
-  .panel-h{display:flex;align-items:center;gap:7px;margin-bottom:9px}
-  .panel-h h3{font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.7px;text-transform:uppercase}
-  .dot{width:7px;height:7px;border-radius:50%;flex:none}
-
-  .stat{font-size:30px;font-weight:700;line-height:1.15;letter-spacing:-.5px;
-    font-variant-numeric:tabular-nums}
-  .stat small{font-size:13px;color:var(--muted);font-weight:500}
-  .stat-note{font-size:11px;color:var(--dim);margin-top:5px;line-height:1.5}
-
-  .bar{height:5px;background:var(--panel2);border-radius:3px;overflow:hidden;margin-top:9px}
-  .bar>div{height:100%;border-radius:3px}
-
-  .row{display:flex;align-items:center;gap:9px;padding:4px 0;font-size:12px}
-  .row .lb{width:132px;flex:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-    padding:2px 7px;border-radius:2px;font-size:10px;font-weight:700;text-align:center}
-  .row .barwrap{flex:1;height:13px;background:var(--panel2);border-radius:2px;overflow:hidden}
-  .row .barwrap>div{height:100%;min-width:2px}
-  .row .ct{width:26px;text-align:right;flex:none;color:var(--muted)}
-
-  .uptime{display:flex;gap:2px;flex-wrap:wrap;margin-top:8px}
-  .ud{width:9px;height:16px;border-radius:1px}
-
-  table{width:100%;border-collapse:collapse;font-size:12px}
-  th{text-align:left;color:var(--dim);font-size:10px;font-weight:600;letter-spacing:.6px;
-    text-transform:uppercase;padding:7px 8px;border-bottom:1px solid var(--border);white-space:nowrap}
-  td{padding:8px;border-bottom:1px solid var(--border);vertical-align:top}
-  tbody tr:hover{background:var(--panel2)}
-  .reason{color:var(--muted);font-size:11px;margin-top:3px;line-height:1.5}
-  .code{display:inline-block;padding:2px 8px;border-radius:2px;font-size:10px;font-weight:700;white-space:nowrap}
-
-  .alert{display:flex;gap:8px;padding:8px 11px;background:var(--panel2);
-    border-left:2px solid var(--orange);border-radius:0 2px 2px 0;margin-bottom:6px;
-    font-size:12px;line-height:1.55}
-
-  details summary{cursor:pointer;list-style:none;color:var(--muted);font-size:11px}
-  details summary::-webkit-details-marker{display:none}
-  .item{font-size:11px;padding:2px 0;color:var(--muted)}
-  .item.miss{color:var(--red)}
-  .item.miss::after{content:" 无法计量";font-weight:600}
-
-  .egg-wrap{text-align:center;padding:44px 24px}
-  .egg-code{font-size:64px;font-weight:800;letter-spacing:-2px;color:var(--red);line-height:1}
-  .egg-title{font-size:17px;font-weight:600;margin:14px 0 18px}
-  .egg-box{max-width:560px;margin:0 auto;text-align:left;background:var(--panel2);
-    border:1px solid var(--border);border-radius:3px;padding:16px 18px;font-size:13px;line-height:1.85}
-  .egg-box p{margin-bottom:9px}
-  .egg-box p:last-child{margin-bottom:0}
-  .egg-cta{margin-top:18px;padding:13px 16px;background:rgba(50,116,217,.1);
-    border:1px solid var(--blue);border-radius:3px;font-size:13px;line-height:1.7}
-
-  .locked{text-align:center;padding:28px;color:var(--dim);font-size:13px}
-  footer{margin-top:22px;padding-top:14px;border-top:1px solid var(--border);
-    color:var(--dim);font-size:11px;text-align:center;line-height:1.8}
-
-  /* ── 图表 ────────────────────────────────────────────────── */
-  .chart-wrap{width:100%;overflow:visible}
-  .chart-wrap svg{display:block;width:100%;height:auto;overflow:visible}
-  .axis-line{stroke:var(--border);stroke-width:1}
-  .axis-text{fill:var(--dim);font-size:9px;font-family:"SF Mono",Consolas,monospace}
-  .grid-line{stroke:var(--border);stroke-width:1;stroke-dasharray:2 3;opacity:.55}
-  .bar{transition:opacity .15s ease}
-  .bar:hover{opacity:.75}
-  .legend{display:flex;flex-wrap:wrap;gap:5px 14px;margin-top:10px;
-    padding-top:9px;border-top:1px solid var(--border)}
-  .legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
-  .legend-item .sw{width:8px;height:8px;border-radius:2px;flex:none}
-  .legend-item .lv{font-family:"SF Mono",monospace;color:var(--text);font-weight:600}
-  .legend-item .ln{color:var(--dim)}
-
-  /* 仪表盘：容器必须与 SVG 显示尺寸一致（112×112），否则 inset:0 居中的
-     环心文字锚在 96 容器的 (48,48)，而圆环实际中心在 (56,56)，读数会偏左上 */
-  .gauge-wrap{display:flex;align-items:center;gap:16px}
-  .gauge{position:relative;width:112px;height:112px;flex:none}
-  .gauge svg{display:block;transform:rotate(-90deg)}
-  .gauge .gv{position:absolute;inset:0;display:flex;flex-direction:column;
-    align-items:center;justify-content:center;gap:1px}
-  .gauge .gv b{font-size:25px;font-weight:700;line-height:1;letter-spacing:-.5px;
-    font-family:"SF Mono",Consolas,monospace}
-  .gauge .gv i{font-size:9px;font-style:normal;color:var(--dim);letter-spacing:.4px}
-
-  /* 热量标尺 */
-  .scale{position:relative;height:60px;margin-top:6px}
-  .scale-track{position:absolute;top:24px;left:0;right:0;height:7px;
-    background:var(--panel2);border-radius:4px;overflow:hidden;display:flex}
-  .scale-seg{height:100%}
-  .scale-thr{position:absolute;top:19px;width:1px;height:17px;
-    background:var(--dim);opacity:.7}
-  .scale-mark{position:absolute;top:12px;width:2px;height:31px;background:var(--text);
-    border-radius:1px;transform:translateX(-50%);box-shadow:0 0 0 2px var(--panel)}
-  .scale-mark.p50{height:21px;top:17px;background:var(--cyan)}
-  .scale-mark.p99{background:var(--purple)}
-  .scale-ticks{position:absolute;top:37px;left:0;right:0;display:flex;
-    justify-content:space-between;font-size:9px;color:var(--dim);
-    font-family:"SF Mono",monospace}
-
-  /* 时间轴刻度 */
-  .tl-label{font-size:10px;color:var(--dim);font-family:"SF Mono",monospace}
-
-  /* 分段切换控件 */
-  .seg{display:inline-flex;gap:2px;padding:2px;background:var(--panel2);
-    border:1px solid var(--border);border-radius:3px}
-  .seg-btn{appearance:none;border:0;background:transparent;color:var(--muted);
-    font-size:11px;font-family:inherit;padding:3px 11px;border-radius:2px;
-    cursor:pointer;transition:all .15s ease;line-height:1.5}
-  .seg-btn:hover{color:var(--text)}
-  .seg-btn.on{background:var(--blue);color:#fff;font-weight:600}
-  .seg-btn:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
-
-  .panel-h.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
-  .panel-h.row > div{display:flex;align-items:center;gap:7px;min-width:0}
-
-  /* 分页 */
-  .pager{display:flex;align-items:center;gap:8px;justify-content:flex-end;
-    padding-top:11px;margin-top:11px;border-top:1px solid var(--border)}
-  .pager-info{margin-right:auto;font-size:11px;color:var(--dim)}
-  .pg-btn{appearance:none;min-width:26px;height:26px;padding:0 7px;
-    border:1px solid var(--border);background:var(--panel2);color:var(--muted);
-    border-radius:3px;font-size:12px;cursor:pointer;font-family:"SF Mono",monospace;
-    transition:all .15s ease;line-height:1}
-  .pg-btn:hover:not(:disabled){color:var(--text);border-color:var(--dim)}
-  .pg-btn:disabled{opacity:.35;cursor:not-allowed}
-  .pg-btn.on{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:700}
-  .pg-btn:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
-  .pg-gap{color:var(--dim);padding:0 2px;font-size:12px}
-
-  /* 状态码筛选 chips */
-  .chips{display:flex;flex-wrap:wrap;gap:5px}
-  .chip-btn{appearance:none;display:inline-flex;align-items:center;gap:5px;
-    padding:3px 9px;border:1px solid var(--border);background:var(--panel2);
-    color:var(--muted);border-radius:11px;font-size:11px;cursor:pointer;
-    font-family:inherit;transition:all .15s ease;line-height:1.6}
-  .chip-btn:hover{color:var(--text)}
-  .chip-btn.on{background:var(--panel);border-color:var(--dim);color:var(--text)}
-  .chip-btn .sw{width:7px;height:7px;border-radius:50%;flex:none}
-  .chip-btn .n{font-family:"SF Mono",monospace;font-size:10px;color:var(--dim)}
-  .chip-btn:focus-visible{outline:2px solid var(--cyan);outline-offset:1px}
-
-  /* SLA 分级 */
-  .sla{display:flex;flex-direction:column;gap:1px}
-  .sla-row{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:11.5px}
-  .sla-dot{width:7px;height:7px;border-radius:50%;flex:none}
-  .sla-lb{flex:1;font-weight:500}
-  .sla-v{font-family:"SF Mono",monospace;font-size:10px;color:var(--dim)}
-  .sla-s{font-family:"SF Mono",monospace;font-size:10px;width:38px;text-align:right}
+:root{--bg:#111217;--panel:#181b20;--panel2:#1f232a;--border:#2a2f38;--text:#d8d9da;--muted:#8e9095;--dim:#6a6d73;--green:#37872D;--red:#E24D42;--orange:#E98300;--yellow:#EAB839;--blue:#3274D9;--cyan:#6ED0E0;--purple:#705DA0;--gold:#FFC72C}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:"PingFang SC","Microsoft YaHei",sans-serif;max-width:860px;margin:0 auto;padding:24px 16px 40px}
+.mono{font-family:"SF Mono","JetBrains Mono",Consolas,monospace;font-variant-numeric:tabular-nums}
+header{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+header img{width:40px;height:34px}
+h1{font-size:20px;font-weight:700}
+h1 .accent{color:var(--gold)}
+.sub{color:var(--muted);font-size:12px;margin-bottom:14px;line-height:1.8}
+.sub a{color:var(--blue);text-decoration:none}
+.clock{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:11px 14px;margin-bottom:12px}
+.clock input[type=range]{flex:1;min-width:200px;accent-color:var(--gold)}
+.clock .t{font-size:22px;font-weight:800;color:var(--gold);font-family:"SF Mono",monospace;min-width:70px}
+.clock .d{font-size:11px;color:var(--dim)}
+.chat{background:var(--panel);border:1px solid var(--border);border-radius:4px;display:flex;flex-direction:column;height:560px}
+.msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+.msg{display:flex;gap:9px;max-width:94%}
+.msg.me{align-self:flex-end;flex-direction:row-reverse}
+.msg .avatar{width:30px;height:30px;border-radius:3px;flex:none;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px}
+.msg.agent .avatar{background:var(--gold);color:#111}
+.msg.me .avatar{background:var(--panel2);color:var(--muted);border:1px solid var(--border)}
+.bubble{background:var(--panel2);border:1px solid var(--border);border-radius:4px;padding:10px 12px;font-size:13px;line-height:1.75;min-width:0;overflow-wrap:break-word}
+.msg.me .bubble{background:rgba(50,116,217,.14);border-color:rgba(50,116,217,.35)}
+.bubble b{color:var(--text)}
+.dim2{color:var(--dim)}
+.vcode{font-size:34px;font-weight:800;font-family:"SF Mono",monospace;line-height:1.1}
+.vlabel{font-size:13px;font-weight:700;margin:2px 0 5px}
+.vreason{font-size:12px;color:var(--muted);line-height:1.7}
+.badges{margin-top:7px;display:flex;gap:6px;flex-wrap:wrap}
+.bdg{padding:2px 9px;border-radius:2px;font-size:10px;font-weight:700;font-family:"SF Mono",monospace;color:#fff}
+.combo{margin:8px 0;display:flex;flex-direction:column;gap:6px}
+.combo .ci{display:flex;justify-content:space-between;gap:10px;font-size:12px;background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:5px 9px}
+.combo .ci img{width:34px;height:34px;object-fit:cover;border-radius:2px;background:#fff}
+.combo .ci .cn{flex:1;min-width:0;align-self:center}
+.combo .ci .cv{font-family:"SF Mono",monospace;color:var(--muted);align-self:center}
+.acts{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap}
+.abtn{appearance:none;border:1px solid var(--blue);background:rgba(50,116,217,.14);color:var(--blue);font-size:12px;font-weight:600;padding:6px 14px;border-radius:3px;cursor:pointer;font-family:inherit}
+.abtn:hover{background:var(--blue);color:#fff}
+.abtn.gold{border-color:var(--gold);color:var(--gold);background:rgba(255,199,44,.08)}
+.abtn.gold:hover{background:var(--gold);color:#111}
+.quick{display:flex;gap:6px;flex-wrap:wrap;padding:9px 12px 3px}
+.quick button{appearance:none;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:11px;padding:4px 10px;border-radius:99px;cursor:pointer;font-family:inherit}
+.quick button:hover{color:var(--text);border-color:var(--dim)}
+.inputrow{display:flex;gap:8px;padding:10px 12px 12px}
+.inputrow input{flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:3px;color:var(--text);padding:9px 12px;font-size:13px;font-family:inherit}
+.inputrow input:focus{outline:none;border-color:var(--blue)}
+.inputrow button{appearance:none;border:0;background:var(--gold);color:#111;font-weight:700;padding:0 18px;border-radius:3px;cursor:pointer;font-family:inherit}
+details{margin-top:12px;background:var(--panel);border:1px solid var(--border);border-radius:4px}
+summary{cursor:pointer;list-style:none;padding:11px 14px;font-size:13px;font-weight:600;color:var(--muted)}
+summary::-webkit-details-marker{display:none}
+details[open] summary{border-bottom:1px solid var(--border)}
+.catwrap{padding:10px 14px 0}
+.catwrap .chips{display:flex;flex-wrap:wrap;gap:6px}
+.catwrap .chip{padding:4px 11px;font-size:12px}
+.search{width:calc(100% - 28px);margin:9px 14px;background:var(--panel2);border:1px solid var(--border);border-radius:3px;color:var(--text);padding:6px 11px;font-size:12px;font-family:inherit}
+.menu{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;padding:10px 14px 14px}
+.mi{background:var(--panel2);border:1px solid var(--border);border-radius:4px;overflow:hidden;cursor:pointer;position:relative}
+.mi:hover{border-color:var(--dim)}
+.mi img{width:100%;height:72px;object-fit:cover;display:block;background:#fff}
+.mi .tag{position:absolute;top:5px;left:5px;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:2px}
+.mi .n{font-size:11px;font-weight:600;padding:5px 7px 2px;line-height:1.3;height:30px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.mi .v{font-size:10px;color:var(--muted);padding:0 7px 7px;font-family:"SF Mono",monospace}
+.share-row{margin:10px 12px 12px;display:flex;gap:10px;flex-wrap:wrap}
+.share-row button{appearance:none;border:1px solid var(--blue);background:rgba(50,116,217,.12);color:var(--blue);font-weight:600;font-size:12px;padding:7px 16px;border-radius:3px;cursor:pointer;font-family:inherit}
+#shot{max-width:100%;border:1px solid var(--border);border-radius:4px;margin:0 12px 12px;display:none}
+.real{margin-top:22px}
+.real ol{margin:8px 0 0 20px;font-size:13px;color:var(--muted);line-height:2}
+.real code{background:var(--panel2);padding:1px 7px;border-radius:2px;font-size:12px;font-family:"SF Mono",monospace}
+footer{margin-top:22px;padding-top:14px;border-top:1px solid var(--border);color:var(--dim);font-size:11px;text-align:center;line-height:1.9}
+@media (max-width:640px){.menu{grid-template-columns:repeat(auto-fill,minmax(116px,1fr))}}
+  .meta-row{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px dashed var(--border)}
+  .meta-row .k{color:var(--muted)}
+  .meta-row .v{font-family:"SF Mono",monospace;font-weight:600;color:var(--text)}
 </style>
 </head>
 <body>
-<div id="app"></div>
+<header><img src="logo.png" alt="Golden Arches"><h1>麦门状态码 <span class="accent">// 试玩间</span></h1></header>
+<div class="sub">跟运维 Agent 对话点餐：说「20 块吃什么」「减脂能吃啥」「来杯咖啡」「新品有什么」，它按官方真实菜单与营养表组单、判定状态码、触发探活。<b>无需 Token</b>。<a href="https://github.com/chaucerj/mcd-status-codes" target="_blank">GitHub 仓库 →</a>
+  · <a href="dashboard.html" target="_blank">📊 监控台 →</a>
+  · <a href="https://github.com/chaucerj/mcd-status-codes/issues/264" target="_blank">参赛 Issue →</a></div>
+<div class="clock"><span class="t mono" id="clockT">12:00</span><input type="range" id="clockSlider" min="0" max="1429" value="720" aria-label="模拟时间"><span class="d">🕐 模拟时间轴——Agent 探活随时钟触发</span></div>
+<div class="chat"><div class="msgs" id="msgs"></div><div class="quick" id="quick"></div><div class="inputrow"><input id="chatIn" placeholder="想吃什么？例如：20块吃什么 / 减脂能吃啥 / 来杯咖啡 / 新品有什么"><button id="chatSend">发送</button></div></div>
+<details><summary>▾ 不想打字？展开完整菜单手动点（官方 15 分类）</summary><div class="catwrap"><div class="chips" id="catChips"></div></div><input class="search" id="search" placeholder="搜索商品…"><div class="menu" id="menu"></div><div class="share-row"><button id="share2">📸 把刚才那单生成晒卡</button></div><canvas id="shot" width="900" height="1150"></canvas></details>
+<div class="real"><div style="font-size:13px;font-weight:600;margin-bottom:8px">★ 用你的真实订单跑完整版</div><ol><li>在 <a href="https://open.mcd.cn/mcp" target="_blank">open.mcd.cn/mcp</a> 登录并激活 MCP Token</li><li><code>git clone https://github.com/chaucerj/mcd-status-codes &amp;&amp; cd mcd-status-codes &amp;&amp; export MCD_MCP_TOKEN=你的Token</code></li><li><code>python3 scripts/collect.py &amp;&amp; python3 scripts/classify.py &amp;&amp; python3 scripts/evolve.py &amp;&amp; python3 scripts/report.py</code> → 打开 <code>dashboard.html</code></li></ol></div>
+<footer>麦门监控台 · 基于麦当劳中国官方 MCP 构建 · 独立开发，非官方产品<br>本页为单日模拟试玩（完整判定口径见仓库），营养数值取自官方营养表；输出仅供参考，不构成营养或医疗建议</footer>
 <script>
-const DATA = {"rulesVersion": "2.0", "generatedAt": "2026-10-11 10:15:20", "orders": [{"orderId": "DEMO-0016", "datetime": "2026-10-05 12:08:55", "date": "2026-10-05", "hour": 12, "store": "演示餐厅16", "orderType": "1", "rawStatus": "订单已完成", "amount": "24.0", "items": [{"name": "板烧鸡腿堡", "qty": 1, "matched": true, "kcal": 391, "sodium": 1041}, {"name": "小杯玉米杯", "qty": 1, "matched": true, "kcal": 53, "sodium": 1}], "kcal": 444, "sodium": 1042, "matchCoverage": "2/2", "httpStatus": "206", "codeLabel": "206 Partial Content", "codeTitle": "摄入无法完整计量", "codeMeaning": "你的身体账本里查不全这次摄入，返回的是残缺甚至空的响应", "reason": "2/2 项能在你的营养账本中定位，响应残缺（2/2 可计量）"}, {"orderId": "DEMO-0015", "datetime": "2026-10-02 15:00:41", "date": "2026-10-02", "hour": 15, "store": "演示餐厅15", "orderType": "1", "rawStatus": "订单已完成", "amount": "47.0", "items": [{"name": "圆筒冰淇淋", "qty": 1, "matched": true, "kcal": 93, "sodium": 36}, {"name": "麦门限定星空堡套餐", "qty": 1, "matched": false, "kcal": null, "sodium": null}], "kcal": 93, "sodium": 36, "matchCoverage": "1/2", "httpStatus": "206", "codeLabel": "206 Partial Content", "codeTitle": "摄入无法完整计量", "codeMeaning": "你的身体账本里查不全这次摄入，返回的是残缺甚至空的响应", "reason": "1/2 项能在你的营养账本中定位，响应残缺（1/2 可计量）"}, {"orderId": "DEMO-0014", "datetime": "2026-09-28 14:20:07", "date": "2026-09-28", "hour": 14, "store": "演示餐厅14", "orderType": "1", "rawStatus": "订单已完成", "amount": "15.0", "items": [{"name": "圆筒冰淇淋", "qty": 6, "matched": true, "kcal": 558, "sodium": 216}], "kcal": 558, "sodium": 216, "matchCoverage": "1/1", "httpStatus": "502", "codeLabel": "502 Bad Gateway", "codeTitle": "聚合网关", "codeMeaning": "这一次请求聚合了多个子请求，单次摄入量过大", "reason": "本次请求聚合了 6 件商品，单次摄入量过大"}, {"orderId": "DEMO-0013", "datetime": "2026-09-25 12:33:21", "date": "2026-09-25", "hour": 12, "store": "演示餐厅13", "orderType": "1", "rawStatus": "订单已完成", "amount": "66.0", "items": [{"name": "麦麦脆汁鸡全肋", "qty": 1, "matched": false, "kcal": null, "sodium": null}, {"name": "咸蛋黄鸡腿蛋月堡", "qty": 2, "matched": false, "kcal": null, "sodium": null}], "kcal": null, "sodium": null, "matchCoverage": "0/2", "httpStatus": "201", "codeLabel": "201 Created", "codeTitle": "新资源入库", "codeMeaning": "你吃到了历史上从未出现过的单品，身体新建了一条记录", "reason": "你吃到了历史上从未出现过的单品（麦麦脆汁鸡全肋、咸蛋黄鸡腿蛋月堡），身体新建了一条记录"}, {"orderId": "DEMO-0012", "datetime": "2026-09-18 12:15:33", "date": "2026-09-18", "hour": 12, "store": "演示餐厅12", "orderType": "1", "rawStatus": "订单已完成", "amount": "39.0", "items": [{"name": "双层吉士堡", "qty": 1, "matched": false, "kcal": null, "sodium": null}, {"name": "中薯条", "qty": 1, "matched": true, "kcal": 289, "sodium": 165}], "kcal": 289, "sodium": 165, "matchCoverage": "1/2", "httpStatus": "201", "codeLabel": "201 Created", "codeTitle": "新资源入库", "codeMeaning": "你吃到了历史上从未出现过的单品，身体新建了一条记录", "reason": "你吃到了历史上从未出现过的单品（双层吉士堡），身体新建了一条记录"}, {"orderId": "DEMO-0011", "datetime": "2026-09-12 19:22:54", "date": "2026-09-12", "hour": 19, "store": "演示餐厅11", "orderType": "1", "rawStatus": "订单已完成", "amount": "56.0", "items": [{"name": "麦辣鸡翅-2块", "qty": 2, "matched": true, "kcal": 448, "sodium": 1074}, {"name": "大薯条", "qty": 2, "matched": true, "kcal": 758, "sodium": 432}, {"name": "朱古力新地", "qty": 1, "matched": true, "kcal": 282, "sodium": 126}], "kcal": 1488, "sodium": 1632, "matchCoverage": "3/3", "httpStatus": "403", "codeLabel": "403 Forbidden", "codeTitle": "营养署拒绝放行", "codeMeaning": "你的热量或钠超出单餐配额，身体的准入网关拦下了这单", "reason": "营养署拒绝放行（1488 kcal / 钠 1632 mg），超出单餐配额"}, {"orderId": "DEMO-0010", "datetime": "2026-09-06 12:40:08", "date": "2026-09-06", "hour": 12, "store": "演示餐厅10", "orderType": "1", "rawStatus": "订单已完成", "amount": "129.0", "items": [{"name": "巨无霸", "qty": 2, "matched": true, "kcal": 1026, "sodium": 1922}, {"name": "麦辣鸡腿堡", "qty": 2, "matched": false, "kcal": null, "sodium": null}, {"name": "大薯条", "qty": 2, "matched": true, "kcal": 758, "sodium": 432}, {"name": "麦乐鸡5块", "qty": 2, "matched": true, "kcal": 426, "sodium": 844}], "kcal": 2210, "sodium": 3198, "matchCoverage": "3/4", "httpStatus": "500", "codeLabel": "500 Internal Server Error", "codeTitle": "系统过载", "codeMeaning": "单餐热量超出身体的处理能力，服务当场过载", "reason": "单餐 2210 kcal，超出身体的处理能力，服务当场过载"}, {"orderId": "DEMO-0009", "datetime": "2026-09-01 12:00:00", "date": "2026-09-01", "hour": 12, "store": "演示餐厅09", "orderType": "1", "rawStatus": "订单已完成", "amount": "12.5", "items": [{"name": "可乐大杯", "qty": 1, "matched": true, "kcal": 224, "sodium": 0}, {"name": "芬达中杯", "qty": 1, "matched": false, "kcal": null, "sodium": null}], "kcal": 224, "sodium": 0, "matchCoverage": "1/2", "httpStatus": "418", "codeLabel": "418 I'm a teapot", "codeTitle": "我是茶壶", "codeMeaning": "你只点了饮料，请求打到了茶壶而不是餐桌", "reason": "整单只有饮品，你的身体这次只出茶壶不出餐"}, {"orderId": "DEMO-0008", "datetime": "2026-08-26 21:05:31", "date": "2026-08-26", "hour": 21, "store": "演示餐厅08", "orderType": "2", "rawStatus": "订单已取消", "amount": "45.0", "items": [{"name": "麦香鱼", "qty": 2, "matched": true, "kcal": 650, "sodium": 1112}, {"name": "小薯条", "qty": 2, "matched": true, "kcal": 420, "sodium": 240}], "kcal": 1070, "sodium": 1352, "matchCoverage": "2/2", "httpStatus": "504", "codeLabel": "504 Gateway Timeout", "codeTitle": "上游中止", "codeMeaning": "这次摄入最终没有发生，链路在上游超时中止", "reason": "订单状态为「订单已取消」，这次摄入最终没有发生，链路在上游超时中止"}, {"orderId": "DEMO-0007", "datetime": "2026-08-20 12:22:12", "date": "2026-08-20", "hour": 12, "store": "演示餐厅07", "orderType": "2", "rawStatus": "订单已完成", "amount": "88.0", "items": [{"name": "麦门限定星空堡套餐", "qty": 1, "matched": false, "kcal": null, "sodium": null}, {"name": "泷盐星星圆筒", "qty": 2, "matched": false, "kcal": null, "sodium": null}, {"name": "BFF四宫格小食盘", "qty": 1, "matched": false, "kcal": null, "sodium": null}], "kcal": null, "sodium": null, "matchCoverage": "0/3", "httpStatus": "301", "codeLabel": "301 Moved Permanently", "codeTitle": "取餐渠道永久改道", "codeMeaning": "你的取餐路径换了节点，并已永久指向新渠道", "reason": "取餐路径由「1」永久改道至「2」"}, {"orderId": "DEMO-0006", "datetime": "2026-08-15 18:31:02", "date": "2026-08-15", "hour": 18, "store": "演示餐厅06", "orderType": "1", "rawStatus": "订单已完成", "amount": "18.0", "items": [{"name": "圆筒冰淇淋", "qty": 2, "matched": true, "kcal": 186, "sodium": 72}], "kcal": 186, "sodium": 72, "matchCoverage": "1/1", "httpStatus": "304", "codeLabel": "304 Not Modified", "codeTitle": "缓存命中", "codeMeaning": "这次摄入与上一单完全一致，身体直接复用了上次的响应", "reason": "与上一单逐项相同，你的身体直接复用了上次的摄入响应"}, {"orderId": "DEMO-0005", "datetime": "2026-08-14 18:30:45", "date": "2026-08-14", "hour": 18, "store": "演示餐厅05", "orderType": "1", "rawStatus": "订单已完成", "amount": "18.0", "items": [{"name": "圆筒冰淇淋", "qty": 2, "matched": true, "kcal": 186, "sodium": 72}], "kcal": 186, "sodium": 72, "matchCoverage": "1/1", "httpStatus": "201", "codeLabel": "201 Created", "codeTitle": "新资源入库", "codeMeaning": "你吃到了历史上从未出现过的单品，身体新建了一条记录", "reason": "你吃到了历史上从未出现过的单品（圆筒冰淇淋），身体新建了一条记录"}, {"orderId": "DEMO-0004", "datetime": "2026-08-09 23:47:19", "date": "2026-08-09", "hour": 23, "store": "演示餐厅04", "orderType": "1", "rawStatus": "订单已完成", "amount": "33.5", "items": [{"name": "麦辣鸡腿堡", "qty": 1, "matched": false, "kcal": null, "sodium": null}, {"name": "大薯条", "qty": 1, "matched": true, "kcal": 379, "sodium": 216}, {"name": "麦乐鸡5块", "qty": 1, "matched": true, "kcal": 213, "sodium": 422}], "kcal": 592, "sodium": 638, "matchCoverage": "2/3", "httpStatus": "408", "codeLabel": "408 Request Timeout", "codeTitle": "请求超时", "codeMeaning": "你在深夜发起摄入请求，但身体已不在服务时段", "reason": "23:47 发起摄入请求，但你的身体已不在服务时段"}, {"orderId": "DEMO-0003", "datetime": "2026-08-05 09:15:02", "date": "2026-08-05", "hour": 9, "store": "演示餐厅03", "orderType": "1", "rawStatus": "订单已完成", "amount": "21.0", "items": [{"name": "猪柳蛋麦满分", "qty": 1, "matched": true, "kcal": 387, "sodium": 846}, {"name": "鲜煮咖啡中杯", "qty": 1, "matched": false, "kcal": null, "sodium": null}], "kcal": 387, "sodium": 846, "matchCoverage": "1/2", "httpStatus": "429", "codeLabel": "429 Too Many Requests", "codeTitle": "摄入请求过频", "codeMeaning": "你在同一天发起了多次摄入，身体对你限流", "reason": "当日第 2 单，你向身体发起了多次摄入请求，已被自身限流"}, {"orderId": "DEMO-0002", "datetime": "2026-08-05 09:12:40", "date": "2026-08-05", "hour": 9, "store": "演示餐厅02", "orderType": "1", "rawStatus": "订单已完成", "amount": "21.0", "items": [{"name": "猪柳蛋麦满分", "qty": 1, "matched": true, "kcal": 387, "sodium": 846}, {"name": "鲜煮咖啡中杯", "qty": 1, "matched": false, "kcal": null, "sodium": null}], "kcal": 387, "sodium": 846, "matchCoverage": "1/2", "httpStatus": "201", "codeLabel": "201 Created", "codeTitle": "新资源入库", "codeMeaning": "你吃到了历史上从未出现过的单品，身体新建了一条记录", "reason": "你吃到了历史上从未出现过的单品（猪柳蛋麦满分、鲜煮咖啡中杯），身体新建了一条记录"}, {"orderId": "DEMO-0001", "datetime": "2026-08-02 12:10:00", "date": "2026-08-02", "hour": 12, "store": "演示餐厅01", "orderType": "1", "rawStatus": "订单已完成", "amount": "26.0", "items": [{"name": "板烧鸡腿堡", "qty": 1, "matched": true, "kcal": 391, "sodium": 1041}, {"name": "小杯玉米杯", "qty": 1, "matched": true, "kcal": 53, "sodium": 1}], "kcal": 444, "sodium": 1042, "matchCoverage": "2/2", "httpStatus": "201", "codeLabel": "201 Created", "codeTitle": "新资源入库", "codeMeaning": "你吃到了历史上从未出现过的单品，身体新建了一条记录", "reason": "你吃到了历史上从未出现过的单品（板烧鸡腿堡、小杯玉米杯），身体新建了一条记录"}, {"orderId": "DEMO-0000", "datetime": "2026-08-01 12:03:11", "date": "2026-08-01", "hour": 12, "store": "演示餐厅00", "orderType": "1", "rawStatus": "订单已完成", "amount": "41.0", "items": [{"name": "巨无霸", "qty": 1, "matched": true, "kcal": 513, "sodium": 961}, {"name": "中薯条", "qty": 1, "matched": true, "kcal": 289, "sodium": 165}, {"name": "可乐中杯", "qty": 1, "matched": true, "kcal": 147, "sodium": 0}], "kcal": 949, "sodium": 1126, "matchCoverage": "3/3", "httpStatus": "403", "codeLabel": "403 Forbidden", "codeTitle": "营养署拒绝放行", "codeMeaning": "你的热量或钠超出单餐配额，身体的准入网关拦下了这单", "reason": "营养署拒绝放行（949 kcal / 钠 1126 mg），超出单餐配额"}], "summary": {"collectionStatus": "200", "collectionLabel": "200 OK", "collectionTitle": "摄入已入账", "spanDays": 66, "orderedDays": 16, "uptime": 24.2, "totalOrders": 17, "distribution": {"403": 2, "201": 5, "429": 1, "408": 1, "304": 1, "301": 1, "504": 1, "418": 1, "500": 1, "502": 1, "206": 2}, "kcalP50": 444, "kcalP99": 2210, "totalKcal": 9507, "flowUnit": "9.3 KB", "ledgerCoverageRate": 67.6, "itemLedgerGapRate": 32.4, "missedItems": [["麦辣鸡腿堡", 3], ["鲜煮咖啡中杯", 2], ["麦门限定星空堡套餐", 2], ["泷盐星星圆筒", 2], ["咸蛋黄鸡腿蛋月堡", 2], ["BFF四宫格小食盘", 1], ["芬达中杯", 1], ["双层吉士堡", 1]], "missedDays": 50, "errorBudgetUsed": 8, "alerts": ["⚠️ 1 次 429 限流：单日多单摄入行为被记录", "⚠️ 1 次 408：深夜时段仍在发起摄入请求", "📡 营养账本缺口：37 件商品中 12 件无法在你的身体账本中计量（独立指标，不计错误预算）"], "days": [{"date": "2026-08-01", "ordered": true}, {"date": "2026-08-02", "ordered": true}, {"date": "2026-08-03", "ordered": false}, {"date": "2026-08-04", "ordered": false}, {"date": "2026-08-05", "ordered": true}, {"date": "2026-08-06", "ordered": false}, {"date": "2026-08-07", "ordered": false}, {"date": "2026-08-08", "ordered": false}, {"date": "2026-08-09", "ordered": true}, {"date": "2026-08-10", "ordered": false}, {"date": "2026-08-11", "ordered": false}, {"date": "2026-08-12", "ordered": false}, {"date": "2026-08-13", "ordered": false}, {"date": "2026-08-14", "ordered": true}, {"date": "2026-08-15", "ordered": true}, {"date": "2026-08-16", "ordered": false}, {"date": "2026-08-17", "ordered": false}, {"date": "2026-08-18", "ordered": false}, {"date": "2026-08-19", "ordered": false}, {"date": "2026-08-20", "ordered": true}, {"date": "2026-08-21", "ordered": false}, {"date": "2026-08-22", "ordered": false}, {"date": "2026-08-23", "ordered": false}, {"date": "2026-08-24", "ordered": false}, {"date": "2026-08-25", "ordered": false}, {"date": "2026-08-26", "ordered": true}, {"date": "2026-08-27", "ordered": false}, {"date": "2026-08-28", "ordered": false}, {"date": "2026-08-29", "ordered": false}, {"date": "2026-08-30", "ordered": false}, {"date": "2026-08-31", "ordered": false}, {"date": "2026-09-01", "ordered": true}, {"date": "2026-09-02", "ordered": false}, {"date": "2026-09-03", "ordered": false}, {"date": "2026-09-04", "ordered": false}, {"date": "2026-09-05", "ordered": false}, {"date": "2026-09-06", "ordered": true}, {"date": "2026-09-07", "ordered": false}, {"date": "2026-09-08", "ordered": false}, {"date": "2026-09-09", "ordered": false}, {"date": "2026-09-10", "ordered": false}, {"date": "2026-09-11", "ordered": false}, {"date": "2026-09-12", "ordered": true}, {"date": "2026-09-13", "ordered": false}, {"date": "2026-09-14", "ordered": false}, {"date": "2026-09-15", "ordered": false}, {"date": "2026-09-16", "ordered": false}, {"date": "2026-09-17", "ordered": false}, {"date": "2026-09-18", "ordered": true}, {"date": "2026-09-19", "ordered": false}, {"date": "2026-09-20", "ordered": false}, {"date": "2026-09-21", "ordered": false}, {"date": "2026-09-22", "ordered": false}, {"date": "2026-09-23", "ordered": false}, {"date": "2026-09-24", "ordered": false}, {"date": "2026-09-25", "ordered": true}, {"date": "2026-09-26", "ordered": false}, {"date": "2026-09-27", "ordered": false}, {"date": "2026-09-28", "ordered": true}, {"date": "2026-09-29", "ordered": false}, {"date": "2026-09-30", "ordered": false}, {"date": "2026-10-01", "ordered": false}, {"date": "2026-10-02", "ordered": true}, {"date": "2026-10-03", "ordered": false}, {"date": "2026-10-04", "ordered": false}, {"date": "2026-10-05", "ordered": true}]}};
-const FORCE_1024 = false;
-const CODES = {"200": {"color": "#37872D", "short": "200 OK", "title": "摄入已入账"}, "201": {"color": "#37872D", "short": "201 Created", "title": "新资源入库"}, "206": {"color": "#6ED0E0", "short": "206 Partial", "title": "摄入无法完整计量"}, "301": {"color": "#705DA0", "short": "301 Moved", "title": "取餐渠道永久改道"}, "304": {"color": "#6ED0E0", "short": "304 Not Modified", "title": "缓存命中"}, "403": {"color": "#E24D42", "short": "403 Forbidden", "title": "营养署拒绝放行"}, "404": {"color": "#E24D42", "short": "404 Not Found", "title": "订单不存在"}, "408": {"color": "#E98300", "short": "408 Timeout", "title": "请求超时"}, "418": {"color": "#705DA0", "short": "418 teapot", "title": "我是茶壶"}, "429": {"color": "#E98300", "short": "429 Too Many", "title": "摄入请求过频"}, "500": {"color": "#96222A", "short": "500 Server Error", "title": "系统过载"}, "502": {"color": "#705DA0", "short": "502 Bad Gateway", "title": "聚合网关"}, "503": {"color": "#E24D42", "short": "503 Unavailable", "title": "身体服务宕机"}, "504": {"color": "#96222A", "short": "504 Timeout", "title": "上游中止"}};
-const KCAL_OK = 800;
-const KCAL_OVERLOAD = 1500;
+const ITEMS = [{"code": "9900016076", "name": "“我就喜欢”鸡薯双全盒", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900016076_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "小食拼盘/多人餐", "tags": ["上新", "心形薯饼同款比心"], "tagList": {"protein": ["鸡肉"], "category": ["小食"]}}, {"code": "9900016075", "name": "龙焰芝士棒鸡腿堡三件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900016075_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "鸡肉汉堡/卷", "tags": ["上新", "浓郁奶香拉丝芝士"], "tagList": {"protein": ["鸡肉"], "category": ["汉堡", "套餐"]}}, {"code": "9900016073", "name": "龙焰鸡腿堡三件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900016073_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "鸡肉汉堡/卷", "tags": ["上新", "韩式辣椒黄油风味"], "tagList": {"protein": ["鸡肉"], "category": ["汉堡", "套餐"]}}, {"code": "521955", "name": "麦当劳联名徽章", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_521955_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "小食甜品/其他", "tags": ["上新", "McDonald's X PEACEMINUSONE"], "tagList": {"category": ["周边", "周边"]}}, {"code": "9900016311", "name": "龙焰美味四件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900016311_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "人气热卖", "tags": [], "tagList": {"category": ["套餐"]}}, {"code": "9900004064", "name": "精选单人餐三件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900004064_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "精选单人餐", "tags": ["爆款"], "tagList": {"category": ["套餐"]}}, {"code": "521950", "name": "蓝莓爆爆珠麦旋风", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_521950_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "小食甜品/其他", "tags": ["上新", "蓝莓"], "tagList": {"cooking": ["冷制"], "category": ["甜品"]}}, {"code": "521929", "name": "旋旋水手帽", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260916/product/MS_521929_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "小食甜品/其他", "tags": ["上新", "汪苏泷限量周边"], "tagList": {"category": ["周边", "周边"]}}, {"code": "521946", "name": "旋旋星愿贴", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_521946_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "小食甜品/其他", "tags": ["上新", "汪苏泷限量周边"], "tagList": {"category": ["其他"], "protein": ["其他"]}}, {"code": "515946", "name": "冰浓浓黑巧中杯", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20250611/product/MS_515946_600.png", "kcal": 135, "sod": 77, "protein": 8, "matched": true, "cat": "麦咖啡™", "tags": ["限定特惠"], "tagList": {"flavor": ["巧克力"]}}, {"code": "9900016309", "name": "龙焰鸡腿堡四件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900016309_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "麦金卡专享", "tags": [], "tagList": {"protein": ["鸡肉"], "category": ["汉堡", "套餐"]}}, {"code": "9900016310", "name": "龙焰芝士棒鸡腿堡四件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900016310_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "麦金卡专享", "tags": [], "tagList": {"protein": ["鸡肉"], "category": ["汉堡", "套餐"]}}, {"code": "9900004236", "name": "人气超值四件套随心选", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900004236_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "麦金卡专享", "tags": [], "tagList": {"category": ["套餐"]}}, {"code": "9900010110", "name": "鱼牛汉堡四件套随心选", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900010110_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "麦金卡专享", "tags": [], "tagList": {"protein": ["牛肉"], "category": ["汉堡", "套餐"]}}, {"code": "9900006957", "name": "安格斯厚牛堡四件套随心选", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900006957_600.gif", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "麦金卡专享", "tags": [], "tagList": {"protein": ["牛肉"], "category": ["汉堡", "套餐"]}}, {"code": "9900000884", "name": "酥酥多笋卷四件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900000884_600.png", "kcal": 342, "sod": 1044, "protein": 14, "matched": true, "cat": "麦金卡专享", "tags": [], "tagList": {"category": ["卷类", "套餐"]}}, {"code": "9900011056", "name": "全明星双人分享餐八件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20261008/product/MS_9900011056_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "麦金卡专享", "tags": [], "tagList": {"category": ["套餐"]}}, {"code": "9900005321", "name": "BFF四宫格小食盘双人餐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260304/product/MS_9900005321_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "麦金卡专享", "tags": [], "tagList": {"category": ["套餐"]}}, {"code": "507328", "name": "麦咖啡™热奶铁中杯", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20250324/product/MS_507328_600.png", "kcal": 186, "sod": 99, "protein": 11, "matched": true, "cat": "麦金卡专享", "tags": [], "tagList": {"category": ["咖啡", "奶茶"]}}, {"code": "521953", "name": "龙焰芝士棒鸡腿堡", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_521953_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "鸡肉汉堡/卷", "tags": ["上新", "浓郁奶香拉丝芝士"], "tagList": {"protein": ["鸡肉"], "category": ["汉堡"]}}, {"code": "521952", "name": "龙焰鸡腿堡", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_521952_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "鸡肉汉堡/卷", "tags": ["上新", "韩式辣椒黄油风味"], "tagList": {"protein": ["鸡肉"], "category": ["汉堡"]}}, {"code": "9900015850", "name": "咸蛋黄鸡腿蛋月堡三件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900015850_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "鸡肉汉堡/卷", "tags": ["上新", "酥脆鸡腿排", "滑嫩蒸蛋"], "tagList": {"protein": ["鸡肉"], "flavor": ["咸蛋黄"], "category": ["汉堡", "套餐"]}}, {"code": "521900", "name": "咸蛋黄鸡腿蛋月堡", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_521900_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "鸡肉汉堡/卷", "tags": ["上新", "酥脆鸡腿排", "滑嫩蒸蛋"], "tagList": {"protein": ["鸡肉"], "flavor": ["咸蛋黄"], "category": ["汉堡"]}}, {"code": "9900005462", "name": "板烧鸡腿堡三件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900005462_600.png", "kcal": 391, "sod": 1041, "protein": 23, "matched": true, "cat": "鸡肉汉堡/卷", "tags": ["套餐", "新升级", "更多汁"], "tagList": {"protein": ["鸡肉"], "cooking": ["板烧"], "category": ["汉堡", "套餐"]}}, {"code": "9900005456", "name": "麦辣鸡腿汉堡三件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900005456_600.png", "kcal": 485, "sod": 1208, "protein": 24, "matched": true, "cat": "鸡肉汉堡/卷", "tags": ["套餐", "立省10.5元起"], "tagList": {"protein": ["鸡肉"], "flavor": ["辣"], "category": ["汉堡", "套餐"]}}, {"code": "9900005453", "name": "麦香鸡中套餐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900005453_600.png", "kcal": 369, "sod": 731, "protein": 15, "matched": true, "cat": "鸡肉汉堡/卷", "tags": ["套餐", "立省10.5元起"], "tagList": {"protein": ["鸡肉"], "category": ["套餐"]}}, {"code": "9900015008", "name": "酥酥多笋卷三件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900015008_600.png", "kcal": 342, "sod": 1044, "protein": 14, "matched": true, "cat": "鸡肉汉堡/卷", "tags": ["套餐", "全新升级", "川香风味"], "tagList": {"category": ["卷类", "套餐"]}}, {"code": "9900003537", "name": "学生专享汉堡小食随心选", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20250420/product/MS_9900003537_600_0_1744785039883.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "鸡肉汉堡/卷", "tags": ["套餐"], "tagList": {"category": ["汉堡", "套餐"]}}, {"code": "1440", "name": "麦辣鸡腿汉堡", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20250420/product/MS_1440_600_0_1744772198163.png", "kcal": 485, "sod": 1208, "protein": 24, "matched": true, "cat": "鸡肉汉堡/卷", "tags": ["单品", "人气经典", "外酥里嫩"], "tagList": {"protein": ["鸡肉"], "flavor": ["辣"], "category": ["汉堡"]}}, {"code": "1406", "name": "板烧鸡腿堡", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20241008/product/MS_1406_600.png", "kcal": 391, "sod": 1041, "protein": 23, "matched": true, "cat": "鸡肉汉堡/卷", "tags": ["单品", "板烧滋滋", "多汁惹味"], "tagList": {"protein": ["鸡肉"], "cooking": ["板烧"], "category": ["汉堡"]}}, {"code": "1450", "name": "麦香鸡", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260520/product/MS_1450_600.png", "kcal": 369, "sod": 731, "protein": 15, "matched": true, "cat": "鸡肉汉堡/卷", "tags": ["单品"], "tagList": {"protein": ["鸡肉"]}}, {"code": "521816", "name": "酥酥多笋卷", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_521816_600.png", "kcal": 342, "sod": 1044, "protein": 14, "matched": true, "cat": "鸡肉汉堡/卷", "tags": ["单品", "全新升级", "川香风味"], "tagList": {"category": ["卷类"]}}, {"code": "9900008746", "name": "鸡肉堡单品精选", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260708/product/MS_9900008746_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "鸡肉汉堡/卷", "tags": ["单品", "人气"], "tagList": {"protein": ["鸡肉"], "category": ["汉堡"]}}, {"code": "9900015726", "name": "韩式甜辣酱鸡块8块", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260815/product/MS_9900015726_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "小食拼盘/多人餐", "tags": ["上新", "韩式风味"], "tagList": {"protein": ["鸡肉"], "flavor": ["辣", "甜辣"]}}, {"code": "9900006332", "name": "薄皮V翅双拼十翅", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20250423/product/MS_9900006332_600_1745288015452.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "小食拼盘/多人餐", "tags": ["小食拼盘", "超值"], "tagList": {"protein": ["鸡肉"], "cooking": ["烤制"]}}, {"code": "9900015730", "name": "BFF四宫格小食盘", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900015730_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "小食拼盘/多人餐", "tags": ["小食拼盘", "随心拼"], "tagList": {"category": ["其他"], "protein": ["其他"]}}, {"code": "9900004066", "name": "堡堡随心拼（7件任选）", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20250420/product/MS_9900004066_600_0_1744772565664.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "小食拼盘/多人餐", "tags": ["小食拼盘", "万种组合"], "tagList": {"category": ["汉堡"]}}, {"code": "9900013304", "name": "人气经典随心配", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900013304_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "随心配1+1", "tags": ["超值百种组合随心配"], "tagList": {"category": ["套餐"]}}, {"code": "9900015568", "name": "精选超值随心配", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900015568_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "随心配1+1", "tags": ["超值百种组合随心配"], "tagList": {"category": ["套餐"]}}, {"code": "9900015602", "name": "大堡口福三件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900015602_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "大堡口福单人餐", "tags": ["大口吃肉好快乐"], "tagList": {"category": ["汉堡", "套餐"]}}, {"code": "9900015851", "name": "三文鱼双虾至尊月堡三件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900015851_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "巨无霸牛鱼肉堡", "tags": ["上新", "精选三文鱼", "整颗虾仁"], "tagList": {"protein": ["鱼肉", "虾"], "category": ["汉堡", "套餐"]}}, {"code": "521903", "name": "三文鱼双虾至尊月堡", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_521903_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "巨无霸牛鱼肉堡", "tags": ["上新", "精选三文鱼", "整颗虾仁"], "tagList": {"protein": ["鱼肉", "虾"], "category": ["汉堡"]}}, {"code": "9900005411", "name": "不素之霸双层牛堡三件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900005411_600.png", "kcal": 493, "sod": 1012, "protein": 28, "matched": true, "cat": "巨无霸牛鱼肉堡", "tags": ["套餐", "100%纯牛肉"], "tagList": {"protein": ["牛肉"], "category": ["汉堡", "套餐"]}}, {"code": "9900005466", "name": "巨无霸三件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900005466_600.png", "kcal": 513, "sod": 961, "protein": 27, "matched": true, "cat": "巨无霸牛鱼肉堡", "tags": ["套餐", "100%纯牛肉"], "tagList": {"protein": ["牛肉"], "category": ["套餐"]}}, {"code": "9900005468", "name": "培根蔬萃双层牛堡三件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900005468_600.png", "kcal": 442, "sod": 728, "protein": 24, "matched": true, "cat": "巨无霸牛鱼肉堡", "tags": ["套餐", "100%纯牛肉"], "tagList": {"protein": ["牛肉"], "category": ["汉堡", "套餐"]}}, {"code": "9900005413", "name": "双层深海鳕鱼堡三件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900005413_600.png", "kcal": 485, "sod": 917, "protein": 28, "matched": true, "cat": "巨无霸牛鱼肉堡", "tags": ["套餐", "麦香鱼系列"], "tagList": {"protein": ["鱼肉"], "category": ["汉堡", "套餐"]}}, {"code": "9900005460", "name": "麦香鱼中套餐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900005460_600.png", "kcal": 325, "sod": 556, "protein": 16, "matched": true, "cat": "巨无霸牛鱼肉堡", "tags": ["套餐", "麦香鱼系列"], "tagList": {"protein": ["鱼肉"], "category": ["套餐"]}}, {"code": "9900005464", "name": "双层吉士汉堡中套餐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900005464_600.png", "kcal": 429, "sod": 1017, "protein": 27, "matched": true, "cat": "巨无霸牛鱼肉堡", "tags": ["套餐", "100%纯牛肉"], "tagList": {"protein": ["牛肉"], "category": ["汉堡", "套餐"]}}, {"code": "9900005449", "name": "吉士汉堡包中套餐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900005449_600.png", "kcal": 294, "sod": 673, "protein": 16, "matched": true, "cat": "巨无霸牛鱼肉堡", "tags": ["套餐", "100%纯牛肉"], "tagList": {"protein": ["牛肉"], "category": ["汉堡", "套餐"]}}, {"code": "1100", "name": "巨无霸", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20250611/product/MS_1100_600_1749175370846.png", "kcal": 513, "sod": 961, "protein": 27, "matched": true, "cat": "巨无霸牛鱼肉堡", "tags": ["单品", "100%纯牛肉"], "tagList": {"protein": ["牛肉"]}}, {"code": "9900003586", "name": "双层深海鳕鱼堡", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900003586_600.png", "kcal": 485, "sod": 917, "protein": 28, "matched": true, "cat": "巨无霸牛鱼肉堡", "tags": ["单品", "麦香鱼系列"], "tagList": {"protein": ["鱼肉"], "category": ["汉堡"]}}, {"code": "1600", "name": "麦香鱼", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260520/product/MS_1600_600.png", "kcal": 325, "sod": 556, "protein": 16, "matched": true, "cat": "巨无霸牛鱼肉堡", "tags": ["单品", "麦香鱼系列"], "tagList": {"protein": ["鱼肉"]}}, {"code": "4648", "name": "不素之霸双层牛堡", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20250611/product/MS_4648_600_1749175329279.png", "kcal": 493, "sod": 1012, "protein": 28, "matched": true, "cat": "巨无霸牛鱼肉堡", "tags": ["单品", "100%纯牛肉"], "tagList": {"protein": ["牛肉"], "category": ["汉堡"]}}, {"code": "1106", "name": "培根蔬萃双层牛堡", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20250804/product/MS_1106_600.png", "kcal": 442, "sod": 728, "protein": 24, "matched": true, "cat": "巨无霸牛鱼肉堡", "tags": ["单品", "100%纯牛肉"], "tagList": {"protein": ["牛肉"], "category": ["汉堡"]}}, {"code": "1120", "name": "双层吉士汉堡", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260101/product/MS_1120_600.png", "kcal": 429, "sod": 1017, "protein": 27, "matched": true, "cat": "巨无霸牛鱼肉堡", "tags": ["单品", "100%纯牛肉"], "tagList": {"protein": ["牛肉"], "category": ["汉堡"]}}, {"code": "521316", "name": "高达吉士双牛堡", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260101/product/MS_521316_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "巨无霸牛鱼肉堡", "tags": ["单品", "100%纯牛肉", "人气"], "tagList": {"protein": ["牛肉"], "category": ["汉堡"]}}, {"code": "9900008747", "name": "牛肉堡单品精选", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900008747_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "巨无霸牛鱼肉堡", "tags": ["单品", "100%纯牛肉"], "tagList": {"protein": ["牛肉"], "category": ["汉堡"]}}, {"code": "9900005428", "name": "培根安格斯厚牛堡三件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900005428_600.png", "kcal": 707, "sod": 1037, "protein": 34, "matched": true, "cat": "安格斯MAX厚牛堡", "tags": ["套餐", "100%安格斯牛肉"], "tagList": {"protein": ["牛肉"], "category": ["汉堡", "套餐"]}}, {"code": "9900005430", "name": "芝士安格斯厚牛堡三件套", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900005430_600.png", "kcal": 696, "sod": 897, "protein": 32, "matched": true, "cat": "安格斯MAX厚牛堡", "tags": ["套餐", "100%安格斯牛肉"], "tagList": {"protein": ["牛肉"], "category": ["汉堡", "套餐"]}}, {"code": "511781", "name": "培根安格斯厚牛堡", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20251022/product/MS_511781_600.png", "kcal": 707, "sod": 1037, "protein": 34, "matched": true, "cat": "安格斯MAX厚牛堡", "tags": ["单品", "100%安格斯牛肉"], "tagList": {"protein": ["牛肉"], "category": ["汉堡"]}}, {"code": "511782", "name": "芝士安格斯厚牛堡", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20251022/product/MS_511782_600.png", "kcal": 696, "sod": 897, "protein": 32, "matched": true, "cat": "安格斯MAX厚牛堡", "tags": ["单品", "100%安格斯牛肉"], "tagList": {"protein": ["牛肉"], "category": ["汉堡"]}}, {"code": "521881", "name": "马来咖喱风味薄皮肉骨鸡3块", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_521881_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "炸鸡", "tags": ["上新", "浓郁咖喱飘香"], "tagList": {"protein": ["鸡肉"], "flavor": ["咖喱"]}}, {"code": "9900005451", "name": "麦辣鸡翅4块中套餐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900005451_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "炸鸡", "tags": ["套餐", "立省10.5元起"], "tagList": {"protein": ["鸡肉"], "flavor": ["辣"], "category": ["套餐"]}}, {"code": "9900004835", "name": "麦乐鸡经典中套餐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260824/product/MS_9900004835_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "炸鸡", "tags": ["套餐", "立省10.5元起"], "tagList": {"protein": ["鸡肉"], "cooking": ["炸制"], "category": ["套餐"]}}, {"code": "1700", "name": "麦辣鸡翅2块", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260219/product/MS_1700_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "炸鸡", "tags": ["单品", "黄金酥脆", "鲜嫩多汁"], "tagList": {"protein": ["鸡肉"], "flavor": ["辣"]}}, {"code": "520445", "name": "薄皮焦香V翅", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20241028/product/MS_520445_600.png", "kcal": 192, "sod": 594, "protein": 17, "matched": true, "cat": "炸鸡", "tags": ["单品", "人气"], "tagList": {"protein": ["鸡肉"], "cooking": ["烤制"]}}, {"code": "1401", "name": "麦乐鸡5块", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260529/product/MS_1401_600.png", "kcal": 213, "sod": 422, "protein": 12, "matched": true, "cat": "炸鸡", "tags": ["单品", "人气"], "tagList": {"protein": ["鸡肉"], "cooking": ["炸制"]}}, {"code": "521156", "name": "那么大鸡排（椒盐风味）", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260520/product/MS_521156_600.png", "kcal": 385, "sod": 996, "protein": 24, "matched": true, "cat": "炸鸡", "tags": ["单品"], "tagList": {"protein": ["鸡肉"]}}, {"code": "9900005432", "name": "麦麦脆汁鸡1块", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20241204/product/MS_9900005432_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "炸鸡", "tags": ["单品"], "tagList": {"protein": ["鸡肉"], "cooking": ["炸制"]}}, {"code": "9900016082", "name": "心形薯饼5块", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900016082_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "小食甜品/其他", "tags": ["上新", "口口酥脆", "含一份蘸酱"], "tagList": {"category": ["小食"]}}, {"code": "521951", "name": "灰焰圆筒", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_521951_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "小食甜品/其他", "tags": ["上新", "灰焰"], "tagList": {"category": ["甜品"]}}, {"code": "521908", "name": "黑洋酥小圆子风味派", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_521908_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "小食甜品/其他", "tags": ["上新", "浓醇芝麻香"], "tagList": {"category": ["甜品"]}}, {"code": "521914", "name": "“葱不求人“按摩捶痒痒挠", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20261008/product/MS_521914_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "小食甜品/其他", "tags": ["上新", "既可捶背", "又可挠痒"], "tagList": {"category": ["周边"]}}, {"code": "521901", "name": "月下相思扭扭薯", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_521901_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "小食甜品/其他", "tags": ["上新", "口口酥脆", "薯香十足"], "tagList": {"category": ["小食", "周边"]}}, {"code": "521917", "name": "泷愿成真麦旋风——大米风味", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_521917_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "小食甜品/其他", "tags": ["上新", "快乐旋开吃"], "tagList": {"cooking": ["冷制"], "category": ["甜品"]}}, {"code": "4810", "name": "中薯条", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20250423/product/MS_4810_600_1745199801147.png", "kcal": 289, "sod": 165, "protein": 4, "matched": true, "cat": "小食甜品/其他", "tags": ["小食"], "tagList": {"category": ["小食"]}}, {"code": "4437", "name": "小杯玉米杯", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260101/product/MS_4437_600.png", "kcal": 53, "sod": 1, "protein": 2, "matched": true, "cat": "小食甜品/其他", "tags": ["小食"], "tagList": {"category": ["小食"]}}, {"code": "6102", "name": "苹果片", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_6102_600.png", "kcal": 32, "sod": 0, "protein": 0, "matched": true, "cat": "小食甜品/其他", "tags": ["小食"], "tagList": {"category": ["小食"]}}, {"code": "521750", "name": "泷盐星星麦旋风", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_521750_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "小食甜品/其他", "tags": ["冰淇淋", "素龙饼干"], "tagList": {"cooking": ["冷制"], "category": ["甜品", "小食"]}}, {"code": "9900008754", "name": "经典麦旋风", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900008754_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "小食甜品/其他", "tags": ["冰淇淋", "第二份半价"], "tagList": {"cooking": ["冷制"], "category": ["甜品"]}}, {"code": "9900008745", "name": "新地", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900008745_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "小食甜品/其他", "tags": ["冰淇淋", "第二份半价"], "tagList": {"cooking": ["冷制"], "category": ["甜品"]}}, {"code": "515837", "name": "圆筒冰淇淋", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20250813/product/MS_515837_600.png", "kcal": 93, "sod": 36, "protein": 2, "matched": true, "cat": "小食甜品/其他", "tags": ["冰淇淋", "第二份半价"], "tagList": {"category": ["甜品"]}}, {"code": "9900008752", "name": "派", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900008752_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "小食甜品/其他", "tags": ["派", "第二份优惠"], "tagList": {"category": ["甜品"]}}, {"code": "9900016057", "name": "汉堡开心乐园餐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900016057_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "开心乐园", "tags": ["开心乐园餐", "童年童款"], "tagList": {"category": ["汉堡"]}}, {"code": "9900016058", "name": "鱼排堡开心乐园餐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900016058_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "开心乐园", "tags": ["开心乐园餐", "童年童款"], "tagList": {"protein": ["鱼肉"], "category": ["汉堡"]}}, {"code": "9900016056", "name": "麦乐鸡开心乐园餐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900016056_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "开心乐园", "tags": ["开心乐园餐", "童年童款"], "tagList": {"protein": ["鸡肉"], "cooking": ["炸制"]}}, {"code": "9900016055", "name": "开心亲子双人餐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900016055_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "开心乐园", "tags": ["开心亲子餐", "童年童款"], "tagList": {"category": ["套餐"]}}, {"code": "507411", "name": "麦咖啡™冰美式中杯", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20250804/product/MS_507411_600.png", "kcal": 13, "sod": 0, "protein": 1, "matched": true, "cat": "麦咖啡™", "tags": ["限定特惠"], "tagList": {"category": ["咖啡"]}}, {"code": "507409", "name": "麦咖啡™冰奶铁中杯", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20250324/product/MS_507409_600.png", "kcal": 148, "sod": 77, "protein": 8, "matched": true, "cat": "麦咖啡™", "tags": ["限定特惠"], "tagList": {"category": ["咖啡", "奶茶"]}}, {"code": "510479", "name": "冰燕麦奶铁中杯", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20250324/product/MS_510479_600.png", "kcal": 132, "sod": 87, "protein": 3, "matched": true, "cat": "麦咖啡™", "tags": ["麦咖啡™咖啡"], "tagList": {"category": ["奶茶"]}}, {"code": "520689", "name": "小杯鲜萃咖啡", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_520689_600.png", "kcal": 15, "sod": 2, "protein": 1, "matched": true, "cat": "饮品", "tags": ["热饮", "鲜萃咖啡"], "tagList": {"category": ["咖啡"]}}, {"code": "507394", "name": "热牛奶中杯", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_507394_600.png", "kcal": 176, "sod": 101, "protein": 10, "matched": true, "cat": "麦咖啡™", "tags": ["其他"], "tagList": {"protein": ["牛肉"], "category": ["乳饮"]}}, {"code": "9900011128", "name": "“堡”你欢乐套餐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900011128_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "500大卡套餐", "tags": ["粉丝之选"], "tagList": {"category": ["汉堡", "套餐"]}}, {"code": "9900011121", "name": "“苹”水相“鱼”套餐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900011121_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "500大卡套餐", "tags": ["粉丝之选"], "tagList": {"category": ["套餐"]}}, {"code": "9900011126", "name": "酥脆无双套餐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260701/product/MS_9900011126_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "500大卡套餐", "tags": [], "tagList": {"category": ["套餐"]}}, {"code": "9900011123", "name": "“辣”么快乐套餐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900011123_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "500大卡套餐", "tags": [], "tagList": {"flavor": ["辣"], "category": ["套餐"]}}, {"code": "9900009245", "name": "牛气满满套餐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900009245_600.png", "kcal": 495, "sod": 764, "protein": 26, "matched": true, "cat": "500大卡套餐", "tags": [], "tagList": {"protein": ["牛肉"], "category": ["套餐"]}}, {"code": "9900009242", "name": "“苹板”支撑Pro套餐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900009242_600.png", "kcal": 476, "sod": 1077, "protein": 25, "matched": true, "cat": "500大卡套餐", "tags": [], "tagList": {"category": ["套餐"]}}, {"code": "521817", "name": "【美汁源】“多汁柠柠”", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20260807/product/MS_521817_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "饮品", "tags": ["上新", "清爽上新"], "tagList": {"category": ["其他"], "protein": ["其他"]}}, {"code": "9900008751", "name": "可乐", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900008751_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "饮品", "tags": ["冷饮"], "tagList": {"category": ["碳酸"]}}, {"code": "3010", "name": "雪碧（小杯）", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_3010_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "饮品", "tags": ["冷饮"], "tagList": {"category": ["碳酸"]}}, {"code": "2430", "name": "【美汁源】“黄金橙橙”", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20240904/product/MS_2430_600.png", "kcal": 165, "sod": 53, "protein": 0, "matched": true, "cat": "饮品", "tags": ["冷饮"], "tagList": {"category": ["其他"], "protein": ["其他"]}}, {"code": "515280", "name": "阳光柠檬红茶小杯", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_515280_600.png", "kcal": 85, "sod": 12, "protein": 0, "matched": true, "cat": "饮品", "tags": ["冷饮"], "tagList": {"flavor": ["柠檬"]}}, {"code": "3755", "name": "纯牛奶(盒装)", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20240731/product/MS_3755_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "饮品", "tags": ["冷饮"], "tagList": {"protein": ["牛肉"], "category": ["乳饮"]}}, {"code": "6362", "name": "100% 苹果汁(盒装)", "img": "https://menu-img.mcd.cn/pcm/prod/menu/20250430/product/MS_6362_600_1745552990018.png", "kcal": 88, "sod": 0, "protein": 0, "matched": true, "cat": "饮品", "tags": ["冷饮"], "tagList": {"category": ["果汁"]}}, {"code": "9900003538", "name": "学生专享饮品随心选", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_9900003538_600.png", "kcal": null, "sod": null, "protein": null, "matched": false, "cat": "饮品", "tags": ["冷饮"], "tagList": {"category": ["套餐"]}}, {"code": "3505", "name": "锡兰红茶", "img": "https://menu-img.mcd.cn/pcm/prod/menu/ProductPool/product/MS_3505_600.png", "kcal": 2, "sod": 0, "protein": 0, "matched": true, "cat": "饮品", "tags": ["热饮"], "tagList": {"category": ["其他"], "protein": ["其他"]}}];
+const CATS = ["500大卡套餐", "人气热卖", "大堡口福单人餐", "安格斯MAX厚牛堡", "小食拼盘/多人餐", "小食甜品/其他", "巨无霸牛鱼肉堡", "开心乐园", "炸鸡", "精选单人餐", "随心配1+1", "饮品", "鸡肉汉堡/卷", "麦咖啡™", "麦金卡专享"];
+const CAFE_KW = ['咖啡', '拿铁', '美式', '摩卡'];
+const SNACK_TARGET = 1800;
+const COLOR = {'200':'#37872D','201':'#37872D','206':'#6ED0E0','301':'#705DA0','304':'#6ED0E0','404':'#E24D42','408':'#E98300','418':'#705DA0','429':'#E98300','502':'#705DA0','504':'#E24D42'};
+const NAME = {'200':'200 OK','201':'201 Created','206':'206 Partial','301':'301 Moved','304':'304 Not Modified','404':'404 Not Found','408':'408 Timeout','418':'418 teapot','429':'429 Too Many','502':'502 Bad Gateway','504':'504 Timeout'};
+const COLORP = {'103':'#6ED0E0','204':'#37872D','412':'#E98300','425':'#E98300','599':'#E24D42','522':'#96222A'};
+const NAMEP = {'103':'103 Hints','204':'204 Quiet','412':'412 Denied','425':'425 Too Early','599':'599 Timeout','522':'522 Lost'};
+let SIM_MIN = 720, ORDERS = [], SEEN = new Set(), LAST_SIG = null, LAST = null, PENDING = null, CART = [], CUR_CAT = '全部';
+let INTERACTED = false;   // 首次交互前探活保持静默——不 nag 刚打开页面的用户
+const fmt = m => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+const $id = id => document.getElementById(id);
+const esc = s => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
 
-/* 语义全部来自 codes.py，面板不自行定义含义 */
-const COLOR = {}, SHORT = {}, TITLE = {};
-for (const [k, v] of Object.entries(CODES)) {
-  COLOR[k] = v.color; SHORT[k] = v.short; TITLE[k] = v.title;
+function msg(html, who) {
+  const d = document.createElement('div');
+  d.className = 'msg ' + (who || 'agent');
+  d.innerHTML = '<div class="avatar">' + (who === 'me' ? '👤' : '🤖') + '</div><div class="bubble">' + html + '</div>';
+  $id('msgs').appendChild(d);
+  $id('msgs').scrollTop = $id('msgs').scrollHeight;
+  return d.querySelector('.bubble');
+}
+const agentSay = h => msg(h, 'agent');
+const meSay = t => msg(esc(t), 'me');
+
+function parseIntent(t) {
+  t = (t || '').trim();
+  const r = {wants: null, scene: null, budget: null, kcalCap: null};
+  const mb = t.match(/(\d+)\s*块/); if (mb) r.budget = +mb[1];
+  const mk = t.match(/(\d{3,4})\s*(?:大卡|kcal)/); if (mk) r.kcalCap = +mk[1];
+  if (/新品|上新|联名/.test(t)) r.wants = 'fresh';
+  else if (/咖啡|拿铁|美式|摩卡|困|醒|提神/.test(t)) r.wants = 'coffee';
+  else if (/甜|新地|圆筒|冰淇淋|派|旋风/.test(t)) r.wants = 'sweet';
+  else if (/薯/.test(t)) r.wants = 'fries';
+  else if (/鸡/.test(t)) r.wants = 'chicken';
+  else if (/鱼/.test(t)) r.wants = 'fish';
+  else if (/牛|巨无霸|吉士|安格斯|板烧/.test(t)) r.wants = 'beef';
+  if (/减脂|瘦|控卡|热量/.test(t)) r.scene = 'cut';
+  else if (/增肌|蛋白|练/.test(t)) r.scene = 'bulk';
+  else if (/夜|晚|加班/.test(t)) r.scene = 'night';
+  else if (/早|早餐/.test(t)) r.scene = 'morning';
+  return r;
 }
 
-const s = DATA.summary;
-const now = new Date();
-const on1024 = FORCE_1024 || (now.getMonth() === 9 && now.getDate() >= 20 && now.getDate() <= 26);
-const logo = "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";
-const esc = t => String(t).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]);
-
-function topbar(cls, text) {
-  return `<div class="topbar">
-    <img src="data:image/png;base64,${logo}" alt="Golden Arches">
-    <h1>麦门监控台 <span class="accent">// 身体服务监控台</span></h1>
-    <span class="crumb">datasource: order-list · rules v${DATA.rulesVersion}</span>
-    <span class="badge${cls}">${text}</span>
-  </div>
-  <div class="meta mono">数据采集 ${DATA.generatedAt} · 样本口径：麦当劳 MCP order-list 近期订单 · 全部指标确定性可复算 · 语义唯一来源 scripts/codes.py</div>`;
-}
-
-/* ── SVG 图表工厂：手绘，零依赖，配色取自 codes.py ─────────────── */
-
-/** Uptime 环形仪表：刻度环 + 渐变弧，形状本身即结论 */
-function gauge(pct, color) {
-  const R = 42, sw = 9, C = 2 * Math.PI * R;
-  const on = C * Math.min(100, Math.max(0, pct)) / 100;
-  const gid = 'g' + Math.abs(Math.round(pct * 1000));
-  // 刻度环：每 10% 一格，25% 处加长
-  let ticks = '';
-  for (let i = 0; i < 20; i++) {
-    const a = (i / 20) * 2 * Math.PI - Math.PI / 2;
-    const long = i % 5 === 0;
-    const r1 = 52, r2 = long ? 56 : 54.5;
-    ticks += `<line x1="${(48 + Math.cos(a) * r1).toFixed(2)}" y1="${(48 + Math.sin(a) * r1).toFixed(2)}"
-      x2="${(48 + Math.cos(a) * r2).toFixed(2)}" y2="${(48 + Math.sin(a) * r2).toFixed(2)}"
-      stroke="${i / 20 * 100 <= pct ? color : 'var(--panel2)'}" stroke-width="1"
-      opacity="${i / 20 * 100 <= pct ? .85 : .5}"/>`;
-  }
-  return `<div class="gauge">
-    <svg viewBox="0 0 96 96" width="112" height="112" role="img"
-         aria-label="身体服务 Uptime ${pct}%">
-      <defs>
-        <linearGradient id="${gid}" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="${color}"/>
-          <stop offset="100%" stop-color="${color}" stop-opacity=".55"/>
-        </linearGradient>
-      </defs>
-      <g>${ticks}</g>
-      <circle cx="48" cy="48" r="${R}" fill="none" stroke="var(--panel2)" stroke-width="${sw}"/>
-      <circle cx="48" cy="48" r="${R}" fill="none" stroke="url(#${gid})" stroke-width="${sw}"
-        stroke-linecap="round" stroke-dasharray="${on} ${C - on}"/>
-    </svg>
-    <div class="gv"><b style="color:${color}">${pct}<i style="font-size:12px">%</i></b><i>UPTIME</i></div>
-  </div>`;
-}
-
-/* ── 聚合层：按「天 / 周」切换统计维度 ─────────────────────────
-   切换维度时，Uptime 分母、缺口清单、错误预算全部按新维度重算，
-   避免出现「图变了但数字没变」的自相矛盾。
-   周口径：ISO 周（周一为一周之始），末尾不足一周按实际天数计入分母。 */
-
-/** ISO 周键，如 2026-W41 */
-function isoWeek(d) {
-  const t = new Date(d + 'T00:00:00');
-  const day = (t.getDay() + 6) % 7;              // 周一=0
-  t.setDate(t.getDate() - day + 3);              // 移到本周周四（ISO 规则）
-  const year = t.getFullYear();
-  const jan4 = new Date(year, 0, 4);
-  const week = 1 + Math.round(((t - jan4) / 86400000 - 3 + ((jan4.getDay() + 6) % 7)) / 7);
-  return { key: year + '-W' + String(week).padStart(2, '0'), start: null };
-}
-
-/** 周维度下每个桶的起始日期（用于 x 轴刻度标签） */
-function weekStart(d) {
-  const t = new Date(d + 'T00:00:00');
-  const day = (t.getDay() + 6) % 7;
-  t.setDate(t.getDate() - day);
-  return t.toISOString().slice(0, 10);
-}
-
-const SEV = {'504':5,'503':4,'500':4,'429':3,'408':3,'403':3,'502':2,'418':2,'206':1,'304':1,'301':1,'201':0,'200':0};
-
-/** 构造按当前维度聚合后的桶数组 */
-function buildBuckets(dim) {
-  const days = s.days || [];
-  const orders = DATA.orders || [];
-  const byDay = {};
-  orders.forEach(o => { (byDay[o.date] = byDay[o.date] || []).push(o); });
-
-  if (dim === 'day') {
-    return days.map(d => {
-      const list = byDay[d.date] || [];
-      return {
-        key: d.date, label: d.date.slice(5),
-        span: 1, ordered: list.length ? 1 : 0,
-        count: list.length, orders: list,
-        worst: list.length ? list.reduce((a, b) => SEV[b.httpStatus] > SEV[a.httpStatus] ? b : a) : null,
-        multi: list.length > 1,
-      };
-    });
-  }
-
-  // 周维度
-  const groups = [];
-  const index = {};
-  days.forEach(d => {
-    const w = isoWeek(d.date);
-    if (!index[w.key]) {
-      index[w.key] = { key: w.key, label: weekStart(d.date).slice(5), start: weekStart(d.date),
-        span: 0, ordered: 0, count: 0, orders: [], worst: null, multi: false };
-      groups.push(index[w.key]);
-    }
-    const g = index[w.key];
-    const list = byDay[d.date] || [];
-    g.span += 1;
-    if (list.length) g.ordered += 1;
-    g.count += list.length;
-    list.forEach(o => {
-      g.orders.push(o);
-      if (!g.worst || SEV[o.httpStatus] > SEV[g.worst.httpStatus]) g.worst = o;
-    });
-    g.multi = g.multi || list.length > 1;
-  });
-  return groups;
-}
-
-/** 按维度重算核心指标，保证与图表口径一致
-    Uptime 分母 = 该维度的总桶数（天→ 天数，周 → 周数）
-    Uptime 分子 = 有摄入的桶数        */
-function metrics(dim) {
-  const b = buildBuckets(dim);
-  const span = b.length;                              // 桶数：周维度即周数
-  const active = b.filter(x => x.count > 0).length;   // 有摄入的桶数
-  const dist = {};
-  const all = dim === 'day'
-    ? (DATA.orders || [])
-    : b.flatMap(x => x.orders);
-  all.forEach(o => { dist[o.httpStatus] = (dist[o.httpStatus] || 0) + 1; });
-  const err = Object.entries(dist).reduce((a, [c, n]) =>
-    (c.startsWith('4') || c.startsWith('5')) && c !== '206' ? a + n : a, 0);
-  return { buckets: b, span, active,
-    ordered: active,
-    uptime: span ? Math.round(active / span * 1000) / 10 : 0,
-    dist, total: all.length, err };
-}
-
-/** 摄入请求时间轴：横轴按当前维度分桶，柱高 = 摄入次数，色 = 最严重状态码 */
-function timeline(dim, m) {
-  const b = m.buckets;
-  if (!b.length) return '<div class="stat-note">无数据</div>';
-  const n = b.length;
-  const maxN = Math.max(1, ...b.map(x => x.count));
-  const unit = dim === 'day' ? '天' : '周';
-  const idle = n - m.active;
-  // 用真实像素宽度作为 viewBox，避免 preserveAspectRatio="none" 拉伸文字
-  const W = Math.max(600, Math.min(1100, n * (dim === 'day' ? 9 : 46)));
-  const px = W / n;                       // 每格像素宽
-  const H = 132, padB = 22, padT = 10;
-  const plotH = H - padB - padT;
-
-  const refLines2 = [0.5, 1].map(f => {
-    const y = H - padB - plotH * f;
-    return `<line class="grid-line" x1="0" y1="${y}" x2="${W}" y2="${y}"
-      style="stroke-dasharray:2 4;opacity:.4"/>`;
-  }).join('');
-
-  let bars2 = '';
-  b.forEach((g, i) => {
-    const x = i * px;
-    if (!g.count) {
-      bars2 += `<rect x="${x + px * 0.2}" y="${H - padB - 2}" width="${px * 0.6}"
-        height="2" fill="var(--panel2)"/>
-        <rect x="${x + px * 0.2}" y="${H - padB - 5}" width="${px * 0.6}"
-          height="1.5" fill="var(--panel2)" opacity=".55">
-          <title>${g.label} · 503 Service Unavailable · 该${unit}零摄入</title></rect>`;
-      return;
-    }
-    const h = (g.count / maxN) * plotH * 0.72 + 12;
-    const col = COLOR[g.worst.httpStatus];
-    bars2 += `<rect class="bar" x="${x + px * 0.16}" y="${H - padB - h}"
-      width="${px * 0.68}" height="${h}" rx="1.5" fill="${col}"
-      opacity=".92"><title>${g.label} · ${SHORT[g.worst.httpStatus]} · ${g.count} 单 · ${TITLE[g.worst.httpStatus]}</title></rect>`;
-    if (g.multi) {
-      bars2 += `<circle cx="${x + px * 0.5}" cy="${H - padB - h - 5}" r="2.4" fill="${col}">
-        <title>${g.label} · 该${unit}出现单日多单（429 限流）</title></circle>`;
-    }
-  });
-
-  const ticks2 = [];
-  const step2 = Math.max(1, Math.ceil(n / (dim === 'day' ? 4 : 7)));
-  b.forEach((g, i) => {
-    if (dim === 'day') {
-      const mth = g.key.slice(5, 7);
-      if (i === 0 || mth !== b[i-1].key.slice(5,7)) {
-        ticks2.push(`<line class="grid-line" x1="${i * px}" y1="${padT}" x2="${i * px}" y2="${H - padB}" style="opacity:.5"/>`);
-        ticks2.push(`<text class="axis-text" x="${i * px + 3}" y="${H - 6}">${mth} 月</text>`);
-      }
-    } else {
-      if (i % step2 !== 0) return;
-      const cx = i * px + px / 2;
-      ticks2.push(`<line class="grid-line" x1="${i * px}" y1="${padT}" x2="${i * px}" y2="${H - padB}" style="opacity:.35"/>`);
-      ticks2.push(`<text class="axis-text" x="${cx}" y="${H - 6}" text-anchor="middle">${g.label}</text>`);
-    }
-  });
-
-  return `<div class="chart-wrap">
-    <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px" role="img"
-         preserveAspectRatio="xMidYMid meet"
-         aria-label="摄入请求时间轴，按${unit}聚合，${m.span} ${unit}中 ${m.active} ${unit}有响应">
-      ${refLines2}
-      <line class="axis-line" x1="0" y1="${H - padB}" x2="${W}" y2="${H - padB}"/>
-      ${ticks2.join('')}
-      ${bars2}
-    </svg>
-  </div>
-  <div class="legend">
-    <span class="legend-item"><span class="sw" style="background:var(--panel2)"></span>
-      <span class="ln">503 零摄入${unit}（${idle} ${unit}）</span></span>
-    <span class="legend-item"><span class="sw" style="background:var(--green)"></span>
-      <span class="ln">柱高 = 摄入次数</span></span>
-    <span class="legend-item"><span class="sw" style="background:var(--orange)"></span>
-      <span class="ln">圆点 = 单日多单</span></span>
-  </div>`;
-}
-
-/** 状态码分布：横向堆叠条 + 图例，比一堆并列条更快读出占比 */
-function distBar(m) {
-  const dist = Object.entries(m.dist).sort((a, b) => b[1] - a[1]);
-  const total = dist.reduce((a, b) => a + b[1], 0) || 1;
-  let x = 0;
-  const GAP = dist.length > 1 ? 0.6 : 0;   // 段间留缝，窄段不缝
-  const segs = dist.map(([c, n]) => {
-    const w = n / total * 100;
-    const pct = Math.round(n / total * 100);
-    // 数值只走图例行与 tooltip：viewBox 非等比拉伸下段内文字必然变形
-    const g = w > GAP * 3 ? GAP / 2 : 0;
-    const seg = `<g><rect x="${(x + g).toFixed(2)}" y="0" width="${(w - g * 2).toFixed(2)}"
-      height="100%" fill="${COLOR[c]}" rx="2"><title>${SHORT[c]} · ${n} 次 · ${pct}%</title></rect></g>`;
-    x += w;
-    return seg;
-  }).join('');
-
-  const legend = dist.map(([c, n]) => `
-    <span class="legend-item">
-      <span class="sw" style="background:${COLOR[c]}"></span>
-      <span class="lv">${SHORT[c]}</span>
-      <span class="ln">${n} · ${Math.round(n/total*100)}%</span>
-    </span>`).join('');
-
-  return `<div class="chart-wrap">
-    <svg viewBox="0 0 100 8" preserveAspectRatio="none" style="height:9px"
-         role="img" aria-label="状态码分布占比">${segs}</svg>
-  </div>
-  <div class="legend">${legend}</div>`;
-}
-
-/** 维度切换控件：分段按钮，遵循 radiogroup 语义 */
-function dimToggle(cur) {
-  const opts = [['day', '按天'], ['week', '按周']];
-  return `<div class="seg" role="radiogroup" aria-label="统计维度">
-    ${opts.map(([v, t]) => `<button class="seg-btn${cur === v ? ' on' : ''}"
-      role="radio" aria-checked="${cur === v}" data-dim="${v}"
-      type="button">${t}</button>`).join('')}
-  </div>`;
-}
-
-/** 热量标尺：分段量程 + 阈值刻度线 + P50/P99 指针 */
-function kcalScale() {
-  const MAX = 1500, p50 = s.kcalP50, p99 = s.kcalP99;
-  const pos = v => Math.min(100, (v || 0) / MAX * 100);
-  return `<div class="scale">
-    <div class="scale-track">
-      <div class="scale-seg" style="width:${pos(KCAL_OK)}%;background:linear-gradient(90deg,rgba(55,135,45,.65),rgba(55,135,45,.35))"></div>
-      <div class="scale-seg" style="width:${pos(KCAL_OVERLOAD)-pos(KCAL_OK)}%;background:linear-gradient(90deg,rgba(224,131,0,.6),rgba(224,131,0,.32))"></div>
-      <div class="scale-seg" style="width:${100-pos(KCAL_OVERLOAD)}%;background:linear-gradient(90deg,rgba(226,77,66,.5),rgba(226,77,66,.26))"></div>
-    </div>
-    <div class="scale-thr" style="left:${pos(KCAL_OK)}%" title="403 阈值 ${KCAL_OK} kcal"></div>
-    <div class="scale-thr" style="left:${pos(KCAL_OVERLOAD)}%" title="500 阈值 ${KCAL_OVERLOAD} kcal"></div>
-    ${p50 != null ? `<div class="scale-mark p50" style="left:${pos(p50)}%" title="P50 中位单餐 ${p50} kcal"></div>` : ''}
-    ${p99 != null ? `<div class="scale-mark p99" style="left:${pos(p99)}%" title="P99 ${p99} kcal"></div>` : ''}
-    <div class="scale-ticks">
-      <span>0</span><span>${KCAL_OK}</span><span>${KCAL_OVERLOAD}</span>
-    </div>
-  </div>
-  <div class="legend">
-    <span class="legend-item"><span class="sw" style="background:rgba(55,135,45,.65)"></span><span class="ln">≤ ${KCAL_OK} → 200</span></span>
-    <span class="legend-item"><span class="sw" style="background:rgba(224,131,0,.6)"></span><span class="ln">→ 403 营养署拒绝</span></span>
-    <span class="legend-item"><span class="sw" style="background:rgba(226,77,66,.5)"></span><span class="ln">>${KCAL_OVERLOAD} → 500 过载</span></span>
-    ${p50 != null ? `<span class="legend-item"><span class="sw" style="background:var(--cyan);width:2px;border-radius:0"></span><span class="lv">P50 ${p50}</span><span class="ln">kcal 中位单餐</span></span>` : ''}
-    ${p99 != null ? `<span class="legend-item"><span class="sw" style="background:var(--purple);width:2px;border-radius:0"></span><span class="lv">P99 ${p99}</span><span class="ln">kcal</span></span>` : ''}
-  </div>`;
-}
-
-/* ── 集合层 404：订单为空 → 资源不存在，触发彩蛋 ─────────────────── */
-function render404() {
-  const egg = s.easterEgg || {};
-  document.getElementById('app').innerHTML =
-    topbar(' on', 'collection 404 · 资源不存在') +
-    `<div class="panel"><div class="egg-wrap">
-      <div class="egg-code">404</div>
-      <div class="egg-title">Not Found · 你的身体服务上还没有任何订单资源</div>
-      <div class="egg-box">
-        ${(egg.lines||[]).map(l => `<p>${l}</p>`).join('')}
-      </div>
-      <div class="egg-cta">${esc(egg.cta || '')}</div>
-    </div></div>`;
-}
-
-/* ── 正常监控台 ─────────────────────────────────────────────────
-   上半屏信息层级（按「监控大屏」而非「数据报表」组织）：
-     第一眼  Uptime 环形仪表 —— 本项目最有梗的指标，弧长形状本身即结论
-     第二眼  摄入请求时间轴—— 89 天跨度里 9 根柱子，稀疏与空窗一眼可见
-     第三眼  状态码构成 / 热量标尺 —— 占比与分位的辅助判读
-   图表全部手绘 SVG，保持零第三方依赖；配色取自 codes.py，与语义同源。
-   ──────────────────────────────────────────────────────────── */
-function render(dim, logFilter, logPage) {
-  dim = dim || 'day';
-  LOG_FILTER = logFilter || LOG_FILTER || 'all';
-  LOG_PAGE = logPage || 1;
-  const cov = s.ledgerCoverageRate || 0;
-  const m = metrics(dim);
-  const worst = Object.entries(m.dist).sort((a,b)=>(SEV[b[0]]||0)-(SEV[a[0]]||0))[0];
-  const worstCode = worst ? worst[0] : null;
-  const unit = dim === 'day' ? '天' : '周';
-  const idle = m.span - m.ordered;
-
-  // 主视觉：Uptime 仪表 +摄入请求时间轴
-  const hero = `
-    <div class="panel">
-      <div class="panel-h"><span class="dot" style="background:var(--blue)"></span>
-        <h3>身体服务可用性</h3></div>
-      <div class="gauge-wrap">
-        ${gauge(m.uptime, 'var(--blue)')}
-        <div style="min-width:0">
-          <div class="stat-note" style="margin-top:0;font-size:12px">
-            近 ${m.span} ${unit}中仅 <strong style="color:var(--text)">${m.ordered}</strong> ${unit}有响应<br>
-            你的身体服务可用性，可能还没有你负责的那个服务高
-          </div>
-          <div class="legend" style="border:0;padding:0;margin-top:9px">
-            <span class="legend-item"><span class="sw" style="background:var(--panel2)"></span>
-              <span class="ln">${idle} ${unit} 503 宕机</span></span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="panel">
-      <div class="panel-h row">
-        <div><span class="dot" style="background:var(--green)"></span>
-          <h3>摄入请求时间轴</h3></div>
-        ${dimToggle(dim)}
-      </div>
-      ${timeline(dim, m)}
-    </div>`;
-
-  // 次级：状态码分布 + 热量标尺 + 摄入流量
-  const second = `
-    <div class="panel">
-      <div class="panel-h"><span class="dot" style="background:var(--purple)"></span>
-        <h3>状态码构成</h3></div>
-      ${distBar(m)}
-      <div class="stat-note" style="margin-top:11px">
-        共 ${m.total} 单${worstCode ? ` · 最严重为 <span style="color:${COLOR[worstCode]}">${SHORT[worstCode]}</span> (${TITLE[worstCode]})` : ''}
-      </div>
-    </div>
-
-    <div class="panel">
-      <div class="panel-h"><span class="dot" style="background:var(--purple)"></span>
-        <h3>单餐热量分位</h3></div>
-      ${kcalScale()}
-    </div>
-
-    <div class="panel">
-      <div class="panel-h"><span class="dot" style="background:var(--yellow)"></span>
-        <h3>累计摄入流量</h3></div>
-      <div class="stat mono" style="color:var(--yellow);font-size:34px">${s.flowUnit}</div>
-      <div class="stat-note" style="margin-top:7px">
-        共 ${(s.totalKcal||0).toLocaleString()} kcal · 按 1 kcal = 1 Byte、1024 进制换算<br>
-        平均 ${s.orderedDays ? Math.round(s.totalKcal/s.orderedDays) : 0} kcal/响应日
-      </div>
-    </div>`;
-
-  const gapList = (s.missedItems && s.missedItems.length) ? (() => {
-    const mx = Math.max(...s.missedItems.map(x => x[1]));
-    return s.missedItems.map(([n,q]) => `
-      <div class="row">
-        <span class="lb" style="background:var(--panel2);color:var(--muted);font-weight:400">${esc(n)}</span>
-        <div class="barwrap"><div style="width:${q/mx*100}%;background:var(--red);opacity:.6"></div></div>
-        <span class="ct mono">×${q}</span>
-      </div>`).join('');
-  })() : '';
-
-  // ── 请求日志：分页 + 状态码筛选，避免单屏堆叠十余行 ──
-  const PER_PAGE = 5;
-  const filtered = LOG_FILTER === 'all'
-    ? (DATA.orders || [])
-    : (DATA.orders || []).filter(o => o.httpStatus === LOG_FILTER);
-  const pages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
-  const page = Math.min(LOG_PAGE, pages);
-  const slice = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
-
-  // 状态码筛选 chips
-  const codeCount = {};
-  (DATA.orders || []).forEach(o => { codeCount[o.httpStatus] = (codeCount[o.httpStatus] || 0) + 1; });
-  const chipList = [['all', '全部', 'var(--dim)', (DATA.orders || []).length]]
-    .concat(Object.entries(codeCount).sort((a, b) => b[1] - a[1])
-      .map(([c, n]) => [c, SHORT[c], COLOR[c], n]));
-  const chips = `<div class="chips">${chipList.map(([v, t, col, n]) => `
-    <button class="chip-btn${LOG_FILTER === v ? ' on' : ''}" data-filter="${v}"
-      type="button" aria-pressed="${LOG_FILTER === v}">
-      ${v === 'all' ? '' : `<span class="sw" style="background:${col}"></span>`}
-      ${esc(t)}<span class="n">${n}</span>
-    </button>`).join('')}</div>`;
-
-  const log = slice.map(o => `
-    <tr>
-      <td class="mono" style="white-space:nowrap">${o.datetime.replace(' ','<br>')}
-        <div style="color:var(--dim);font-size:10px;margin-top:3px">${esc(o.store)}</div></td>
-      <td><span class="code mono" style="background:${COLOR[o.httpStatus]};color:#fff">${SHORT[o.httpStatus]}</span>
-        <div class="reason" style="color:${COLOR[o.httpStatus]}">${esc(o.codeTitle)}</div>
-        <div class="reason">${esc(o.reason)}</div></td>
-      <td><details><summary>${o.items.length} 件商品（${o.matchCoverage} 可计量）▾</summary>
-        ${o.items.map(i => `<div class="item ${i.matched?'':'miss'}">${i.qty}× ${esc(i.name)}${i.matched?` · ${i.kcal} kcal`:''}</div>`).join('')}
-      </details></td>
-      <td class="mono" style="text-align:right;white-space:nowrap">${o.kcal ?? '—'}
-        <div style="color:var(--dim);font-size:10px">${o.sodium!=null?o.sodium+' mg':''}</div></td>
-    </tr>`).join('');
-
-  // 分页器：首/末 + 当前页邻域，页码用省略号收敛
-  const pgBtn = (label, target, opt = {}) => {
-    const dis = opt.disabled ? 'disabled' : '';
-    const on = opt.on ? ' class="pg-btn on"' : ' class="pg-btn"';
-    return `<button${on} data-page="${target}" ${dis} type="button"
-      ${opt.label ? `aria-label="${opt.label}"` : ''}>${label}</button>`;
+function buildCombo(r) {
+  const budget = r.budget, kcalCap = r.kcalCap;
+  const kw = ({beef: '牛', chicken: '鸡', fish: '鱼'})[r.wants] || null;
+  const taste = it => {
+    if (r.wants === 'fresh') return (it.tags || []).includes('上新');
+    if (r.wants === 'coffee') return CAFE_KW.some(k => it.name.includes(k));
+    if (r.wants === 'sweet') return /新地|圆筒|冰淇淋|派|旋风|朱古力/.test(it.name);
+    if (r.wants === 'fries') return /薯/.test(it.name);
+    if (kw) return it.name.includes(kw);
+    return true;
   };
-  const nums = [];
-  const push = n => nums.push(pgBtn(String(n), n, { on: n === page }));
-  if (pages <= 7) {
-    for (let i = 1; i <= pages; i++) push(i);
+  let mains = ITEMS.filter(it => it.matched && it.kcal && it.kcal >= 200 && it.kcal <= 600 && !it._skip && taste(it));
+  if (!mains.length) mains = ITEMS.filter(it => it.matched && it.kcal && !it._skip);
+  mains.sort((a, b) => (b.protein || 0) - (a.protein || 0));
+  const coffees = ITEMS.filter(it => it.matched && it.kcal != null && CAFE_KW.some(k => it.name.includes(k))).sort((a, b) => a.kcal - b.kcal);
+  const sides = ITEMS.filter(it => it.matched && it.kcal != null && it.kcal > 0 && it.kcal <= 300 && /薯条|玉米|苹果/.test(it.name));
+  const combo = [];
+  const capTotal = budget || kcalCap || (r.scene === 'cut' ? 800 : 1100);
+  let kcals = 0, spent = 0;
+  const P = {main: 25, drink: 12, side: 11};
+  if (r.wants === 'coffee' || coffees[0]) { const d = coffees[0]; if (d) { combo.push(Object.assign({}, d, {qty: 1, role: '饮品'})); kcals += d.kcal; spent += P.drink; } }
+  if (mains[0] && spent + P.main <= capTotal + P.main) { combo.push(Object.assign({}, mains[0], {qty: 1, role: '主餐'})); kcals += mains[0].kcal; spent += P.main; }
+  if (sides[0] && spent + P.side <= capTotal) { combo.push(Object.assign({}, sides[0], {qty: 1, role: '小食'})); kcals += sides[0].kcal; spent += P.side; }
+  const note = budget ? '预算 ¥' + budget + '，估约 ¥' + spent + '（试玩间按固定估价，正式价格以官方核价为准）' : (kcalCap ? '热量上限 ' + kcalCap + ' kcal，本组合 ' + kcals + ' kcal' : null);
+  return {combo: combo, kcals: kcals, spent: spent, note: note};
+}
+
+function agentRecommend(text) {
+  const r = parseIntent(text);
+  const combo = buildCombo(r);
+  PENDING = combo;
+  const cards = combo.combo.map(c => '<div class="ci">' + (c.img ? '<img src="' + c.img + '" alt="">' : '') +
+    '<span class="cn">' + c.qty + '× <b>' + esc(c.name) + '</b><span class="dim2"> · ' + c.role + '</span></span>' +
+    '<span class="cv">' + (c.kcal != null ? c.kcal + ' kcal' : '账本未收录') + '</span></div>').join('');
+  const note = combo.note ? '<div class="dim2" style="margin-top:6px">' + esc(combo.note) + '</div>' : '';
+  const b = agentSay('按你的要求组了一单（' + combo.combo.length + ' 件，合计 <b>' + combo.kcals + ' kcal</b>）：' + note +
+    '<div class="combo">' + cards + '</div>' +
+    '<div class="dim2" style="margin-top:6px">提交后我会按当前模拟时间 ' + fmt(SIM_MIN) + ' 判定状态码并触发探活。</div>' +
+    '<div class="acts"><button class="abtn" data-act="confirm">✅ 就这样下单</button>' +
+    '<button class="abtn" data-act="again">🔁 换一换</button>' +
+    '<button class="abtn gold" data-act="browse">☰ 我自己逛菜单</button>' +
+    '<button class="abtn" data-act="wish">📮 都不对？许个愿</button></div>');
+  b.querySelectorAll('[data-act]').forEach(function(btn) { btn.addEventListener('click', function() {
+    const act = btn.getAttribute('data-act');
+    if (act === 'confirm') {
+      meSay('✅ 就这样下单');
+      if (PENDING) { CART = PENDING.combo.map(function(c) { return Object.assign({}, c); }); submitOrder(); }
+    } else if (act === 'again') {
+      if (PENDING && PENDING.combo[0]) { const used = PENDING.combo[0].name; ITEMS.forEach(function(it) { if (it.name === used) it._skip = true; }); }
+      agentRecommend($id('chatIn').value || text || '随便推荐');
+    } else if (act === 'wish') {
+      wishFlow(text.slice(0, 20));
+    } else { document.querySelector('details').open = true; document.querySelector('details').scrollIntoView({behavior: 'smooth', block: 'center'}); }
+  }); });
+}
+
+function submitOrder() {
+  INTERACTED = true;
+  if (!CART.length) return null;
+  const r = judge(CART.slice(), SIM_MIN);
+  ORDERS.push({min: SIM_MIN, items: r.items, kcal: r.kcal, code: r.code});
+  ORDERS.sort(function(a, b) { return a.min < b.min ? -1 : 1; });
+  CART = [];
+  const itemsHtml = r.items.map(function(i) { return '<div>' + i.qty + '× ' + esc(i.name) + (i.matched ? ' · ' + i.kcal + ' kcal' : ' · 账本未收录') + '</div>'; }).join('');
+  agentSay('<div class="vcode mono" style="color:' + COLOR[r.code] + '">' + r.code + '</div>' +
+    '<div class="vlabel" style="color:' + COLOR[r.code] + '">' + NAME[r.code] + '</div>' +
+    '<div class="vreason">' + esc(r.reason) + '</div>' +
+    (r.breaches.length ? '<div class="badges">' + r.breaches.map(function(b) { return '<span class="bdg" style="background:' + b.c + '">⚠ ' + b.t + '</span>'; }).join('') + '</div>' : '') +
+    '<div style="margin-top:8px;font-size:12px;color:var(--muted)">' + itemsHtml + '</div>');
+  // 探活闭环：本次摄入回应仍处 open 状态的探活建议
+  const hasCaf = r.items.some(function(i) { return CAFE_KW.some(function(k) { return i.name.indexOf(k) !== -1; }); });
+  PROBES.filter(function(p) { return p.status === 'open'; }).forEach(function(pr) {
+    let closed = null;
+    if (pr.domain === 'caffeine' && hasCaf) closed = 'adopted';
+    else if (pr.domain === 'metabolic' && pr.key === 'snack_103') closed = 'adopted';
+    if (closed) {
+      pr.status = closed;
+      agentSay('🔗 <b>探活闭环</b>：' + esc(pr.text) + '<br>→ 已被本次摄入回应，判定 <b class="mono" style="color:' + COLOR[r.code] + '">' + r.code + ' ' + NAME[r.code] + '</b>');
+    }
+  });
+  runProbes();
+  LAST = {code: r.code, reason: r.reason, items: r.items, kcal: r.kcal, sodium: r.sodium, qty: r.qty, breaches: r.breaches, scene: '模拟时间 ' + fmt(SIM_MIN)};
+  $id('share2').textContent = '📸 把刚才这单（' + r.code + '）生成晒卡';
+  return r;
+}
+
+const PROBES = [];
+function fireProbe(key, code, min, text, items, domain) {
+  let pr = PROBES.find(function(p) { return p.key === key; });
+  if (pr) return pr;                          // 每个探活键一次，重放不刷屏
+  pr = {key: key, code: code, min: min, text: text, items: items || null,
+        status: 'open', domain: domain || 'general'};
+  PROBES.push(pr);
+  let html = '<span class="bdg" style="background:' + COLORP[code] + '">' + NAMEP[code] + '</span> ' + esc(text) +
+    '<div class="dim2" style="font-size:10px;margin-top:3px">' + fmt(min) + ' · probe 探活方向 · 状态码不受影响</div>';
+  if (items && code === '103') {
+    html += '<div class="acts"><button class="abtn" data-adopt="' + key + '">✅ 采纳：立即摄入这份建议</button></div>';
+  }
+  const b = agentSay(html);
+  if (items && code === '103') {
+    b.querySelector('[data-adopt="' + key + '"]').addEventListener('click', function() {
+      if (pr.status !== 'open') return;
+      pr.status = 'adopted';
+      CART = items.map(function(i) { return Object.assign({}, i, {qty: 1}); });
+      const r = submitOrder();
+      agentSay('🔗 <b>探活闭环完成</b>：' + esc(text) + '<br>→ 已采纳摄入，本次判定 <b class="mono" style="color:' + COLOR[r.code] + '">' + r.code + ' ' + NAME[r.code] + '</b>');
+    });
+  }
+  return pr;
+}
+function closeProbe(key, how) {
+  const pr = PROBES.find(function(p) { return p.key === key && p.status === 'open'; });
+  if (pr) pr.status = how;
+  return pr;
+}
+function runProbes() {
+  const t = SIM_MIN;
+  const caf = ORDERS.filter(function(o) { return (o.items || []).some(function(i) { return CAFE_KW.some(function(k) { return i.name.indexOf(k) !== -1; }); }); });
+  const cafBefore = caf.filter(function(o) { return o.min <= t; });
+  const intake = ORDERS.filter(function(o) { return o.min <= t; }).reduce(function(a, o) { return a + (o.kcal || 0); }, 0);
+  const hasCafIn = function(a, b2) { return caf.some(function(o) { return o.min >= a && o.min <= b2; }); };
+  const coffee = ITEMS.filter(function(it) { return it.matched && it.kcal != null && CAFE_KW.some(function(k) { return it.name.indexOf(k) !== -1; }); }).sort(function(a, b) { return a.kcal - b.kcal; })[0];
+
+  // 晨间咖啡窗 09:30–11:00
+  if (t >= 570 && t <= 660 && !cafBefore.length)
+    fireProbe('morning_103', '103', Math.max(t, 570), '晨间咖啡窗探活：今日尚无咖啡因摄入——建议一杯小杯鲜萃咖啡（15 kcal），保持上午清醒', coffee ? [coffee] : null, 'caffeine');
+  if (t > 660 && !hasCafIn(570, 660)) {
+    closeProbe('morning_103', 'timed_out');
+    fireProbe('morning_599', '599', 660, '晨间咖啡窗关闭：09:30–11:00 的补给建议未被采纳——采纳了那杯 15 kcal 的咖啡就不会有这条 599', null);
+  }
+
+  // 午后咖啡窗 13:30–15:30
+  if (t >= 810 && t <= 930 && !cafBefore.length)
+    fireProbe('afternoon_103', '103', Math.max(t, 810), '午后咖啡窗探活：困倦谷将至——建议麦咖啡™冰美式中杯（13 kcal）', coffee ? [coffee] : null, 'caffeine');
+  if (t > 930 && !hasCafIn(810, 930)) {
+    closeProbe('afternoon_103', 'timed_out');
+    fireProbe('afternoon_599', '599', 930, '午后咖啡窗关闭：仍未摄入咖啡因，下午 CPU 降频已记录在案', null);
+  }
+
+  // 午后补给窗 14:30–16:00（试玩间预设减脂目标 1800 kcal）
+  if (t >= 870 && t <= 960) {
+    const gap = SNACK_TARGET - intake;
+    if (gap < 0)
+      fireProbe('snack_412', '412', Math.max(t, 870), '今日已超减脂预算 ' + (-gap) + ' kcal，下午茶建议被目标否决——412 在保护你', null, 'metabolic');
+    else if (gap >= 250) {
+      const snack = ITEMS.filter(function(i) { return i.matched && i.kcal && i.kcal <= gap && i.protein >= 8; })
+        .sort(function(a, b) { return (b.protein || 0) - (a.protein || 0); })[0];
+      fireProbe('snack_103', '103', Math.max(t, 870), '减脂补给窗：缺口 ' + gap + ' kcal——建议 ' +
+        (snack ? snack.name + '（' + snack.kcal + ' kcal / 蛋白 ' + snack.protein + 'g）' : '轻量蛋白加餐'),
+        snack ? [Object.assign({}, snack, {qty: 1})] : null, 'metabolic');
+    } else
+      fireProbe('snack_204', '204', Math.max(t, 870), '今日摄入与预算吻合（缺口仅 ' + gap + ' kcal），主动静默', null, 'metabolic');
+  }
+
+  // 522：两个咖啡窗都超时 → 失联升级
+  const lost599 = PROBES.filter(function(p) { return p.key === 'morning_599' || p.key === 'afternoon_599'; });
+  if (lost599.length >= 2)
+    fireProbe('lost_522', '522', Math.max(t, 970), '连续窗口失联：晨间与午后的探活建议均未获反馈，告警级别已升级', null, 'general');
+}
+function judge(cart, atMin) {
+  const items = cart.map(function(x) { return {name: x.name, matched: x.matched, kcal: x.kcal != null ? x.kcal * x.qty : null, sod: x.sod != null ? x.sod * x.qty : null, qty: x.qty}; });
+  const matched = items.filter(function(i) { return i.matched; });
+  const kcal = matched.length ? matched.reduce(function(a, i) { return a + i.kcal; }, 0) : null;
+  const sodium = matched.length ? matched.reduce(function(a, i) { return a + i.sod; }, 0) : null;
+  const qty = items.reduce(function(a, i) { return a + i.qty; }, 0);
+  const sig = items.slice().sort(function(a, b) { return a.name.localeCompare(b.name); }).map(function(i) { return i.name + 'x' + i.qty; }).join(',');
+  const hour = Math.floor(atMin / 60);
+  const isDrink = function(n) { return ['可乐', '雪碧', '芬达', '美汁源', '咖啡', '拿铁', '美式', '摩卡', '奶茶', '茶'].some(function(k) { return n.indexOf(k) !== -1; }); };
+  const dupToday = ORDERS.filter(function(o) { return o.min <= atMin; }).length;
+  var code, reason;
+  if (hour >= 22 || hour < 5) { code = '408'; reason = '你在 ' + fmt(atMin) + ' 发起摄入——身体服务已不在供餐时段（22:00–05:00 判 408）'; }
+  else if (dupToday >= 1) { code = '429'; reason = '今日第 ' + dupToday + ' 次之后的摄入请求，触发限流'; }
+  else if (items.length && items.every(function(i) { return isDrink(i.name); }) && !items.every(function(i) { return CAFE_KW.some(function(k) { return i.name.indexOf(k) !== -1; }); })) { code = '418'; reason = '整单均为非咖啡因饮料——茶壶只服务咖啡，功能性摄入请判 200'; }
+  else if (items.length && items.every(function(i) { return CAFE_KW.some(function(k) { return i.name.indexOf(k) !== -1; }); })) { /* 纯咖啡因单：功能性摄入，走正常判定 */ }
+  else if (qty >= 6) { code = '502'; reason = '单笔聚合 ' + qty + ' 件商品——多人网关请求'; }
+  else if (LAST_SIG && sig === LAST_SIG) { code = '304'; reason = '与上一单完全一致，缓存直接命中'; }
+  else if (items.length && !matched.length) { code = '404'; reason = '全部商品不在官方营养账本——数据缺口如实呈现'; }
+  else if (items.some(function(i) { return SEEN.has(i.name) === false; })) { code = '201'; reason = '本模拟日首次出现的新品，身体账本新建记录'; }
+  else if (matched.length < items.length) { code = '206'; reason = matched.length + '/' + items.length + ' 项商品可计量，返回部分内容'; }
+  else { code = '200'; reason = '摄入成功入账，全部商品营养可计算'; }
+  const breaches = [];
+  if (kcal != null && kcal > 1500) breaches.push({t: '热量过载（P1 事故）', c: '#E24D42'});
+  else if (kcal != null && kcal > 800) breaches.push({t: '热量超配额（P2 告警）', c: '#E98300'});
+  if (sodium != null && sodium > 1200) breaches.push({t: '钠超标（P2 告警）', c: '#E98300'});
+  items.forEach(function(i) { SEEN.add(i.name); });
+  LAST_SIG = sig;
+  return {code: code, reason: reason, items: items, kcal: kcal, sodium: sodium, qty: qty, breaches: breaches};
+}
+
+/* ── 新品心愿榜 + DIY 新品工坊（localStorage 持久化）────────────── */
+let WISHES = [];
+let DIYS = [];
+try {
+  WISHES = JSON.parse(localStorage.getItem('mcd.wishes') || '[]');
+  DIYS = JSON.parse(localStorage.getItem('mcd.diys') || '[]');
+  DIYS.forEach(function(d) { ITEMS.push(d); });
+} catch (e) {}
+
+function wishFlow(name) {
+  const exists = WISHES.some(function(w) { return w.name === name; });
+  const b = agentSay('「<b>' + esc(name) + '</b>」——官方菜单和营养账本里都查不到（404）。<br>要把它送进<b>新品心愿榜</b>吗？愿力最高的心愿，就是最该被官方做成真品的那个。<br>' +
+    (exists ? '<div class="dim2">（它已经在你的心愿榜里，愿力 +1）</div>' : '') +
+    '<div class="acts">' +
+    '<button class="abtn gold" data-wish="1">📮 加入心愿榜（愿力 +1）</button>' +
+    '<button class="abtn" data-wish="diy">🧪 去 DIY 工坊自己合成一个</button>' +
+    '<button class="abtn" data-wish="no">❌ 随便说说</button></div>');
+  b.querySelectorAll('[data-wish]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      const w = btn.getAttribute('data-wish');
+      if (w === '1') {
+        const hit = WISHES.find(function(x) { return x.name === name; });
+        if (hit) hit.votes += 1;
+        else WISHES.push({name: name, votes: 1, at: fmt(SIM_MIN)});
+        saveWishes(); renderWishBoard();
+        agentSay('📮 已入榜！「' + esc(name) + '」当前愿力 <b>' + (hit ? hit.votes : 1) + '</b>。生成晒卡发出去拉票——愿力代表「最想让官方做出来」的呼声。');
+      } else if (w === 'diy') {
+        diyStart();
+      } else {
+        agentSay('好的，就当刚才那句是许愿前的深呼吸 🌬️');
+      }
+    });
+  });
+}
+function saveWishes() {
+  try { localStorage.setItem('mcd.wishes', JSON.stringify(WISHES)); } catch (e) {}
+}
+/* ── DIY 新品（纯对话式，无表单无 chip 墙）────────────────────────
+   Agent 问你要什么味道 → 用户打字说 → Agent 从全场选配料组单 →
+   展示合成卡 → 用户说名字 → 201 入库。整个流程就是一个对话。 */
+let DIY_STAGE = 0;       // 0=未激活 1=等味道关键词 2=等新品名
+let DIY_PICKS = [];      // 当前选中的配料
+
+function diyStart() {
+  DIY_STAGE = 1;
+  DIY_PICKS = [];
+  agentSay('🧪 <b>DIY 新品工坊</b><br>想发明什么味道？说两种以上你想吃的——<br>例如「<b>薯条 + 甜筒</b>」「<b>鸡块 + 鳕鱼堡</b>」「<b>辣 + 咖啡</b>」，我从全场 107 项里帮你搭。');
+}
+
+function diyParse(text) {
+  // 从用户输入中提取匹配的餐品（含口语别名）
+  const ALIAS = {
+    '甜筒': '圆筒', '圆筒': '圆筒', '冰淇淋': '圆筒',
+    '可乐': '可乐', '咖啡': '咖啡', '拿铁': '拿铁', '美式': '美式',
+    '薯条': '薯', '薯': '薯', '汉堡': '堡', '堡': '堡',
+    '鸡': '鸡', '牛': '牛', '鱼': '鱼', '猪': '猪柳',
+    '辣': '辣', '派': '派', '新地': '新地', '旋风': '旋风',
+    '麦乐鸡': '麦乐鸡', '翅': '翅', '玉米': '玉米',
+  };
+  const kws = text.replace(/[+＋、，, ]+/g, '|').replace(/[|]+$/g, '');
+  const patterns = kws.split('|').filter(Boolean);
+  if (!patterns.length) { agentSay('告诉我你想吃的关键词，我帮你搭～'); return; }
+  const matched = [];
+  ITEMS.forEach(function(it) {
+    if (it._skip) return;
+    const hit = patterns.some(function(kw) {
+      if (it.name.indexOf(kw) !== -1) return true;
+      // 别名匹配：口语词 → 官方名关键词
+      const alias = ALIAS[kw];
+      return alias && it.name.indexOf(alias) !== -1;
+    });
+    if (hit && !matched.find(function(m) { return m.name === it.name; }))
+      matched.push(Object.assign({}, it, {qty: 1}));
+  });
+  if (matched.length < 2) {
+    agentSay('「' + esc(patterns.join('、')) + '」在官方菜单里只找到 ' + matched.length + ' 项——再补充一个关键词？');
+    return;
+  }
+  DIY_PICKS = matched.slice(0, 6);   // 上限 6 项
+  DIY_STAGE = 2;
+  const kcal = DIY_PICKS.reduce(function(a, p) { return a + (p.kcal || 0) * (p.qty || 1); }, 0);
+  const cards = DIY_PICKS.map(function(p) {
+    return '<div class="ci">' + (p.img ? '<img src="' + p.img + '" alt="">' : '') +
+      '<span class="cn">' + esc(p.name) + '</span>' +
+      '<span class="cv">' + (p.kcal != null ? p.kcal + ' kcal' : '账本 404') + '</span></div>';
+  }).join('');
+  agentSay('🧪 按你的关键词从全场选了 ' + DIY_PICKS.length + ' 项：' +
+    '<div class="combo">' + cards + '</div>' +
+    '合计约 <b>' + kcal + ' kcal</b>。给它起个名？直接回复名字即可入库（201 Created）。');
+  DIY_STAGE = 2;
+}
+
+function diyCreate(nm) {
+  if (!DIY_PICKS.length) { agentSay('先说你想吃什么味道～'); return; }
+  const diy = {code: 'DIY-' + Date.now(), name: nm,
+    img: (DIY_PICKS[0] && DIY_PICKS[0].img) || '', cat: '自制新品',
+    tags: ['自制', 'DIY'], matched: false, kcal: null, sod: null, protein: null,
+    parts: DIY_PICKS.map(function(p) { return p.name; }),
+    at: fmt(SIM_MIN), creative: true};
+  DIYS.push(diy); ITEMS.push(diy);
+  try { localStorage.setItem('mcd.diys', JSON.stringify(DIYS)); } catch (e) {}
+  drawMenu($id('search').value);
+  DIY_STAGE = 0; DIY_PICKS = [];
+  agentSay('🧪 <b>' + esc(nm) + '</b> 合成入库（<b>201 Created · 自制新品</b>）！<br>' +
+    '配方：' + esc(diy.parts.join(' + ')) + '<br>' +
+    '<div class="dim2" style="margin-top:6px">创意组合优先——官方营养表管不到你发明的味道，这正是 DIY 的浪漫。</div>' +
+    '<div class="acts"><button class="abtn" data-act="wishdiy">📮 加入心愿榜，让官方做出来</button></div>', 'agent');
+  // 绑心愿按钮
+  var wb = $id('msgs').querySelector('.msg:last-child [data-act="wishdiy"]');
+  if (wb) wb.addEventListener('click', function() { wishFlow(nm); });
+}
+
+function renderWishBoard() {
+  const sorted = WISHES.slice().sort(function(a, b) { return b.votes - a.votes; });
+  const rows = sorted.map(function(w, i) {
+    return '<div class="meta-row"><span class="k">#' + (i + 1) + ' ' + esc(w.name) + '</span>' +
+      '<span class="v">愿力 ' + w.votes + '</span></div>';
+  }).join('');
+  agentSay('📮 <b>新品心愿榜</b>（本机档案）<br>' + (rows || '（空）') +
+    '<div class="dim2" style="margin-top:6px">生成晒卡分享， collecting 愿力——愿力榜就是「最想让官方做出来」的民意。</div>');
+}
+
+
+const QUICK = ['20块吃什么', '减脂能吃啥', '来杯咖啡', '新品有什么', '深夜饿了', '随便推荐', '🧪 DIY 新品', '📮 新品心愿榜'];
+$id('quick').innerHTML = QUICK.map(function(q) { return '<button data-q="' + q + '">' + q + '</button>'; }).join('');
+$id('quick').addEventListener('click', function(e) {
+  const b = e.target.closest('[data-q]');
+  if (!b) return;
+  $id('chatIn').value = b.getAttribute('data-q');
+  sendChat();
+});
+function sendChat() {
+  const text = $id('chatIn').value.trim();
+  if (!text) return;
+  INTERACTED = true;
+  if (/DIY/.test(text)) { diyStart(); return; }
+  // DIY 模式下，后续输入作为配料关键词
+  if (DIY_STAGE > 0) {
+    if (DIY_STAGE === 1) { diyParse(text); return; }
+    if (DIY_STAGE === 2 && DIY_PICKS.length) { diyCreate(text); return; }
+  }
+  if (/心愿/.test(text)) { renderWishBoard(); return; }
+  meSay(text);
+  $id('chatIn').value = '';
+  const r = parseIntent(text);
+  if (r.scene === 'night' && (SIM_MIN < 1230 || SIM_MIN > 1260)) {
+    setClock(1320);
+    agentSay('深夜场景——已把模拟时间拨到 <b class="mono">' + fmt(SIM_MIN) + '</b>。现在提交一单会判 <b style="color:var(--orange)">408 Request Timeout</b>（身体服务不在供餐时段）。试试提交，或把时间拨回白天。');
+    return;
+  }
+  if (!r.wants && !r.budget && !r.kcalCap && !r.scene && !r.random && text.length <= 20 && !/菜单|帮助|怎么用|探活/.test(text)) {
+    wishFlow(text);
+    return;
+  }
+  agentRecommend(text);
+}
+$id('chatSend').addEventListener('click', sendChat);
+$id('chatIn').addEventListener('keydown', function(e) { if (e.key === 'Enter') sendChat(); });
+
+$id('catChips').innerHTML = CATS.map(function(c, i) { return '<button class="chip' + (i === 0 ? ' on' : '') + '" data-cat="' + c + '">' + c + '</button>'; }).join('');
+$id('catChips').addEventListener('click', function(e) {
+  const b = e.target.closest('[data-cat]');
+  if (!b) return;
+  CUR_CAT = b.getAttribute('data-cat');
+  drawMenu($id('search').value);
+});
+function drawMenu(q) {
+  q = (q || '').trim();
+  const list = ITEMS.filter(function(it) { return (CUR_CAT === '全部' || it.cat === CUR_CAT) && (!q || it.name.indexOf(q) !== -1); });
+  $id('menu').innerHTML = list.map(function(it) {
+    const isNew = (it.tags || []).indexOf('上新') !== -1;
+    return '<div class="mi" data-code="' + it.code + '">' +
+      (it.img ? '<img src="' + it.img + '" loading="lazy" alt="">' : '<div class="nofb">' + esc(it.name.slice(0, 1)) + '</div>') +
+      (isNew ? '<span class="tag">上新</span>' : '') +
+      '<div class="n">' + esc(it.name) + '</div>' +
+      '<div class="v">' + (it.matched ? it.kcal + ' kcal' : '—') + '</div></div>';
+  }).join('') || '<div style="color:var(--dim);font-size:12px">无匹配商品</div>';
+}
+$id('search').addEventListener('input', function(e) { drawMenu(e.target.value); });
+$id('menu').addEventListener('click', function(e) {
+  const c = e.target.closest('.mi');
+  if (!c) return;
+  const it = ITEMS.find(function(x) { return x.code === c.getAttribute('data-code'); });
+  const ex = CART.find(function(x) { return x.code === it.code; });
+  if (ex) ex.qty += 1; else CART.push(Object.assign({}, it, {qty: 1}));
+  meSay('加了 1× ' + it.name + '（对 Agent 说「下单」即提交）');
+});
+
+function drawCard() {
+  const cv = document.getElementById('shot'), ctx = cv.getContext('2d');
+  const W = 900, H = 1150;
+  ctx.fillStyle = '#111217'; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = '#2a2f38'; ctx.lineWidth = 2; ctx.strokeRect(14, 14, W-28, H-28);
+  ctx.strokeStyle = '#FFC72C'; ctx.lineWidth = 13;
+  ctx.beginPath(); ctx.moveTo(60, 128); ctx.lineTo(60, 76);
+  ctx.quadraticCurveTo(60, 30, 100, 30); ctx.quadraticCurveTo(142, 30, 148, 118);
+  ctx.quadraticCurveTo(154, 30, 196, 30); ctx.quadraticCurveTo(236, 30, 236, 76);
+  ctx.lineTo(236, 128); ctx.stroke();
+  ctx.fillStyle = '#d8d9da'; ctx.font = '600 30px "PingFang SC", sans-serif';
+  ctx.fillText('麦门状态码', 268, 78);
+  ctx.fillStyle = '#FFC72C'; ctx.font = '600 20px "PingFang SC", sans-serif';
+  ctx.fillText('身体服务响应卡 · 模拟点单', 268, 110);
+  ctx.fillStyle = COLOR[LAST.code]; ctx.font = '800 130px "SF Mono", Consolas, monospace';
+  ctx.fillText(LAST.code, 60, 300);
+  ctx.fillStyle = '#d8d9da'; ctx.font = '700 34px "PingFang SC", sans-serif';
+  ctx.fillText(NAME[LAST.code], 60, 356);
+  ctx.fillStyle = '#8e9095'; ctx.font = '400 17px "PingFang SC", sans-serif';
+  wrap(ctx, LAST.reason, 60, 396, W-120, 28);
+  ctx.strokeStyle = '#2a2f38'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(60, 470); ctx.lineTo(W-60, 470); ctx.stroke();
+  ctx.fillStyle = '#8e9095'; ctx.font = '600 15px "PingFang SC", sans-serif';
+  ctx.fillText('本次摄入（' + fmt(SIM_MIN) + '）', 60, 505);
+  let y = 540;
+  LAST.items.slice(0, 7).forEach(function(i) {
+    ctx.fillStyle = i.matched ? '#d8d9da' : '#E24D42';
+    ctx.font = '400 18px "PingFang SC", sans-serif';
+    ctx.fillText(i.qty + '× ' + i.name, 60, y);
+    ctx.fillStyle = '#8e9095'; ctx.font = '400 15px "SF Mono", monospace';
+    ctx.fillText(i.matched ? i.kcal + ' kcal' : '—', W-160, y);
+    y += 34;
+  });
+  if (LAST.items.length > 7) { ctx.fillStyle = '#6a6d73'; ctx.fillText('…共 ' + LAST.items.length + ' 件', 60, y); y += 34; }
+  y = Math.max(y + 16, 820);
+  ctx.fillStyle = '#8e9095'; ctx.font = '600 15px "PingFang SC", sans-serif';
+  ctx.fillText('指标告警', 60, y); y += 30;
+  if (LAST.breaches.length) {
+    LAST.breaches.forEach(function(b) {
+      ctx.fillStyle = b.c; ctx.font = '700 18px "PingFang SC", sans-serif';
+      ctx.fillText('⚠ ' + b.t, 60, y); y += 32;
+    });
   } else {
-    push(1);
-    if (page > 3) nums.push('<span class="pg-gap">…</span>');
-    for (let i = Math.max(2, page - 1); i <= Math.min(pages - 1, page + 1); i++) push(i);
-    if (page < pages - 2) nums.push('<span class="pg-gap">…</span>');
-    push(pages);
+    ctx.fillStyle = '#37872D'; ctx.font = '400 16px "PingFang SC", sans-serif';
+    ctx.fillText('✓ 无超标指标', 60, y); y += 32;
   }
-  const pager = `
-    <div class="pager">
-      <span class="pager-info">第 ${(page - 1) * PER_PAGE + 1}–${Math.min(page * PER_PAGE, filtered.length)} 条，
-        共 ${filtered.length} 单${pages > 1 ? ` · ${pages} 页` : ''}</span>
-      ${pgBtn('‹', page - 1, { disabled: page === 1, label: '上一页' })}
-      ${nums.join('')}
-      ${pgBtn('›', page + 1, { disabled: page === pages, label: '下一页' })}
-    </div>`;
-
-  const zone = on1024 ? `
-    <div style="text-align:center;padding:20px">
-      <div class="stat mono" style="font-size:42px;color:var(--yellow)">${s.flowUnit}</div>
-      <div class="stat-note" style="margin-top:9px">
-        按 1 kcal = 1 Byte、1024 进制换算，你的身体服务本期共传输 ${(s.totalKcal||0).toLocaleString()} kcal。<br>
-        没有丢包，全是 TCP（贪吃 Protocol）。
-      </div>
-    </div>`
-    : `<div class="locked">🔒 1024 限定区将于 10 月 20 日解锁 —— 届时摄入总量将换算为流量单位（1 kcal = 1 Byte）</div>`;
-
-  document.getElementById('app').innerHTML =
-    topbar(on1024 ? ' on' : '', on1024 ? '1024 模式：已激活' : '1024 模式：10/20–10/26 自动激活') +
-    `<div class="grid4">${hero}</div>
-    <div class="grid">${second}</div>
-    <div class="grid4" style="margin-bottom:10px">
-      <div class="panel">
-        <div class="panel-h"><span class="dot" style="background:var(--yellow)"></span><h3>监控告警</h3></div>
-        ${(s.alerts||[]).map(a => `<div class="alert">${esc(a)}</div>`).join('') || '<div class="stat-note">无告警</div>'}
-        <div class="panel-h" style="margin-top:13px">
-          <span class="dot" style="background:var(--orange)"></span><h3>错误预算消耗</h3></div>
-        <div style="display:flex;align-items:baseline;gap:7px;margin-bottom:7px">
-          <span class="mono" style="font-size:22px;font-weight:700;color:var(--orange)">${s.errorBudgetUsed}</span>
-          <span class="stat-note" style="margin:0">次 4xx/5xx · 共 ${s.totalOrders} 单</span>
-        </div>
-        <div class="bar" style="height:6px"><div style="width:${s.totalOrders ? Math.round(s.errorBudgetUsed/s.totalOrders*100) : 0}%;background:var(--orange)"></div></div>
-        <div class="stat-note" style="margin-top:7px">
-          206 残缺响应属信息类，不计入错误预算
-        </div>
-        <div class="panel-h" style="margin-top:14px">
-          <span class="dot" style="background:var(--cyan)"></span><h3>SLA 分级</h3></div>
-        <div class="sla">
-          ${[
-            {min: 99, label: '金牌 SLA', c: 'var(--green)'},
-            {min: 95, label: '银牌', c: 'var(--cyan)'},
-            {min: 90, label: '铜牌', c: 'var(--yellow)'},
-            {min: 0, label: 'Best Effort', c: 'var(--dim)'},
-          ].map(x => {
-            const on = m.uptime >= x.min;
-            return `<div class="sla-row">
-              <span class="sla-dot" style="background:${on ? x.c : 'var(--panel2)'}"></span>
-              <span class="sla-lb" style="color:${on ? 'var(--text)' : 'var(--dim)'}">${x.label}</span>
-              <span class="sla-v">≥${x.min}%</span>
-              <span class="sla-s" style="color:${on ? x.c : 'var(--dim)'}">${on ? '达标' : '未达标'}</span>
-            </div>`;
-          }).join('')}
-        </div>
-        <div class="stat-note" style="margin-top:8px">
-          当前 Uptime ${m.uptime}% · 依据本维度口径判定
-        </div>
-      </div>
-      <div class="panel">
-        <div class="panel-h"><span class="dot" style="background:var(--red)"></span><h3>营养账本缺口</h3></div>
-        <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:9px">
-          <span class="mono" style="font-size:20px;font-weight:700;color:${cov>=60?'var(--green)':(cov>=40?'var(--yellow)':'var(--red)')}">${cov}<small style="font-size:11px;color:var(--muted)">% 可计量</small></span>
-          <span class="stat-note" style="margin:0">副指标 · 不计入错误预算</span>
-        </div>
-        ${gapList || '<div class="stat-note">全部商品均可计量</div>'}
-        <div class="stat-note" style="margin-top:9px">官方营养账本仅收录 160 项标准单品所致</div>
-      </div>
-    </div>
-    <div class="panel" id="logPanel" style="margin-bottom:10px">
-      <div class="panel-h row" style="margin-bottom:11px">
-        <div><span class="dot" style="background:var(--purple)"></span>
-          <h3>请求日志 · 每单一次响应</h3></div>
-        ${chips}
-      </div>
-      <table>
-        <thead><tr>
-          <th style="width:132px">时间 / 门店</th><th style="width:216px">状态码 / 诊断</th>
-          <th>响应体（商品明细）</th><th style="width:78px;text-align:right">热量 / 钠</th>
-        </tr></thead>
-        <tbody>${log}</tbody>
-      </table>
-      ${filtered.length ? pager : '<div class="stat-note" style="padding-top:12px;text-align:center">该筛选下暂无订单</div>'}
-    </div>
-    <div class="panel">
-      <div class="panel-h"><span class="dot" style="background:var(--yellow)"></span><h3>1024 程序员节限定区</h3></div>
-      ${zone}
-    </div>
-    <footer>
-      语义唯一视角：你是主体，你的身体是服务端 —— 全部状态码只描述你的身体对这次摄入的响应<br>
-      麦门监控台 · 基于麦当劳中国官方 MCP 构建 · 独立开发，非官方产品 · 输出仅供参考，不构成营养或医疗建议
-    </footer>`;
+  y = Math.max(y + 14, 960);
+  ctx.fillStyle = '#8e9095'; ctx.font = '400 16px "SF Mono", monospace';
+  ctx.fillText('合计 ' + (LAST.kcal ?? '?') + ' kcal · 钠 ' + (LAST.sodium ?? '?') + ' mg · ' + LAST.qty + ' 件', 60, y);
+  ctx.fillStyle = '#EAB839'; ctx.font = '600 18px "PingFang SC", sans-serif';
+  ctx.fillText('模拟时间：' + fmt(SIM_MIN), 60, y + 40);
+  ctx.fillStyle = '#6a6d73'; ctx.font = '400 14px "PingFang SC", sans-serif';
+  ctx.fillText('麦门状态码 · 基于麦当劳中国官方 MCP · 独立开发非官方产品', 60, H-72);
+  ctx.fillText('github.com/chaucerj/mcd-status-codes', 60, H-44);
+  $id('shot').style.display = 'block';
+  $id('dl').style.display = 'inline-flex';
+  $id('dl').href = cv.toDataURL('image/png');
 }
-
-if (s.collectionStatus === '404') {
-  render404();
-} else {
-  // 三类交互状态彼此独立：统计维度 / 日志筛选 / 日志页码
-  // 维度支持 URL 深链（#week / #day），便于按视图分享与回访
-  const HASH_DIM = (location.hash || '').replace('#', '');
-  let CURRENT = HASH_DIM === 'week' ? 'week' : 'day';
-  let LOG_FILTER = 'all';
-  let LOG_PAGE = 1;
-
-  function draw() { render(CURRENT, LOG_FILTER, LOG_PAGE); }
-
-  document.addEventListener('click', e => {
-    // 统计维度
-    const dimBtn = e.target.closest('[data-dim]');
-    if (dimBtn) {
-      const d = dimBtn.getAttribute('data-dim');
-      if (d !== CURRENT) { CURRENT = d; history.replaceState(null, '', '#' + d); draw(); }
-      dimBtn.focus();
-      return;
-    }
-    // 日志筛选
-    const fBtn = e.target.closest('[data-filter]');
-    if (fBtn) {
-      const f = fBtn.getAttribute('data-filter');
-      if (f !== LOG_FILTER) { LOG_FILTER = f; LOG_PAGE = 1; draw(); }
-      fBtn.focus();
-      return;
-    }
-    // 日志翻页
-    const pBtn = e.target.closest('[data-page]');
-    if (pBtn && !pBtn.disabled) {
-      LOG_PAGE = parseInt(pBtn.getAttribute('data-page'), 10) || 1;
-      draw();
-      const cur = document.querySelector('.pg-btn.on');
-      if (cur) cur.focus();
-    }
-  });
-
-  // 键盘左右键翻页（焦点在日志面板内时）
-  document.addEventListener('keydown', e => {
-    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-    const logPanel = e.target.closest?.('#logPanel');
-    if (!logPanel) return;
-    e.preventDefault();
-    const total = Object.keys(codeCountGlobal()).length;
-    if (total <= 1) return;
-    LOG_PAGE = Math.min(total, Math.max(1,
-      LOG_PAGE + (e.key === 'ArrowRight' ? 1 : -1)));
-    draw();
-    document.querySelector('.pg-btn.on')?.focus();
-  });
-
-  function codeCountGlobal() {
-    const list = LOG_FILTER === 'all'
-      ? (DATA.orders || [])
-      : (DATA.orders || []).filter(o => o.httpStatus === LOG_FILTER);
-    return { n: Math.max(1, Math.ceil(list.length / 5)) };
+function wrap(ctx, text, x, y, maxW, lh) {
+  let line = '', yy = y;
+  for (const ch of text) {
+    if (ctx.measureText(line + ch).width > maxW) { ctx.fillText(line, x, yy); line = ch; yy += lh; }
+    else line += ch;
   }
-
-  draw();
+  if (line) ctx.fillText(line, x, yy);
 }
+$id('share2').addEventListener('click', function() {
+  if (!LAST) { meSay('还没有已提交的摄入——先点一单吧'); return; }
+  drawCard();
+  $id('shot').scrollIntoView({behavior: 'smooth', block: 'center'});
+});
+function setClock(m) {
+  SIM_MIN = +m;
+  $id('clockT').textContent = fmt(SIM_MIN);
+  if (INTERACTED) runProbes();
+}
+drawMenu('');
+agentSay('👋 欢迎来到麦门监控台试玩间。我是你身体服务的值班运维 Agent。<br><br>直接告诉我你想吃什么——比如「<b>20 块吃什么</b>」「<b>减脂能吃啥</b>」「<b>来杯咖啡</b>」「<b>新品有什么</b>」——我会组单、判定状态码、按模拟时间探活。拖动上方时间轴可以让探活重放。');
+setClock(720);
 </script>
 </body>
 </html>
