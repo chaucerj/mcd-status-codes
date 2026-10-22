@@ -83,7 +83,9 @@ footer{margin-top:22px;padding-top:14px;border-top:1px solid var(--border);color
 </head>
 <body>
 <header><img src="logo.png" alt="Golden Arches"><h1>麦门状态码 <span class="accent">// 试玩间</span></h1></header>
-<div class="sub">跟运维 Agent 对话点餐：说「20 块吃什么」「减脂能吃啥」「来杯咖啡」「新品有什么」，它按官方真实菜单与营养表组单、判定状态码、触发探活。<b>无需 Token</b>。<a href="https://github.com/chaucerj/mcd-status-codes" target="_blank">GitHub 仓库 →</a></div>
+<div class="sub">跟运维 Agent 对话点餐：说「20 块吃什么」「减脂能吃啥」「来杯咖啡」「新品有什么」，它按官方真实菜单与营养表组单、判定状态码、触发探活。<b>无需 Token</b>。<a href="https://github.com/chaucerj/mcd-status-codes" target="_blank">GitHub 仓库 →</a>
+  · <a href="dashboard.html" target="_blank">📊 监控台 →</a>
+  · <a href="https://github.com/chaucerj/mcd-status-codes/issues/264" target="_blank">参赛 Issue →</a></div>
 <div class="clock"><span class="t mono" id="clockT">12:00</span><input type="range" id="clockSlider" min="0" max="1429" value="720" aria-label="模拟时间"><span class="d">🕐 模拟时间轴——Agent 探活随时钟触发</span></div>
 <div class="chat"><div class="msgs" id="msgs"></div><div class="quick" id="quick"></div><div class="inputrow"><input id="chatIn" placeholder="想吃什么？例如：20块吃什么 / 减脂能吃啥 / 来杯咖啡 / 新品有什么"><button id="chatSend">发送</button></div></div>
 <details><summary>▾ 不想打字？展开完整菜单手动点（官方 15 分类）</summary><div class="catwrap"><div class="chips" id="catChips"></div></div><input class="search" id="search" placeholder="搜索商品…"><div class="menu" id="menu"></div><div class="share-row"><button id="share2">📸 把刚才那单生成晒卡</button></div><canvas id="shot" width="900" height="1150"></canvas></details>
@@ -360,16 +362,6 @@ function wishFlow(name) {
 function saveWishes() {
   try { localStorage.setItem('mcd.wishes', JSON.stringify(WISHES)); } catch (e) {}
 }
-function renderWishBoard() {
-  const sorted = WISHES.slice().sort(function(a, b) { return b.votes - a.votes; });
-  const rows = sorted.map(function(w, i) {
-    return '<div class="meta-row"><span class="k">#' + (i + 1) + ' ' + esc(w.name) + '</span>' +
-      '<span class="v">愿力 ' + w.votes + '</span></div>';
-  }).join('');
-  agentSay('📮 <b>新品心愿榜</b>（本机档案）<br>' + (rows || '（空）') +
-    '<div class="dim2" style="margin-top:6px">生成晒卡分享， collecting 愿力——愿力榜就是「最想让官方做出来」的民意。</div>');
-}
-
 /* ── DIY 新品（纯对话式，无表单无 chip 墙）────────────────────────
    Agent 问你要什么味道 → 用户打字说 → Agent 从全场选配料组单 →
    展示合成卡 → 用户说名字 → 201 入库。整个流程就是一个对话。 */
@@ -454,7 +446,7 @@ function renderWishBoard() {
   agentSay('📮 <b>新品心愿榜</b>（本机档案）<br>' + (rows || '（空）') +
     '<div class="dim2" style="margin-top:6px">生成晒卡分享， collecting 愿力——愿力榜就是「最想让官方做出来」的民意。</div>');
 }
-function renderWishBoard() {}
+
 
 const QUICK = ['20块吃什么', '减脂能吃啥', '来杯咖啡', '新品有什么', '深夜饿了', '随便推荐', '🧪 DIY 新品', '📮 新品心愿榜'];
 $id('quick').innerHTML = QUICK.map(function(q) { return '<button data-q="' + q + '">' + q + '</button>'; }).join('');
@@ -483,8 +475,8 @@ function sendChat() {
     agentSay('深夜场景——已把模拟时间拨到 <b class="mono">' + fmt(SIM_MIN) + '</b>。现在提交一单会判 <b style="color:var(--orange)">408 Request Timeout</b>（身体服务不在供餐时段）。试试提交，或把时间拨回白天。');
     return;
   }
-  if (!r.wants && !r.budget && !r.kcalCap && !r.scene && !r.random && t.length <= 20 && !/菜单|帮助|怎么用|探活/.test(t)) {
-    wishFlow(t);
+  if (!r.wants && !r.budget && !r.kcalCap && !r.scene && !r.random && text.length <= 20 && !/菜单|帮助|怎么用|探活/.test(text)) {
+    wishFlow(text);
     return;
   }
   agentRecommend(text);
